@@ -1,0 +1,72 @@
+import AddressCard from "@/components/address/AddressCard";
+import { Address } from "@/types/Address";
+import { Feather } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useState } from "react";
+import { FlatList, Text, TouchableOpacity, View } from "react-native";
+
+const MOCK_ADDRESSES: Address[] = [
+  {
+    id: "1",
+    recipientName: "Nguyễn Văn A",
+    phone: "0901234567",
+    addressLine: "123 Lê Lợi",
+    ward: "Phường Bến Nghé",
+    district: "Quận 1",
+    province: "TP. Hồ Chí Minh",
+    isDefault: true,
+  },
+];
+
+export default function AddressListScreen() {
+  const [addresses] = useState<Address[]>(MOCK_ADDRESSES);
+
+  const handleEdit = (id: string) => {
+    router.push(`/profile/address/${id}`);
+  };
+
+  const handleAdd = () => {
+    router.push("/profile/address/select-location");
+  };
+
+  return (
+    <View className="flex-1 bg-white">
+      <View className="flex-row items-center px-5 pt-14 pb-4 border-b border-gray-100">
+        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <Feather name="arrow-left" size={22} color="#111827" />
+        </TouchableOpacity>
+        <Text className="text-lg font-bold text-gray-900">
+          Danh sách địa chỉ đã lưu
+        </Text>
+      </View>
+
+      <FlatList
+        data={addresses}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+        renderItem={({ item }) => (
+          <AddressCard address={item} onEdit={handleEdit} />
+        )}
+        ListEmptyComponent={
+          <View className="items-center justify-center mt-20">
+            <Feather name="map-pin" size={40} color="#D1D5DB" />
+            <Text className="text-gray-400 mt-3">Chưa có địa chỉ nào</Text>
+          </View>
+        }
+      />
+
+      <View className="px-6 pb-8 pt-4 border-t border-gray-100">
+        <TouchableOpacity
+          className="flex-row bg-emerald-700 rounded-xl py-4 items-center justify-center"
+          onPress={handleAdd}
+          activeOpacity={0.8}
+        >
+          <Feather name="plus" size={18} color="#fff" />
+          <Text className="text-white font-bold text-base ml-2">
+            Thêm địa chỉ mới
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}

@@ -1,0 +1,11 @@
+export const STORAGE_KEYS = {
+  ACCESS_TOKEN: "access_token",
+  REFRESH_TOKEN: "refresh_token",
+};
+
+export const ROUTES = {
+  LOGIN: "/(auth)/login",
+  REGISTER: "/(auth)/register",
+  HOME: "/(tabs)/home",
+  EDIT_PROFILE: "/profile/edit",
+};
