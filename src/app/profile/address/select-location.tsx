@@ -103,7 +103,7 @@ export default function SelectLocationScreen() {
           className="absolute inset-0 items-center justify-center"
           style={{ marginBottom: 36 }}
         >
-          <Feather name="map-pin" size={36} color="#047857" />
+          {/* <Feather name="map-pin" size={36} color="#047857" /> */}
         </View>
 
         {/* Nút định vị GPS - chỉ dùng expo-location, không cần BE */}

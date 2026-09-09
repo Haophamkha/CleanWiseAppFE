@@ -1,7 +1,7 @@
 import { MenuListItem } from "@/components/common/MenuListItem";
 import { RequireLoginNotice } from "@/components/common/RequireLoginNotice";
 import { ROUTES, STORAGE_KEYS } from "@/config/constants";
-import { useAuthBootstrap } from "@/hooks/useAuthBootstrap";
+
 import { clearAuth } from "@/store/authSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { storage } from "@/utils/storage";
@@ -12,7 +12,8 @@ import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 export default function ProfileScreen() {
   const user = useAppSelector((s) => s.auth.user);
   const dispatch = useAppDispatch();
-  const { isAuthenticated } = useAuthBootstrap();
+
+  const isAuthenticated = !!user;
 
   const displayName = user?.first_name
     ? `${user.first_name} ${user.last_name ?? ""}`.trim()
@@ -32,7 +33,7 @@ export default function ProfileScreen() {
           await storage.deleteItem(STORAGE_KEYS.REFRESH_TOKEN);
 
           dispatch(clearAuth());
-          router.replace(ROUTES.LOGIN);
+          router.replace(ROUTES.HOME);
         },
       },
     ]);
