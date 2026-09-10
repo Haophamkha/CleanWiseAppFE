@@ -1,18 +1,16 @@
 import AddressForm, {
-    AddressFormValues,
+  AddressFormValues,
 } from "@/components/address/AddressForm";
 import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
-// TODO: thay bằng data lấy từ API theo id khi BE sẵn sàng
 const MOCK_DETAIL: AddressFormValues = {
   recipientName: "Nguyễn Văn A",
   phone: "0901234567",
   addressLine: "123 Lê Lợi",
   ward: "Phường Bến Nghé",
-  district: "Quận 1",
   province: "TP. Hồ Chí Minh",
 };
 
@@ -25,7 +23,6 @@ export default function EditAddressScreen() {
   };
 
   const handleUpdate = () => {
-    // TODO: gọi API cập nhật địa chỉ id={id} khi BE sẵn sàng
     router.back();
   };
 
@@ -36,7 +33,6 @@ export default function EditAddressScreen() {
         text: "Xóa",
         style: "destructive",
         onPress: () => {
-          // TODO: gọi API xóa địa chỉ id={id} khi BE sẵn sàng
           router.back();
         },
       },

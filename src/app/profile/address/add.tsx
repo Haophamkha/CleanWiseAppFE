@@ -1,5 +1,5 @@
 import AddressForm, {
-    AddressFormValues,
+  AddressFormValues,
 } from "@/components/address/AddressForm";
 import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -11,15 +11,16 @@ export default function AddAddressScreen() {
     latitude?: string;
     longitude?: string;
     addressLine?: string;
+    ward?: string;
+    province?: string;
   }>();
 
   const [values, setValues] = useState<AddressFormValues>({
     recipientName: "",
     phone: "",
     addressLine: params.addressLine ?? "",
-    ward: "",
-    district: "",
-    province: "",
+    ward: params.ward ?? "",
+    province: params.province ?? "",
   });
 
   const handleChange = (field: keyof AddressFormValues, value: string) => {
@@ -27,8 +28,6 @@ export default function AddAddressScreen() {
   };
 
   const handleConfirm = () => {
-    // TODO: gọi API thêm địa chỉ khi BE sẵn sàng
-    // kèm theo params.latitude, params.longitude để lưu tọa độ nếu cần
     router.dismissAll();
   };
 
@@ -38,6 +37,7 @@ export default function AddAddressScreen() {
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Feather name="arrow-left" size={22} color="#111827" />
         </TouchableOpacity>
+
         <Text className="text-lg font-bold text-gray-900">Thêm địa chỉ</Text>
       </View>
 

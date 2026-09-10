@@ -6,7 +6,6 @@ export interface AddressFormValues {
   phone: string;
   addressLine: string;
   ward: string;
-  district: string;
   province: string;
 }
 
@@ -48,12 +47,6 @@ const FIELDS: {
     placeholder: "Nhập phường/xã",
   },
   {
-    key: "district",
-    label: "Quận/Huyện",
-    icon: "map",
-    placeholder: "Nhập quận/huyện",
-  },
-  {
     key: "province",
     label: "Tỉnh/Thành phố",
     icon: "map",
@@ -67,8 +60,10 @@ export default function AddressForm({ values, onChange }: AddressFormProps) {
       {FIELDS.map((field) => (
         <View key={field.key}>
           <Text className="text-gray-700 font-medium mb-1">{field.label}</Text>
+
           <View className="flex-row items-center border border-gray-200 bg-gray-50 rounded-xl px-4 py-3 mb-4">
             <Feather name={field.icon} size={18} color="#9CA3AF" />
+
             <TextInput
               className="flex-1 ml-3 text-gray-900"
               placeholder={field.placeholder}

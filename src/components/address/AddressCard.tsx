@@ -16,6 +16,7 @@ export default function AddressCard({ address, onEdit }: AddressCardProps) {
             <Text className="font-bold text-gray-900 text-base">
               {address.recipientName}
             </Text>
+
             {address.isDefault && (
               <View className="ml-2 px-2 py-0.5 bg-emerald-50 rounded-full">
                 <Text className="text-emerald-700 text-xs font-medium">
@@ -24,10 +25,11 @@ export default function AddressCard({ address, onEdit }: AddressCardProps) {
               </View>
             )}
           </View>
+
           <Text className="text-gray-500 text-sm mb-1">{address.phone}</Text>
+
           <Text className="text-gray-700 text-sm">
-            {address.addressLine}, {address.ward}, {address.district},{" "}
-            {address.province}
+            {address.addressLine}, {address.ward}, {address.province}
           </Text>
         </View>
 

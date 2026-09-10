@@ -12,7 +12,6 @@ const MOCK_ADDRESSES: Address[] = [
     phone: "0901234567",
     addressLine: "123 Lê Lợi",
     ward: "Phường Bến Nghé",
-    district: "Quận 1",
     province: "TP. Hồ Chí Minh",
     isDefault: true,
   },

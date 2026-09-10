@@ -41,10 +41,6 @@ export default function ForgotPasswordScreen() {
   const [resetPassword, { isLoading: isResetting }] =
     useResetPasswordMutation();
 
-  // Đếm ngược dựa trên timestamp, không phải đếm tay - không lệch khi app
-  // vào background/foreground. Đây là timer UI để chặn spam nút "gửi lại",
-  // không phải hạn dùng thật của mã OTP - hạn dùng/số lần sai do BE tự kiểm
-  // tra khi verify-reset-otp, FE chỉ hiển thị lỗi BE trả về.
   useEffect(() => {
     if (!resendAt) return;
     const tick = () => {

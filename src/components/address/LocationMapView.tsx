@@ -1,67 +1,77 @@
 import { forwardRef, useImperativeHandle, useRef } from "react";
-import { Text, View } from "react-native";
-import MapView from "react-native-maps";
-import {
+import { WebView } from "react-native-webview";
+import type {
   LocationMapViewHandle,
   LocationMapViewProps,
 } from "./LocationMapView.types";
 
-const LocationMapView = forwardRef<
-  LocationMapViewHandle,
-  LocationMapViewProps
->(({ initialRegion, onRegionChangeComplete }, ref) => {
-  const mapRef = useRef<MapView>(null);
+const LocationMapView = forwardRef<LocationMapViewHandle, LocationMapViewProps>(
+  ({ initialRegion, onRegionChangeComplete }, ref) => {
+    const webviewRef = useRef<WebView>(null);
 
-  console.log("🔥 MAP VIEW RENDER");
+    useImperativeHandle(ref, () => ({
+      animateToRegion: (region) => {
+        webviewRef.current?.injectJavaScript(`
+          map.setView([${region.latitude}, ${region.longitude}], 16);
+          true;
+        `);
+      },
+    }));
 
-  useImperativeHandle(ref, () => ({
-    animateToRegion: (region, duration = 500) => {
-      mapRef.current?.animateToRegion(region, duration);
-    },
-  }));
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+          <style>
+            html, body, #map { height: 100%; margin: 0; padding: 0; }
+          </style>
+        </head>
+        <body>
+          <div id="map"></div>
+          <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+          <script>
+            const map = L.map('map', { zoomControl: false }).setView(
+              [${initialRegion.latitude}, ${initialRegion.longitude}], 16
+            );
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
 
-  return (
-    <View style={{ flex: 1, backgroundColor: "red" }}>
-      <Text
-        style={{
-          position: "absolute",
-          top: 20,
-          left: 20,
-          zIndex: 9999,
-          backgroundColor: "white",
-          color: "black",
-          padding: 10,
-        }}
-      >
-        TEST MAP
-      </Text>
+            function sendCenter() {
+              const c = map.getCenter();
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                latitude: c.lat,
+                longitude: c.lng
+              }));
+            }
 
-      <MapView
-        ref={mapRef}
-        provider="google"
-        style={{
-          width: 300,
-          height: 300,
-          alignSelf: "center",
-          marginTop: 100,
+            map.on('moveend', sendCenter);
+          </script>
+        </body>
+      </html>
+    `;
+
+    return (
+      <WebView
+        ref={webviewRef}
+        originWhitelist={["*"]}
+        source={{ html }}
+        onMessage={(event) => {
+          const data = JSON.parse(event.nativeEvent.data);
+          onRegionChangeComplete({
+            latitude: data.latitude,
+            longitude: data.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          });
         }}
-        initialRegion={{
-          latitude: 10.7769,
-          longitude: 106.7009,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        }}
-        onMapReady={() => {
-          console.log("✅ MAP READY");
-        }}
-        onError={(event) => {
-          console.log("❌ MAP ERROR", event.nativeEvent);
-        }}
-        onRegionChangeComplete={onRegionChangeComplete}
+        style={{ flex: 1 }}
       />
-    </View>
-  );
-});
+    );
+  },
+);
 
 LocationMapView.displayName = "LocationMapView";
 
