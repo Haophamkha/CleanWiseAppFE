@@ -1,10 +1,13 @@
+import ScreenContainer from "@/components/ScreenContainer";
 import AddressForm, {
   AddressFormValues,
 } from "@/components/address/AddressForm";
+import DefaultAddressSwitch from "@/components/address/DefaultAddressSwitch"; // <-- Import component chung
 import ProvinceWardPicker from "@/components/address/ProvinceWardPicker";
 import {
   useDeleteAddressMutation,
   useGetAddressDetailQuery,
+  useSetDefaultAddressMutation,
   useUpdateAddressMutation,
 } from "@/services/addressApi";
 import { Feather } from "@expo/vector-icons";
@@ -38,10 +41,13 @@ export default function EditAddressScreen() {
     error: detailError,
   } = useGetAddressDetailQuery(addressId, {
     skip: !params.id || !Number.isFinite(addressId),
+    refetchOnMountOrArgChange: true,
   });
 
   const [updateAddress, { isLoading: isUpdating }] = useUpdateAddressMutation();
   const [deleteAddress, { isLoading: isDeleting }] = useDeleteAddressMutation();
+  const [setDefaultAddress, { isLoading: isSettingDefault }] =
+    useSetDefaultAddressMutation();
 
   const [values, setValues] = useState<AddressFormValues>({
     label: "",
@@ -56,15 +62,14 @@ export default function EditAddressScreen() {
   const [error, setError] = useState("");
   const [hydrated, setHydrated] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isDefault, setIsDefault] = useState(false);
 
-  // Chặn bấm lặp: reset cờ điều hướng mỗi khi màn hình này được focus lại
   useFocusEffect(
     useCallback(() => {
       setIsNavigating(false);
     }, []),
   );
 
-  // Nguồn dữ liệu chính: GET detail — fill 1 lần duy nhất khi có data
   useEffect(() => {
     if (!address || hydrated) return;
 
@@ -78,11 +83,11 @@ export default function EditAddressScreen() {
     setWard(address.ward ?? "");
     setLatitude(address.latitude ?? undefined);
     setLongitude(address.longitude ?? undefined);
+    setIsDefault(address.is_default ?? false);
     setHydrated(true);
     setError("");
   }, [address, hydrated]);
 
-  // Nếu quay lại từ màn chọn bản đồ, ghi đè bằng lựa chọn mới nhất
   useEffect(() => {
     if (!params.latitude || !params.longitude) return;
     setLatitude(params.latitude);
@@ -153,12 +158,15 @@ export default function EditAddressScreen() {
         },
       }).unwrap();
 
+      if (isDefault && !address.is_default) {
+        await setDefaultAddress(addressId).unwrap();
+      }
+
       router.back();
     } catch (e: any) {
       if (__DEV__) {
         console.log("[UPDATE ADDRESS ERROR]", e);
       }
-
       const backendErrors = e?.data?.errors;
       if (backendErrors) {
         const firstError = Object.values(backendErrors).flat().find(Boolean);
@@ -172,6 +180,14 @@ export default function EditAddressScreen() {
   };
 
   const handleDelete = () => {
+    if (address?.is_default) {
+      Alert.alert(
+        "Không thể xóa",
+        "Địa chỉ mặc định không thể xóa. Vui lòng đặt địa chỉ khác làm mặc định trước.",
+      );
+      return;
+    }
+
     Alert.alert("Xóa địa chỉ", "Bạn có chắc muốn xóa địa chỉ này?", [
       { text: "Hủy", style: "cancel" },
       {
@@ -193,125 +209,130 @@ export default function EditAddressScreen() {
 
   if (!params.id || !Number.isFinite(addressId)) {
     return (
-      <View className="flex-1 bg-white items-center justify-center px-6">
-        <Text className="text-red-500 text-center">Địa chỉ không hợp lệ</Text>
-        <TouchableOpacity
-          className="mt-4 bg-emerald-700 rounded-xl px-6 py-3"
-          onPress={() => router.back()}
-        >
-          <Text className="text-white font-bold">Quay lại</Text>
-        </TouchableOpacity>
-      </View>
+      <ScreenContainer>
+        <View className="flex-1 bg-white items-center justify-center px-6">
+          <Text className="text-red-500 text-center">Địa chỉ không hợp lệ</Text>
+          <TouchableOpacity
+            className="mt-4 bg-emerald-700 rounded-xl px-6 py-3"
+            onPress={() => router.back()}
+          >
+            <Text className="text-white font-bold">Quay lại</Text>
+          </TouchableOpacity>
+        </View>
+      </ScreenContainer>
     );
   }
 
   if (isLoadingDetail && !hydrated) {
     return (
-      <View className="flex-1 bg-white items-center justify-center">
-        <ActivityIndicator color="#047857" size="small" />
-        <Text className="text-gray-500 mt-3">Đang tải địa chỉ...</Text>
-      </View>
+      <ScreenContainer>
+        <View className="flex-1 bg-white items-center justify-center">
+          <ActivityIndicator color="#047857" size="small" />
+          <Text className="text-gray-500 mt-3">Đang tải địa chỉ...</Text>
+        </View>
+      </ScreenContainer>
     );
   }
 
   if (isError || !address) {
-    if (__DEV__) {
-      console.log("[GET ADDRESS DETAIL ERROR]", detailError);
-    }
-
     return (
-      <View className="flex-1 bg-white items-center justify-center px-6">
-        <Feather name="alert-circle" size={36} color="#DC2626" />
-        <Text className="text-gray-900 font-bold text-base mt-4">
-          Không tải được địa chỉ
-        </Text>
-        <Text className="text-gray-500 text-center mt-2">
-          Vui lòng thử lại hoặc quay về danh sách địa chỉ.
-        </Text>
-        <TouchableOpacity
-          className="bg-emerald-700 rounded-xl px-6 py-3 mt-5"
-          onPress={() => router.back()}
-        >
-          <Text className="text-white font-bold">Quay lại</Text>
-        </TouchableOpacity>
-      </View>
+      <ScreenContainer>
+        <View className="flex-1 bg-white items-center justify-center px-6">
+          <Feather name="alert-circle" size={36} color="#DC2626" />
+          <Text className="text-gray-900 font-bold text-base mt-4">
+            Không tải được địa chỉ
+          </Text>
+          <TouchableOpacity
+            className="bg-emerald-700 rounded-xl px-6 py-3 mt-5"
+            onPress={() => router.back()}
+          >
+            <Text className="text-white font-bold">Quay lại</Text>
+          </TouchableOpacity>
+        </View>
+      </ScreenContainer>
     );
   }
 
   return (
-    <View className="flex-1 bg-white">
-      <View className="flex-row items-center justify-between px-5 pt-14 pb-4 border-b border-gray-100">
-        <View className="flex-row items-center flex-1">
+    <ScreenContainer>
+      <View className="flex-1 bg-white">
+        <View className="flex-row items-center justify-between px-5 pt-4 pb-4 border-b border-gray-100">
+          <View className="flex-row items-center flex-1">
+            <TouchableOpacity onPress={() => router.back()} className="mr-4">
+              <Feather name="arrow-left" size={22} color="#111827" />
+            </TouchableOpacity>
+            <Text className="text-lg font-bold text-gray-900">
+              Cập nhật địa chỉ
+            </Text>
+          </View>
+
           <TouchableOpacity
-            onPress={() => router.back()}
-            className="mr-4"
-            activeOpacity={0.7}
+            onPress={handleDelete}
+            disabled={isDeleting}
+            className="w-9 h-9 rounded-full bg-red-50 items-center justify-center"
           >
-            <Feather name="arrow-left" size={22} color="#111827" />
+            {isDeleting ? (
+              <ActivityIndicator size="small" color="#DC2626" />
+            ) : (
+              <Feather name="trash-2" size={16} color="#DC2626" />
+            )}
           </TouchableOpacity>
-          <Text className="text-lg font-bold text-gray-900">
-            Cập nhật địa chỉ
-          </Text>
         </View>
 
-        <TouchableOpacity
-          onPress={handleDelete}
-          disabled={isDeleting}
-          className="w-9 h-9 rounded-full bg-red-50 items-center justify-center"
-          activeOpacity={0.7}
+        <ScrollView
+          className="flex-1 px-6 pt-6"
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          {isDeleting ? (
-            <ActivityIndicator size="small" color="#DC2626" />
-          ) : (
-            <Feather name="trash-2" size={16} color="#DC2626" />
-          )}
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView
-        className="flex-1 px-6 pt-6"
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <ProvinceWardPicker
-          initialProvince={city}
-          initialWard={ward}
-          onSelect={handlePickProvinceWard}
-        />
-
-        <TouchableOpacity
-          className="flex-row items-center justify-center border border-emerald-700 rounded-xl py-3 mb-5"
-          onPress={handleGoToMap}
-          disabled={isNavigating}
-        >
-          <Feather
-            name="map-pin"
-            size={16}
-            color="#047857"
-            style={{ marginRight: 8 }}
+          <ProvinceWardPicker
+            initialProvince={city}
+            initialWard={ward}
+            onSelect={handlePickProvinceWard}
           />
-          <Text className="text-emerald-700 font-semibold">
-            Hoặc chọn lại trên bản đồ
-          </Text>
-        </TouchableOpacity>
 
-        <AddressForm values={values} onChange={handleChange} />
+          <TouchableOpacity
+            className="flex-row items-center justify-center border border-emerald-700 rounded-xl py-3 mb-5"
+            onPress={handleGoToMap}
+            disabled={isNavigating}
+          >
+            <Feather
+              name="map-pin"
+              size={16}
+              color="#047857"
+              style={{ marginRight: 8 }}
+            />
+            <Text className="text-emerald-700 font-semibold">
+              Hoặc chọn lại trên bản đồ
+            </Text>
+          </TouchableOpacity>
 
-        {!!error && <Text className="text-red-500 text-sm mb-3">{error}</Text>}
-      </ScrollView>
+          <AddressForm values={values} onChange={handleChange} />
 
-      <View className="px-6 pb-8 pt-4 border-t border-gray-100">
-        <TouchableOpacity
-          className="bg-emerald-700 rounded-xl py-4 items-center"
-          onPress={handleUpdate}
-          disabled={isUpdating}
-          activeOpacity={0.8}
-        >
-          <Text className="text-white font-bold text-base">
-            {isUpdating ? "Đang cập nhật..." : "Cập nhật"}
-          </Text>
-        </TouchableOpacity>
+          {/* Dùng component chung cho màn Edit */}
+          <DefaultAddressSwitch
+            isDefault={isDefault}
+            onValueChange={setIsDefault}
+            isCurrentDefault={address?.is_default}
+            isEditMode={true}
+          />
+
+          {!!error && (
+            <Text className="text-red-500 text-sm mb-3">{error}</Text>
+          )}
+        </ScrollView>
+
+        <View className="px-6 pb-8 pt-4 border-t border-gray-100">
+          <TouchableOpacity
+            className="bg-emerald-700 rounded-xl py-4 items-center"
+            onPress={handleUpdate}
+            disabled={isUpdating || isSettingDefault}
+          >
+            <Text className="text-white font-bold text-base">
+              {isUpdating || isSettingDefault ? "Đang cập nhật..." : "Cập nhật"}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </ScreenContainer>
   );
 }
