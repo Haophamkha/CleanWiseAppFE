@@ -23,14 +23,22 @@ axiosInstance.interceptors.request.use(async (config) => {
 
   if (!isPublic) {
     const token = await storage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+
     if (token && token !== "undefined" && token !== "null") {
+      config.headers = config.headers ?? {};
       config.headers.Authorization = `Bearer ${token}`;
     }
   }
 
+  // FormData
+  if (config.data instanceof FormData) {
+    delete config.headers?.["Content-Type"];
+  }
+
   if (__DEV__) {
     console.log("[REQUEST]", config.method?.toUpperCase(), config.url, {
-      hasAuthHeader: !!config.headers.Authorization,
+      hasAuthHeader: !!config.headers?.Authorization,
+      isFormData: config.data instanceof FormData,
       body: config.data,
     });
   }
@@ -43,6 +51,7 @@ axiosInstance.interceptors.response.use(
     if (__DEV__) {
       console.log("[RESPONSE OK]", response.config.url, response.data);
     }
+
     return response;
   },
   (error) => {
@@ -56,6 +65,7 @@ axiosInstance.interceptors.response.use(
         fullURL: `${error.config?.baseURL}${error.config?.url}`,
       });
     }
+
     return Promise.reject(error);
   },
 );
@@ -74,10 +84,19 @@ const axiosBaseQuery = (): BaseQueryFn<
 > => {
   return async ({ url, method, data, params }) => {
     try {
-      const result = await axiosInstance({ url, method, data, params });
-      return { data: result.data };
+      const result = await axiosInstance({
+        url,
+        method,
+        data,
+        params,
+      });
+
+      return {
+        data: result.data,
+      };
     } catch (axiosError) {
       const err = axiosError as AxiosError;
+
       return {
         error: {
           status: err.response?.status,
@@ -91,6 +110,9 @@ const axiosBaseQuery = (): BaseQueryFn<
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: axiosBaseQuery(),
-  tagTypes: ["Profile"],
+
+  // Các loại cache tag của RTK Query
+  tagTypes: ["Profile", "Addresses"],
+
   endpoints: () => ({}),
 });

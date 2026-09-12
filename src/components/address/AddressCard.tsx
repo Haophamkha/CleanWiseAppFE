@@ -4,7 +4,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 
 interface AddressCardProps {
   address: Address;
-  onEdit: (id: string) => void;
+  onEdit: (id: number) => void;
 }
 
 export default function AddressCard({ address, onEdit }: AddressCardProps) {
@@ -14,10 +14,10 @@ export default function AddressCard({ address, onEdit }: AddressCardProps) {
         <View className="flex-1 pr-3">
           <View className="flex-row items-center mb-1">
             <Text className="font-bold text-gray-900 text-base">
-              {address.recipientName}
+              {address.label}
             </Text>
 
-            {address.isDefault && (
+            {address.is_default && (
               <View className="ml-2 px-2 py-0.5 bg-emerald-50 rounded-full">
                 <Text className="text-emerald-700 text-xs font-medium">
                   Mặc định
@@ -26,10 +26,12 @@ export default function AddressCard({ address, onEdit }: AddressCardProps) {
             )}
           </View>
 
-          <Text className="text-gray-500 text-sm mb-1">{address.phone}</Text>
+          <Text className="text-gray-700 text-sm mb-1">
+            {address.receiver_name} · {address.receiver_phone}
+          </Text>
 
-          <Text className="text-gray-700 text-sm">
-            {address.addressLine}, {address.ward}, {address.province}
+          <Text className="text-gray-500 text-sm">
+            {address.address_line}, {address.ward}, {address.city}
           </Text>
         </View>
 
