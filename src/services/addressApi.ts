@@ -23,6 +23,7 @@ export const addressApi = baseApi.injectEndpoints({
         method: "GET",
       }),
       transformResponse: unwrap,
+      providesTags: ["Addresses"],
     }),
 
     // POST tạo địa chỉ

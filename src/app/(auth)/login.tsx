@@ -1,3 +1,4 @@
+import ScreenContainer from "@/components/ScreenContainer";
 import { ROUTES } from "@/config/constants";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import {
@@ -14,8 +15,6 @@ import { Link, router } from "expo-router";
 import { useState } from "react";
 import {
   Image,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   Text,
   TextInput,
@@ -88,11 +87,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
-    >
+    <ScreenContainer>
       <ScrollView
         className="flex-1 bg-[#FAF9F5]"
         contentContainerStyle={{
@@ -230,6 +225,6 @@ export default function LoginScreen() {
           </View>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </ScreenContainer>
   );
 }

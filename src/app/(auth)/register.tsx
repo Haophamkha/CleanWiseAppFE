@@ -1,3 +1,4 @@
+import ScreenContainer from "@/components/ScreenContainer";
 import { ROUTES } from "@/config/constants";
 import { useRegisterMutation } from "@/services/authApi";
 import { setUser } from "@/store/authSlice";
@@ -8,8 +9,6 @@ import { Feather } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import {
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   Text,
   TextInput,
@@ -104,11 +103,7 @@ export default function RegisterScreen() {
   ];
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
-    >
+    <ScreenContainer>
       <ScrollView
         className="flex-1 bg-[#FAF9F5]"
         contentContainerStyle={{
@@ -122,7 +117,7 @@ export default function RegisterScreen() {
       >
         <View className="w-full max-w-[420px] self-center">
           <TouchableOpacity
-            onPress={() => router.replace("/")}
+            onPress={() => router.replace("/(auth)/login")}
             className="w-10 h-10 rounded-full bg-white border border-[#E7E3D8] items-center justify-center mb-4"
             activeOpacity={0.7}
           >
@@ -257,6 +252,6 @@ export default function RegisterScreen() {
           </View>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </ScreenContainer>
   );
 }

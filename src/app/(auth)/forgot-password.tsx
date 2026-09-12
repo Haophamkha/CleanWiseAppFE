@@ -1,10 +1,11 @@
+import ScreenContainer from "@/components/ScreenContainer";
 import {
   useForgotPasswordMutation,
   useResetPasswordMutation,
   useVerifyResetOtpMutation,
 } from "@/services/authApi";
 import { showSuccessToast } from "@/utils/toast";
-import { forgotPasswordSchema } from "@/utils/validators";
+import { forgotPasswordSchema, resetPasswordSchema } from "@/utils/validators";
 import { Feather } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -21,7 +22,35 @@ const RESEND_SECONDS = 60;
 type Step = "request" | "verify" | "reset" | "done";
 
 const getErrorMessage = (err: any, fallback: string) => {
-  return err?.data?.message || err?.data?.detail || fallback;
+  const errorData = err?.data;
+
+  if (!errorData) return fallback;
+
+  // 1. Nếu backend trả về dạng dictionary theo field (Ví dụ Django: { "new_password": ["Mật khẩu quá ngắn."], "code": ["Mã không hợp lệ"] })
+  if (typeof errorData === "object" && !Array.isArray(errorData)) {
+    const messages: string[] = [];
+    for (const key of Object.keys(errorData)) {
+      const value = errorData[key];
+      if (Array.isArray(value)) {
+        messages.push(`${value.join(", ")}`);
+      } else if (typeof value === "string") {
+        messages.push(value);
+      }
+    }
+    if (messages.length > 0) {
+      return messages.join(" | ");
+    }
+  }
+
+  // 2. Nếu backend trả về mảng detail (Ví dụ FastAPI: [{ loc: [...], msg: "field required" }])
+  if (Array.isArray(errorData?.detail)) {
+    return errorData.detail
+      .map((d: any) => d.msg || JSON.stringify(d))
+      .join(", ");
+  }
+
+  // 3. Các dạng message đơn thông thường khác
+  return errorData?.message || errorData?.detail || fallback;
 };
 
 export default function ForgotPasswordScreen() {
@@ -84,14 +113,16 @@ export default function ForgotPasswordScreen() {
   };
 
   const handleResetPassword = async () => {
-    if (newPassword.length < 6) {
-      setError("Mật khẩu phải có ít nhất 6 ký tự");
+    const result = resetPasswordSchema.safeParse({
+      new_password: newPassword,
+      new_password_confirm: confirmPassword,
+    });
+
+    if (!result.success) {
+      setError(result.error.issues[0].message);
       return;
     }
-    if (newPassword !== confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp");
-      return;
-    }
+
     setError("");
     try {
       await resetPassword({
@@ -107,207 +138,223 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-[#FAF9F5]"
-      contentContainerClassName="flex-grow items-center justify-center px-6 py-12"
-      keyboardShouldPersistTaps="handled"
-    >
-      <View className="w-full max-w-[420px] bg-white rounded-[28px] border border-[#E7E3D8] p-8 sm:p-10">
-        {/* Wordmark */}
-        <View className="flex-row items-center mb-8">
-          <View className="w-9 h-9 rounded-full bg-[#E7EFE9] items-center justify-center mr-3">
-            <Feather name="droplet" size={16} color="#1F4D3D" />
-          </View>
-          <Text className="text-[#1B2420] text-base font-semibold tracking-tight">
-            CleanWise
-          </Text>
-        </View>
-
-        {step === "request" && (
-          <>
-            <Text className="text-[#1B2420] text-[26px] leading-8 font-semibold mb-2">
-              Quên mật khẩu?
-            </Text>
-            <Text className="text-[#6B7268] text-[15px] leading-5 mb-8">
-              Nhập email đã đăng ký, chúng tôi sẽ gửi mã xác nhận để đặt lại mật
-              khẩu.
-            </Text>
-
-            <Text className="text-[#1B2420] text-sm mb-2">Email</Text>
-            <View className="flex-row items-center bg-[#F7F5EF] border border-[#E7E3D8] rounded-2xl px-4 py-3.5 mb-2">
-              <Feather name="mail" size={17} color="#9A9A8E" />
-              <TextInput
-                className="flex-1 ml-3 text-[#1B2420] text-[15px]"
-                placeholder="ban@email.com"
-                placeholderTextColor="#9A9A8E"
-                autoCapitalize="none"
-                keyboardType="email-address"
-                value={email}
-                onChangeText={setEmail}
-              />
+    <ScreenContainer>
+      <ScrollView
+        className="flex-1 bg-[#FAF9F5]"
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "center",
+          paddingHorizontal: 24,
+          paddingVertical: 48,
+        }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="w-full max-w-[420px] self-center bg-white rounded-[28px] border border-[#E7E3D8] p-8 sm:p-10">
+          {/* Wordmark */}
+          <View className="flex-row items-center mb-8">
+            <View className="w-9 h-9 rounded-full bg-[#E7EFE9] items-center justify-center mr-3">
+              <Feather name="droplet" size={16} color="#1F4D3D" />
             </View>
+            <Text className="text-[#1B2420] text-base font-semibold tracking-tight">
+              CleanWise
+            </Text>
+          </View>
 
-            {!!error && (
-              <Text className="text-[#B3413B] text-sm mt-2 mb-1">{error}</Text>
-            )}
-
-            <TouchableOpacity
-              className="bg-[#1F4D3D] rounded-2xl py-4 flex-row justify-center items-center mt-5"
-              onPress={handleSendCode}
-              disabled={isSending}
-            >
-              <Text className="text-white font-semibold text-[15px] mr-2">
-                {isSending ? "Đang gửi..." : "Gửi mã xác nhận"}
+          {step === "request" && (
+            <>
+              <Text className="text-[#1B2420] text-[26px] leading-8 font-semibold mb-2">
+                Quên mật khẩu?
               </Text>
-              {!isSending && (
-                <Feather name="arrow-right" size={17} color="#fff" />
+              <Text className="text-[#6B7268] text-[15px] leading-5 mb-8">
+                Nhập email đã đăng ký, chúng tôi sẽ gửi mã xác nhận để đặt lại
+                mật khẩu.
+              </Text>
+
+              <Text className="text-[#1B2420] text-sm mb-2">Email</Text>
+              <View className="flex-row items-center bg-[#F7F5EF] border border-[#E7E3D8] rounded-2xl px-4 py-3.5 mb-2">
+                <Feather name="mail" size={17} color="#9A9A8E" />
+                <TextInput
+                  className="flex-1 ml-3 text-[#1B2420] text-[15px]"
+                  placeholder="ban@email.com"
+                  placeholderTextColor="#9A9A8E"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  value={email}
+                  onChangeText={setEmail}
+                />
+              </View>
+
+              {!!error && (
+                <Text className="text-[#B3413B] text-sm mt-2 mb-1">
+                  {error}
+                </Text>
               )}
-            </TouchableOpacity>
-          </>
-        )}
 
-        {step === "verify" && (
-          <>
-            <Text className="text-[#1B2420] text-[26px] leading-8 font-semibold mb-2">
-              Nhập mã xác nhận
-            </Text>
-            <Text className="text-[#6B7268] text-[15px] leading-5 mb-8">
-              Mã xác nhận đã được gửi tới{" "}
-              <Text className="text-[#1B2420] font-medium">{email}</Text>
-            </Text>
-
-            <Text className="text-[#1B2420] text-sm mb-2">Mã xác nhận</Text>
-            <View className="flex-row items-center bg-[#F7F5EF] border border-[#E7E3D8] rounded-2xl px-4 py-3.5 mb-2">
-              <Feather name="lock" size={17} color="#9A9A8E" />
-              <TextInput
-                className="flex-1 ml-3 text-[#1B2420] text-[15px] tracking-widest"
-                placeholder="000000"
-                placeholderTextColor="#9A9A8E"
-                keyboardType="number-pad"
-                maxLength={6}
-                value={otp}
-                onChangeText={setOtp}
-              />
-            </View>
-
-            {!!error && (
-              <Text className="text-[#B3413B] text-sm mt-2 mb-1">{error}</Text>
-            )}
-
-            <TouchableOpacity
-              className="bg-[#1F4D3D] rounded-2xl py-4 items-center mt-5"
-              onPress={handleVerifyOtp}
-              disabled={isVerifying}
-            >
-              <Text className="text-white font-semibold text-[15px]">
-                {isVerifying ? "Đang xác nhận..." : "Xác nhận"}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="items-center mt-5"
-              onPress={handleSendCode}
-              disabled={countdown > 0 || isSending}
-            >
-              <Text
-                className={
-                  countdown > 0
-                    ? "text-[#9A9A8E] text-sm"
-                    : "text-[#1F4D3D] font-semibold text-sm"
-                }
+              <TouchableOpacity
+                className="bg-[#1F4D3D] rounded-2xl py-4 flex-row justify-center items-center mt-5"
+                onPress={handleSendCode}
+                disabled={isSending}
               >
-                {countdown > 0 ? `Gửi lại mã sau ${countdown}s` : "Gửi lại mã"}
+                <Text className="text-white font-semibold text-[15px] mr-2">
+                  {isSending ? "Đang gửi..." : "Gửi mã xác nhận"}
+                </Text>
+                {!isSending && (
+                  <Feather name="arrow-right" size={17} color="#fff" />
+                )}
+              </TouchableOpacity>
+            </>
+          )}
+
+          {step === "verify" && (
+            <>
+              <Text className="text-[#1B2420] text-[26px] leading-8 font-semibold mb-2">
+                Nhập mã xác nhận
               </Text>
-            </TouchableOpacity>
-          </>
-        )}
+              <Text className="text-[#6B7268] text-[15px] leading-5 mb-8">
+                Mã xác nhận đã được gửi tới{" "}
+                <Text className="text-[#1B2420] font-medium">{email}</Text>
+              </Text>
 
-        {step === "reset" && (
-          <>
-            <Text className="text-[#1B2420] text-[26px] leading-8 font-semibold mb-2">
-              Đặt mật khẩu mới
-            </Text>
-            <Text className="text-[#6B7268] text-[15px] leading-5 mb-8">
-              Nhập mật khẩu mới cho tài khoản của bạn.
-            </Text>
+              <Text className="text-[#1B2420] text-sm mb-2">Mã xác nhận</Text>
+              <View className="flex-row items-center bg-[#F7F5EF] border border-[#E7E3D8] rounded-2xl px-4 py-3.5 mb-2">
+                <Feather name="lock" size={17} color="#9A9A8E" />
+                <TextInput
+                  className="flex-1 ml-3 text-[#1B2420] text-[15px] tracking-widest"
+                  placeholder="000000"
+                  placeholderTextColor="#9A9A8E"
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  value={otp}
+                  onChangeText={setOtp}
+                />
+              </View>
 
-            <Text className="text-[#1B2420] text-sm mb-2">Mật khẩu mới</Text>
-            <View className="flex-row items-center bg-[#F7F5EF] border border-[#E7E3D8] rounded-2xl px-4 py-3.5 mb-4">
-              <Feather name="lock" size={17} color="#9A9A8E" />
-              <TextInput
-                className="flex-1 ml-3 text-[#1B2420] text-[15px]"
-                placeholder="Ít nhất 6 ký tự"
-                placeholderTextColor="#9A9A8E"
-                secureTextEntry
-                value={newPassword}
-                onChangeText={setNewPassword}
-              />
+              {!!error && (
+                <Text className="text-[#B3413B] text-sm mt-2 mb-1">
+                  {error}
+                </Text>
+              )}
+
+              <TouchableOpacity
+                className="bg-[#1F4D3D] rounded-2xl py-4 items-center mt-5"
+                onPress={handleVerifyOtp}
+                disabled={isVerifying}
+              >
+                <Text className="text-white font-semibold text-[15px]">
+                  {isVerifying ? "Đang xác nhận..." : "Xác nhận"}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="items-center mt-5"
+                onPress={handleSendCode}
+                disabled={countdown > 0 || isSending}
+              >
+                <Text
+                  className={
+                    countdown > 0
+                      ? "text-[#9A9A8E] text-sm"
+                      : "text-[#1F4D3D] font-semibold text-sm"
+                  }
+                >
+                  {countdown > 0
+                    ? `Gửi lại mã sau ${countdown}s`
+                    : "Gửi lại mã"}
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {step === "reset" && (
+            <>
+              <Text className="text-[#1B2420] text-[26px] leading-8 font-semibold mb-2">
+                Đặt mật khẩu mới
+              </Text>
+              <Text className="text-[#6B7268] text-[15px] leading-5 mb-8">
+                Nhập mật khẩu mới cho tài khoản của bạn.
+              </Text>
+
+              <Text className="text-[#1B2420] text-sm mb-2">Mật khẩu mới</Text>
+              <View className="flex-row items-center bg-[#F7F5EF] border border-[#E7E3D8] rounded-2xl px-4 py-3.5 mb-4">
+                <Feather name="lock" size={17} color="#9A9A8E" />
+                <TextInput
+                  className="flex-1 ml-3 text-[#1B2420] text-[15px]"
+                  placeholder="Ít nhất 6 ký tự"
+                  placeholderTextColor="#9A9A8E"
+                  secureTextEntry
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                />
+              </View>
+
+              <Text className="text-[#1B2420] text-sm mb-2">
+                Xác nhận mật khẩu mới
+              </Text>
+              <View className="flex-row items-center bg-[#F7F5EF] border border-[#E7E3D8] rounded-2xl px-4 py-3.5 mb-2">
+                <Feather name="lock" size={17} color="#9A9A8E" />
+                <TextInput
+                  className="flex-1 ml-3 text-[#1B2420] text-[15px]"
+                  placeholder="Nhập lại mật khẩu mới"
+                  placeholderTextColor="#9A9A8E"
+                  secureTextEntry
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                />
+              </View>
+
+              {!!error && (
+                <Text className="text-[#B3413B] text-sm mt-2 mb-1">
+                  {error}
+                </Text>
+              )}
+
+              <TouchableOpacity
+                className="bg-[#1F4D3D] rounded-2xl py-4 items-center mt-5"
+                onPress={handleResetPassword}
+                disabled={isResetting}
+              >
+                <Text className="text-white font-semibold text-[15px]">
+                  {isResetting ? "Đang cập nhật..." : "Đặt lại mật khẩu"}
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {step === "done" && (
+            <>
+              <View className="w-14 h-14 rounded-full bg-[#E7EFE9] items-center justify-center mb-6">
+                <Feather name="check" size={24} color="#1F4D3D" />
+              </View>
+              <Text className="text-[#1B2420] text-[26px] leading-8 font-semibold mb-2">
+                Đổi mật khẩu thành công
+              </Text>
+              <Text className="text-[#6B7268] text-[15px] leading-5 mb-8">
+                Bạn có thể đăng nhập lại bằng mật khẩu mới.
+              </Text>
+
+              <TouchableOpacity
+                className="bg-[#1F4D3D] rounded-2xl py-4 items-center"
+                onPress={() => router.replace("/(auth)/login")}
+              >
+                <Text className="text-white font-semibold text-[15px]">
+                  Quay lại đăng nhập
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {step === "request" && (
+            <View className="flex-row justify-center mt-8">
+              <Link href="/(auth)/login">
+                <Text className="text-[#1F4D3D] font-semibold text-[15px]">
+                  Đăng nhập
+                </Text>
+              </Link>
             </View>
-
-            <Text className="text-[#1B2420] text-sm mb-2">
-              Xác nhận mật khẩu mới
-            </Text>
-            <View className="flex-row items-center bg-[#F7F5EF] border border-[#E7E3D8] rounded-2xl px-4 py-3.5 mb-2">
-              <Feather name="lock" size={17} color="#9A9A8E" />
-              <TextInput
-                className="flex-1 ml-3 text-[#1B2420] text-[15px]"
-                placeholder="Nhập lại mật khẩu mới"
-                placeholderTextColor="#9A9A8E"
-                secureTextEntry
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-              />
-            </View>
-
-            {!!error && (
-              <Text className="text-[#B3413B] text-sm mt-2 mb-1">{error}</Text>
-            )}
-
-            <TouchableOpacity
-              className="bg-[#1F4D3D] rounded-2xl py-4 items-center mt-5"
-              onPress={handleResetPassword}
-              disabled={isResetting}
-            >
-              <Text className="text-white font-semibold text-[15px]">
-                {isResetting ? "Đang cập nhật..." : "Đặt lại mật khẩu"}
-              </Text>
-            </TouchableOpacity>
-          </>
-        )}
-
-        {step === "done" && (
-          <>
-            <View className="w-14 h-14 rounded-full bg-[#E7EFE9] items-center justify-center mb-6">
-              <Feather name="check" size={24} color="#1F4D3D" />
-            </View>
-            <Text className="text-[#1B2420] text-[26px] leading-8 font-semibold mb-2">
-              Đổi mật khẩu thành công
-            </Text>
-            <Text className="text-[#6B7268] text-[15px] leading-5 mb-8">
-              Bạn có thể đăng nhập lại bằng mật khẩu mới.
-            </Text>
-
-            <TouchableOpacity
-              className="bg-[#1F4D3D] rounded-2xl py-4 items-center"
-              onPress={() => router.replace("/(auth)/login")}
-            >
-              <Text className="text-white font-semibold text-[15px]">
-                Quay lại đăng nhập
-              </Text>
-            </TouchableOpacity>
-          </>
-        )}
-
-        {step === "request" && (
-          <View className="flex-row justify-center mt-8">
-            <Link href="/(auth)/login">
-              <Text className="text-[#1F4D3D] font-semibold text-[15px]">
-                Đăng nhập
-              </Text>
-            </Link>
-          </View>
-        )}
-      </View>
-    </ScrollView>
+          )}
+        </View>
+      </ScrollView>
+    </ScreenContainer>
   );
 }

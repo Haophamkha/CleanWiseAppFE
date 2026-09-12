@@ -1,13 +1,14 @@
 import { MenuListItem } from "@/components/common/MenuListItem";
+import { NotificationBellButton } from "@/components/common/NotificationBellButton";
 import { RequireLoginNotice } from "@/components/common/RequireLoginNotice";
 import { ROUTES, STORAGE_KEYS } from "@/config/constants";
-
-import { NotificationBellButton } from "@/components/common/NotificationBellButton";
-import { clearAuth } from "@/store/authSlice";
+import { useGetProfileQuery } from "@/services/authApi";
+import { clearAuth, setUser } from "@/store/authSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { storage } from "@/utils/storage";
 import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 import {
   Alert,
   Image,
@@ -22,6 +23,24 @@ export default function ProfileScreen() {
   const dispatch = useAppDispatch();
 
   const isAuthenticated = !!user;
+
+  // Gọi API lấy profile mới nhất từ server
+  const { refetch } = useGetProfileQuery(undefined, {
+    skip: !isAuthenticated, // Chỉ gọi khi đã đăng nhập
+  });
+
+  // Tự động đồng bộ vào Redux mỗi khi màn hình Profile được hiển thị/focus lại
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        refetch().then((res) => {
+          if (res.data) {
+            dispatch(setUser(res.data));
+          }
+        });
+      }
+    }, [isAuthenticated]),
+  );
 
   const displayName = user
     ? `${user.last_name ?? ""} ${user.first_name ?? ""}`.trim()

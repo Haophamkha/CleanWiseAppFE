@@ -35,3 +35,14 @@ export const registerSchema = z
 export const forgotPasswordSchema = z.object({
   contact: z.string().min(1, "Vui lòng nhập số điện thoại hoặc email"),
 });
+
+// Thêm schema này để validate bước nhập mật khẩu mới ở trang ForgotPassword
+export const resetPasswordSchema = z
+  .object({
+    new_password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
+    new_password_confirm: z.string().min(1, "Vui lòng xác nhận mật khẩu mới"),
+  })
+  .refine((data) => data.new_password === data.new_password_confirm, {
+    message: "Mật khẩu xác nhận không khớp",
+    path: ["new_password_confirm"],
+  });
