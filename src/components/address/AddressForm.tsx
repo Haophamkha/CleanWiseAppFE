@@ -2,11 +2,10 @@ import { Feather } from "@expo/vector-icons";
 import { Text, TextInput, View } from "react-native";
 
 export interface AddressFormValues {
-  recipientName: string;
-  phone: string;
-  addressLine: string;
-  ward: string;
-  province: string;
+  label: string;
+  receiver_name: string;
+  receiver_phone: string;
+  address_line: string;
 }
 
 interface AddressFormProps {
@@ -22,35 +21,29 @@ const FIELDS: {
   keyboardType?: "default" | "phone-pad";
 }[] = [
   {
-    key: "recipientName",
+    key: "label",
+    label: "Tên gợi nhớ (Nhà riêng, Công ty...)",
+    icon: "tag",
+    placeholder: "Nhà riêng",
+  },
+  {
+    key: "receiver_name",
     label: "Họ tên người nhận",
     icon: "user",
     placeholder: "Nhập họ tên",
   },
   {
-    key: "phone",
+    key: "receiver_phone",
     label: "Số điện thoại",
     icon: "phone",
     placeholder: "Nhập số điện thoại",
     keyboardType: "phone-pad",
   },
   {
-    key: "addressLine",
+    key: "address_line",
     label: "Địa chỉ chi tiết",
     icon: "map-pin",
     placeholder: "Số nhà, tên đường",
-  },
-  {
-    key: "ward",
-    label: "Phường/Xã",
-    icon: "map",
-    placeholder: "Nhập phường/xã",
-  },
-  {
-    key: "province",
-    label: "Tỉnh/Thành phố",
-    icon: "map",
-    placeholder: "Nhập tỉnh/thành phố",
   },
 ];
 

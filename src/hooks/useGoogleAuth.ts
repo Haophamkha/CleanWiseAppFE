@@ -7,18 +7,34 @@ import { useEffect } from "react";
 WebBrowser.maybeCompleteAuthSession();
 
 export function useGoogleAuth(onSuccess: (idToken: string) => void) {
-  console.log("[GOOGLE REDIRECT URI]", AuthSession.makeRedirectUri());
+  const redirectUri = AuthSession.makeRedirectUri({
+    scheme: "cleanwiseappfe",
+  });
+
+  console.log("[GOOGLE CLIENT ID]", ENV.GOOGLE_WEB_CLIENT_ID);
+  console.log("[GOOGLE REDIRECT URI]", redirectUri);
 
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     clientId: ENV.GOOGLE_WEB_CLIENT_ID,
+    redirectUri,
   });
 
   useEffect(() => {
+    console.log("[GOOGLE RESPONSE]", response);
+
     if (response?.type === "success") {
-      const idToken = response.params.id_token;
-      if (idToken) onSuccess(idToken);
+      const idToken = response.params?.id_token;
+
+      if (idToken) {
+        onSuccess(idToken);
+      } else {
+        console.log("[GOOGLE ERROR] Không có id_token", response);
+      }
     }
   }, [response]);
 
-  return { request, promptAsync };
+  return {
+    request,
+    promptAsync,
+  };
 }

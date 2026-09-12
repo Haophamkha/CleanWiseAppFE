@@ -98,22 +98,39 @@ export const authApi = baseApi.injectEndpoints({
     >({
       query: (body) => {
         const formData = new FormData();
-        Object.entries(body).forEach(([key, value]) => {
-          if (value === undefined || value === null) return;
-          if (key === "avatar") {
-            formData.append("avatar", value as any);
-          } else {
-            formData.append(key, String(value));
-          }
-        });
+
+        formData.append("first_name", body.first_name ?? "");
+        formData.append("last_name", body.last_name ?? "");
+        formData.append("email", body.email ?? "");
+        formData.append("phone_number", body.phone_number ?? "");
+
+        if (body.gender !== undefined) {
+          formData.append("gender", body.gender);
+        }
+
+        if (body.birth_date !== undefined) {
+          formData.append("birth_date", body.birth_date);
+        }
+
+        if (body.avatar) {
+          formData.append("avatar", {
+            uri: body.avatar.uri,
+            name: body.avatar.name,
+            type: body.avatar.type,
+          } as any);
+        }
+
         return {
           url: "/api/auth/customer/profile/",
           method: "PATCH",
           data: formData,
         };
       },
+
       transformResponse: unwrapResponse,
+
       invalidatesTags: ["Profile"],
+
       onQueryStarted: async (_arg, { dispatch, queryFulfilled }) => {
         try {
           const { data } = await queryFulfilled;

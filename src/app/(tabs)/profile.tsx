@@ -2,12 +2,20 @@ import { MenuListItem } from "@/components/common/MenuListItem";
 import { RequireLoginNotice } from "@/components/common/RequireLoginNotice";
 import { ROUTES, STORAGE_KEYS } from "@/config/constants";
 
+import { NotificationBellButton } from "@/components/common/NotificationBellButton";
 import { clearAuth } from "@/store/authSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { storage } from "@/utils/storage";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Image,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function ProfileScreen() {
   const user = useAppSelector((s) => s.auth.user);
@@ -15,8 +23,8 @@ export default function ProfileScreen() {
 
   const isAuthenticated = !!user;
 
-  const displayName = user?.first_name
-    ? `${user.first_name} ${user.last_name ?? ""}`.trim()
+  const displayName = user
+    ? `${user.last_name ?? ""} ${user.first_name ?? ""}`.trim()
     : "Người dùng";
 
   const handleLogout = () => {
@@ -49,19 +57,18 @@ export default function ProfileScreen() {
 
         <Text className="text-xl font-bold text-emerald-700">Tài khoản</Text>
 
-        <TouchableOpacity
-          onPress={() => router.push("/notifications" as any)}
-          activeOpacity={0.7}
-        >
-          <Feather name="bell" size={22} color="#111827" />
-        </TouchableOpacity>
+        {isAuthenticated ? (
+          <NotificationBellButton />
+        ) : (
+          <View style={{ width: 22 }} />
+        )}
       </View>
 
       <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
         {/* Profile card */}
         <View className="bg-emerald-50 rounded-3xl items-center py-8 mb-6">
           <View
-            className="w-24 h-24 rounded-full bg-white items-center justify-center border-4 border-white"
+            className="w-24 h-24 rounded-full bg-white items-center justify-center border-4 border-white overflow-hidden"
             style={{
               shadowColor: "#000",
               shadowOpacity: 0.06,
@@ -69,7 +76,18 @@ export default function ProfileScreen() {
               elevation: 2,
             }}
           >
-            <Feather name="user" size={40} color="#9CA3AF" />
+            {user?.avatar ? (
+              <Image
+                source={{ uri: user.avatar }}
+                style={{
+                  width: 96,
+                  height: 96,
+                }}
+                resizeMode="cover"
+              />
+            ) : (
+              <Feather name="user" size={40} color="#9CA3AF" />
+            )}
           </View>
 
           <Text className="text-xl font-bold text-gray-900 mt-4">
