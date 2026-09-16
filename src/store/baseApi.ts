@@ -16,6 +16,7 @@ const PUBLIC_ENDPOINTS = [
   "/api/auth/forgot-password/",
   "/api/auth/verify-reset-otp/",
   "/api/auth/reset-password/",
+  "/api/services/",
 ];
 
 axiosInstance.interceptors.request.use(async (config) => {
