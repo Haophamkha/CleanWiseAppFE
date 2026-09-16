@@ -8,4 +8,5 @@ export const ROUTES = {
   REGISTER: "/(auth)/register",
   HOME: "/(tabs)/home",
   EDIT_PROFILE: "/profile/edit",
+  VOUCHERS: "/vouchers",
 } as const;

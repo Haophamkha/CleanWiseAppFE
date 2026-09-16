@@ -12,6 +12,7 @@ const axiosInstance = axios.create({
 
 const PUBLIC_ENDPOINTS = [
   "/api/auth/login/",
+  "/api/auth/login-google/",
   "/api/auth/register/",
   "/api/auth/forgot-password/",
   "/api/auth/verify-reset-otp/",
@@ -113,7 +114,7 @@ export const baseApi = createApi({
   baseQuery: axiosBaseQuery(),
 
   // Các loại cache tag của RTK Query
-  tagTypes: ["Profile", "Addresses"],
+  tagTypes: ["Profile", "Addresses", "PublicVouchers", "MyVouchers"],
 
   endpoints: () => ({}),
 });

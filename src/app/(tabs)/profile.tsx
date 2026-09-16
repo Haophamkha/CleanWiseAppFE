@@ -133,7 +133,11 @@ export default function ProfileScreen() {
             />
             <MenuListItem icon="heart" label="Nhân viên yêu thích" />
             <MenuListItem icon="clock" label="Lịch sử thanh toán" />
-            <MenuListItem icon="tag" label="Khuyến mãi" />
+            <MenuListItem
+              icon="tag"
+              label="Khuyến mãi"
+              onPress={() => router.push(ROUTES.VOUCHERS as any)}
+            />
             <MenuListItem icon="star" label="Đánh giá của tôi" />
           </>
         ) : (

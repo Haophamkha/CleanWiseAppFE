@@ -10,7 +10,6 @@ export type RegisterRequest = {
   password_confirm: string;
   first_name: string;
   last_name: string;
-  role: "CUSTOMER" | "STAFF" | "ADMIN";
   phone_number: string;
 };
 
