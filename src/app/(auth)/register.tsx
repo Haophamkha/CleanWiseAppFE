@@ -47,7 +47,7 @@ export default function RegisterScreen() {
     }
     setError("");
     try {
-      const res = await register({ ...form, role: "CUSTOMER" }).unwrap();
+      const res = await register(form).unwrap();
       dispatch(setUser(res.user));
       showSuccessToast(
         "Tạo tài khoản thành công",
