@@ -1,3 +1,4 @@
+import type { FormField } from "@/types/Service";
 import { z } from "zod";
 
 const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
@@ -46,3 +47,44 @@ export const resetPasswordSchema = z
     message: "Mật khẩu xác nhận không khớp",
     path: ["new_password_confirm"],
   });
+
+type AddressEntry = { key: string; label: string; required?: boolean };
+
+const isEmptyValue = (value: any) =>
+  value === undefined ||
+  value === null ||
+  value === "" ||
+  (Array.isArray(value) && value.length === 0);
+
+// Trả về danh sách nhãn (label) của các field bắt buộc mà chưa có giá trị,
+// bỏ qua TEXTAREA (ghi chú), TASK_CHECKLIST và REPEATABLE_GROUP
+// (2 loại sau không dùng chung 1 kiểu "value" đơn giản nên xử lý riêng ở nơi gọi).
+export function getMissingRequiredFieldLabels(
+  fields: FormField[],
+  values: Record<string, any>,
+  addressEntries: AddressEntry[] = [],
+): string[] {
+  const missing: string[] = [];
+
+  addressEntries.forEach((entry) => {
+    if (entry.required && isEmptyValue(values[entry.key])) {
+      missing.push(entry.label);
+    }
+  });
+
+  fields.forEach((field) => {
+    if (!field.required) return;
+    if (
+      field.type === "TEXTAREA" ||
+      field.type === "TASK_CHECKLIST" ||
+      field.type === "REPEATABLE_GROUP"
+    ) {
+      return;
+    }
+    if (isEmptyValue(values[field.key])) {
+      missing.push(field.label);
+    }
+  });
+
+  return missing;
+}

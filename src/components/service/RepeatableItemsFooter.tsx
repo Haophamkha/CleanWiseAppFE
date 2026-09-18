@@ -1,22 +1,24 @@
 // src/components/service/RepeatableItemsFooter.tsx
+import { useAppSelector } from "@/store/hooks";
 import type { FormField } from "@/types/Service";
 import { formatVnd } from "@/utils/currency";
 import { getItemTotalPrice } from "@/utils/servicePricing";
 import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-    Pressable,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  Pressable,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS, getSelectedOption } from "./formFieldShared";
 
 type Values = Record<string, any>;
 
 type Props = {
-  groupField: FormField; // type REPEATABLE_GROUP
+  groupField: FormField;
   items: Values[];
   pricingConfig?: any;
   onRemove: (index: number) => void;
@@ -35,6 +37,8 @@ export function RepeatableItemsFooter({
   submitLabel = "Tiếp theo",
 }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const isAuthenticated = !!useAppSelector((state) => state.auth.user);
+  const displayedSubmitLabel = isAuthenticated ? submitLabel : "Đăng nhập ngay";
 
   const itemFields = groupField.item_fields ?? [];
   const categoryField = itemFields[0];
@@ -55,7 +59,7 @@ export function RepeatableItemsFooter({
 
   return (
     <>
-      {/* Nền mờ khi mở rộng — bấm ra ngoài để đóng lại */}
+      {/* Nền mờ khi mở rộng */}
       {expanded && (
         <Pressable
           onPress={() => setExpanded(false)}
@@ -70,7 +74,7 @@ export function RepeatableItemsFooter({
         />
       )}
 
-      {/* Footer luôn dính đáy màn hình, không phụ thuộc scroll */}
+      {/* Footer */}
       <View
         style={{
           position: "absolute",
@@ -84,6 +88,7 @@ export function RepeatableItemsFooter({
           borderColor: COLORS.border,
         }}
       >
+        {/* Header */}
         {items.length > 0 && (
           <TouchableOpacity
             onPress={() => setExpanded((v) => !v)}
@@ -96,6 +101,7 @@ export function RepeatableItemsFooter({
             >
               Thiết bị đã chọn
             </Text>
+
             <View
               className="w-6 h-6 rounded-full items-center justify-center mr-2"
               style={{ backgroundColor: COLORS.danger }}
@@ -104,6 +110,7 @@ export function RepeatableItemsFooter({
                 {totalQuantity}
               </Text>
             </View>
+
             <Feather
               name={expanded ? "chevron-up" : "chevron-down"}
               size={20}
@@ -112,6 +119,7 @@ export function RepeatableItemsFooter({
           </TouchableOpacity>
         )}
 
+        {/* List */}
         {expanded && (
           <ScrollView
             style={{ maxHeight: 320 }}
@@ -122,9 +130,11 @@ export function RepeatableItemsFooter({
               const catOpt = categoryOptions.find(
                 (o) => o.value === item[categoryField?.key ?? ""],
               );
+
               const opt = optionField
                 ? getSelectedOption(optionField, item)
                 : undefined;
+
               const itemPrice = getItemTotalPrice(
                 pricingConfig,
                 itemFields,
@@ -148,10 +158,20 @@ export function RepeatableItemsFooter({
                     >
                       {catOpt?.label}
                     </Text>
-                    <TouchableOpacity onPress={() => onRemove(index)}>
+
+                    <TouchableOpacity
+                      onPress={() => onRemove(index)}
+                      hitSlop={{
+                        top: 8,
+                        bottom: 8,
+                        left: 8,
+                        right: 8,
+                      }}
+                    >
                       <Feather name="trash-2" size={16} color={COLORS.danger} />
                     </TouchableOpacity>
                   </View>
+
                   {!!opt && (
                     <Text
                       className="text-[13px] mb-0.5"
@@ -160,6 +180,7 @@ export function RepeatableItemsFooter({
                       {opt.label}
                     </Text>
                   )}
+
                   <View className="flex-row items-center justify-between mt-1">
                     <Text
                       className="text-[13px]"
@@ -167,6 +188,7 @@ export function RepeatableItemsFooter({
                     >
                       Số lượng: {item.quantity ?? 1}
                     </Text>
+
                     {itemPrice != null && (
                       <Text
                         className="text-[14px] font-bold"
@@ -182,25 +204,30 @@ export function RepeatableItemsFooter({
           </ScrollView>
         )}
 
-        <View className="px-6 pb-8 pt-4 border-t border-gray-100">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-gray-500 text-sm">Tổng tiền</Text>
-            <Text className="text-emerald-700 font-bold text-lg">
-              {items.length > 0 ? formatVnd(totalPrice) : "Chưa đủ thông tin"}
-            </Text>
+        {/* Bottom */}
+        <SafeAreaView edges={["bottom"]}>
+          <View className="px-6 pt-4 pb-2 border-t border-gray-100">
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-gray-500 text-sm">Tổng tiền</Text>
+
+              <Text className="text-emerald-700 font-bold text-lg">
+                {items.length > 0 ? formatVnd(totalPrice) : "Chưa đủ thông tin"}
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              className="bg-emerald-700 rounded-xl py-4 items-center"
+              style={{ opacity: submitDisabled ? 0.6 : 1 }}
+              activeOpacity={0.8}
+              onPress={onSubmit}
+              disabled={submitDisabled}
+            >
+              <Text className="text-white font-bold text-base">
+                {displayedSubmitLabel}
+              </Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            className="bg-emerald-700 rounded-xl py-4 items-center"
-            style={{ opacity: submitDisabled ? 0.5 : 1 }}
-            disabled={submitDisabled}
-            activeOpacity={0.8}
-            onPress={onSubmit}
-          >
-            <Text className="text-white font-bold text-base">
-              {submitLabel}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        </SafeAreaView>
       </View>
     </>
   );

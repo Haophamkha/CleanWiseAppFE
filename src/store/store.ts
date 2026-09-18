@@ -1,7 +1,9 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { provinceApi } from "../services/provinceApi";
+import addressPickerReducer from "./addressPickerSlice";
 import authReducer from "./authSlice";
 import { baseApi } from "./baseApi";
+import bookingDraftReducer from "./bookingDraftSlice";
 import notificationReducer from "./notificationSlice";
 
 export const store = configureStore({
@@ -10,6 +12,8 @@ export const store = configureStore({
     [provinceApi.reducerPath]: provinceApi.reducer,
     auth: authReducer,
     notification: notificationReducer,
+    addressPicker: addressPickerReducer,
+    bookingDraft: bookingDraftReducer,
   },
   middleware: (getDefault) =>
     getDefault().concat(baseApi.middleware, provinceApi.middleware),

@@ -180,7 +180,16 @@ export default function EditAddressScreen() {
   };
 
   const handleDelete = () => {
+    console.log("👉 [DEBUG] Đã bấm vào nút xóa địa chỉ!");
+    console.log(
+      "👉 [DEBUG] addressId:",
+      addressId,
+      "| is_default:",
+      address?.is_default,
+    );
+
     if (address?.is_default) {
+      console.log("👉 [DEBUG] Bị chặn do đây là địa chỉ mặc định.");
       Alert.alert(
         "Không thể xóa",
         "Địa chỉ mặc định không thể xóa. Vui lòng đặt địa chỉ khác làm mặc định trước.",
@@ -188,23 +197,36 @@ export default function EditAddressScreen() {
       return;
     }
 
-    Alert.alert("Xóa địa chỉ", "Bạn có chắc muốn xóa địa chỉ này?", [
-      { text: "Hủy", style: "cancel" },
-      {
-        text: "Xóa",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await deleteAddress(addressId).unwrap();
-            router.back();
-          } catch (e: any) {
-            setError(
-              e?.data?.message || "Xóa địa chỉ thất bại, vui lòng thử lại",
-            );
-          }
+    Alert.alert(
+      "Xác nhận xóa",
+      "Bạn có chắc chắn muốn xóa địa chỉ này không?",
+      [
+        {
+          text: "Hủy",
+          style: "cancel",
+          onPress: () => console.log("👉 [DEBUG] Người dùng đã hủy xóa."),
         },
-      },
-    ]);
+        {
+          text: "Xóa",
+          style: "destructive",
+          onPress: async () => {
+            console.log("👉 [DEBUG] Người dùng đã bấm xác nhận XÓA!");
+            try {
+              await deleteAddress(addressId).unwrap();
+              console.log(
+                "✅ [DEBUG] Xóa thành công, đang quay lại màn trước.",
+              );
+              router.back();
+            } catch (e: any) {
+              console.log("❌ [DEBUG] Lỗi khi gọi API xóa:", e);
+              setError(
+                e?.data?.message || "Xóa địa chỉ thất bại, vui lòng thử lại",
+              );
+            }
+          },
+        },
+      ],
+    );
   };
 
   if (!params.id || !Number.isFinite(addressId)) {
@@ -258,7 +280,10 @@ export default function EditAddressScreen() {
       <View className="flex-1 bg-white">
         <View className="flex-row items-center justify-between px-5 pt-4 pb-4 border-b border-gray-100">
           <View className="flex-row items-center flex-1">
-            <TouchableOpacity onPress={() => router.back()} className="mr-4">
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="mr-4 p-2"
+            >
               <Feather name="arrow-left" size={22} color="#111827" />
             </TouchableOpacity>
             <Text className="text-lg font-bold text-gray-900">
@@ -266,15 +291,19 @@ export default function EditAddressScreen() {
             </Text>
           </View>
 
+          {/* Sửa lại đoạn nút xóa ở đây */}
           <TouchableOpacity
             onPress={handleDelete}
             disabled={isDeleting}
-            className="w-9 h-9 rounded-full bg-red-50 items-center justify-center"
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={{ zIndex: 999 }}
+            className="w-10 h-10 rounded-full bg-red-50 items-center justify-center"
           >
             {isDeleting ? (
               <ActivityIndicator size="small" color="#DC2626" />
             ) : (
-              <Feather name="trash-2" size={16} color="#DC2626" />
+              <Feather name="trash-2" size={18} color="#DC2626" />
             )}
           </TouchableOpacity>
         </View>

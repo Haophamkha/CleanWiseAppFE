@@ -1,5 +1,6 @@
 import React from "react";
-import { KeyboardAvoidingView, Platform, View, ViewStyle } from "react-native";
+import { KeyboardAvoidingView, Platform, ViewStyle } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context"; // Hoặc từ "react-native" nếu không dùng package ngoài
 
 interface ScreenContainerProps {
   children: React.ReactNode;
@@ -11,12 +12,17 @@ export default function ScreenContainer({
   style,
 }: ScreenContainerProps) {
   return (
-    <KeyboardAvoidingView
-      style={[{ flex: 1 }, style]}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
+    <SafeAreaView
+      style={[{ flex: 1, backgroundColor: "#fff" }, style]}
+      edges={["top", "left", "right", "bottom"]}
     >
-      <View style={{ flex: 1 }}>{children}</View>
-    </KeyboardAvoidingView>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
+      >
+        {children}
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
