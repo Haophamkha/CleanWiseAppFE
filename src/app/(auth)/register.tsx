@@ -117,7 +117,7 @@ export default function RegisterScreen() {
       >
         <View className="w-full max-w-[420px] self-center">
           <TouchableOpacity
-            onPress={() => router.replace("/(auth)/login")}
+            onPress={() => router.back()}
             className="w-10 h-10 rounded-full bg-white border border-[#E7E3D8] items-center justify-center mb-4"
             activeOpacity={0.7}
           >
@@ -146,7 +146,9 @@ export default function RegisterScreen() {
             {/* Dynamic fields */}
             {fields.map((f) => (
               <View key={f.key}>
-                <Text className="text-[#1B2420] text-sm mb-2">{f.label}</Text>
+                <Text className="text-[#1B2420] text-sm mb-2">
+                  {f.label} <Text style={{ color: "#DC2626" }}>*</Text>
+                </Text>
                 <View className="flex-row items-center bg-[#F7F5EF] border border-[#E7E3D8] rounded-2xl px-4 py-3.5 mb-4">
                   <Feather name={f.icon} size={17} color="#9A9A8E" />
                   <TextInput
@@ -163,7 +165,9 @@ export default function RegisterScreen() {
             ))}
 
             {/* Password */}
-            <Text className="text-[#1B2420] text-sm mb-2">Mật khẩu</Text>
+            <Text className="text-[#1B2420] text-sm mb-2">
+              Mật khẩu <Text style={{ color: "#DC2626" }}>*</Text>
+            </Text>
             <View className="flex-row items-center bg-[#F7F5EF] border border-[#E7E3D8] rounded-2xl px-4 py-3.5 mb-4">
               <Feather name="lock" size={17} color="#9A9A8E" />
               <TextInput
@@ -185,7 +189,7 @@ export default function RegisterScreen() {
 
             {/* Confirm password */}
             <Text className="text-[#1B2420] text-sm mb-2">
-              Xác nhận mật khẩu
+              Xác nhận mật khẩu <Text style={{ color: "#DC2626" }}>*</Text>
             </Text>
             <View className="flex-row items-center bg-[#F7F5EF] border border-[#E7E3D8] rounded-2xl px-4 py-3.5 mb-5">
               <Feather name="lock" size={17} color="#9A9A8E" />

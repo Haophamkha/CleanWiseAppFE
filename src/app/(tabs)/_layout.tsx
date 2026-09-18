@@ -1,4 +1,4 @@
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -13,7 +13,6 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: "#9CA3AF",
 
         tabBarStyle: {
-          // Tự động co giãn chiều cao dựa vào safe area của thiết bị
           height: 60 + (insets.bottom > 0 ? insets.bottom : 10),
           paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
           paddingTop: 8,
@@ -27,7 +26,6 @@ export default function TabsLayout() {
         },
       }}
     >
-      {/* Trang chủ */}
       <Tabs.Screen
         name="home"
         options={{
@@ -38,18 +36,6 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* Dịch vụ */}
-      <Tabs.Screen
-        name="services"
-        options={{
-          title: "Dịch vụ",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="grid" size={size} color={color} />
-          ),
-        }}
-      />
-
-      {/* Đơn hàng */}
       <Tabs.Screen
         name="booking"
         options={{
@@ -60,7 +46,21 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* Tin nhắn */}
+      {/* Chatbot */}
+      <Tabs.Screen
+        name="chatbot"
+        options={{
+          title: "Chatbot",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons
+              name="robot-outline"
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+
       <Tabs.Screen
         name="messages"
         options={{
@@ -71,7 +71,6 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* Cá nhân */}
       <Tabs.Screen
         name="profile"
         options={{

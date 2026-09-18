@@ -22,6 +22,7 @@ export type FormField = {
     | "REPEATABLE_GROUP"
     | "BOOLEAN"
     | "TIME"
+    | "DATE"
     | "TASK_CHECKLIST";
   label: string;
   description?: string;
@@ -31,7 +32,8 @@ export type FormField = {
   max?: number;
   min_items?: number;
   min_selections?: number;
-  display?: "list" | "grid"; // gợi ý layout cho SINGLE_SELECT không có ảnh
+  min_days_from_now?: number;
+  display?: "list" | "grid";
   options?: FieldOption[] | ConditionalOptionGroup[];
   options_by?: string;
   item_fields?: FormField[];

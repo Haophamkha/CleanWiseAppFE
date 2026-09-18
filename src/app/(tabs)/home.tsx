@@ -1,12 +1,23 @@
 import { AuthGreeting } from "@/components/common/AuthGreeting";
 import { NotificationBellButton } from "@/components/common/NotificationBellButton";
+import { ServiceGridItem } from "@/components/service/ServiceGridItem";
+import { useGetServicesQuery } from "@/services/serviceApi";
 import { useAppSelector } from "@/store/hooks";
 import { Feather } from "@expo/vector-icons";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { router } from "expo-router";
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function HomeScreen() {
   const user = useAppSelector((s) => s.auth.user);
   const isAuthenticated = !!user;
+
+  const { data: services, isLoading, isError } = useGetServicesQuery();
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -30,16 +41,39 @@ export default function HomeScreen() {
         {/* Component lời chào tích hợp sẵn */}
         <AuthGreeting />
 
-        {/* Các thành phần nội dung khác của trang chủ */}
-        <View className="bg-white rounded-2xl p-5 items-center justify-center border border-gray-100 shadow-sm mt-2">
-          <Feather name="compass" size={32} color="#047857" />
-          <Text className="text-gray-800 font-bold text-base mt-3">
-            Khám phá dịch vụ dọn dẹp
-          </Text>
-          <Text className="text-gray-400 text-xs text-center mt-1">
-            Nội dung và danh mục dịch vụ đang được cập nhật từ hệ thống...
-          </Text>
+        {/* Danh sách dịch vụ */}
+        <View className="mt-4 mb-2 flex-row items-center justify-between">
+          <Text className="text-lg font-bold text-gray-900">Dịch vụ</Text>
         </View>
+
+        {isLoading ? (
+          <View className="items-center justify-center py-10">
+            <ActivityIndicator color="#047857" />
+          </View>
+        ) : isError ? (
+          <View className="items-center justify-center py-10">
+            <Text className="text-red-500">
+              Không tải được danh sách dịch vụ
+            </Text>
+          </View>
+        ) : !services || services.length === 0 ? (
+          <View className="items-center justify-center py-10">
+            <Feather name="grid" size={40} color="#D1D5DB" />
+            <Text className="text-gray-400 mt-3">Chưa có dịch vụ nào</Text>
+          </View>
+        ) : (
+          <View className="flex-row flex-wrap pb-6">
+            {services.map((item) => (
+              <ServiceGridItem
+                key={item.id}
+                code={item.code}
+                sectionCode={item.section_code}
+                name={item.name}
+                onPress={() => router.push(`/services/${item.id}`)}
+              />
+            ))}
+          </View>
+        )}
       </ScrollView>
     </View>
   );

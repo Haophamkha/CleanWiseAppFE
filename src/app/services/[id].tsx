@@ -1,23 +1,33 @@
+import { AddressPickerField } from "@/components/service/AddressPickerField";
 import { FormSchemaRenderer } from "@/components/service/FormSchemaRenderer";
 import { RepeatableItemsFooter } from "@/components/service/RepeatableItemsFooter";
 import { useGetServiceDetailQuery } from "@/services/serviceApi";
+import { clearPickedAddress } from "@/store/addressPickerSlice";
+import { setBookingDraft } from "@/store/bookingDraftSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { formatVnd } from "@/utils/currency";
 import { calculateEstimatedPrice } from "@/utils/servicePricing";
 import { getServiceVisual } from "@/utils/serviceVisuals";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+
+import { showErrorToast } from "@/utils/toast";
+import { getMissingRequiredFieldLabels } from "@/utils/validators";
 
 export default function ServiceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const serviceId = Number(id);
+  const dispatch = useAppDispatch();
+  const pickedSelections = useAppSelector((s) => s.addressPicker.selections);
+
   const {
     data: service,
     isLoading,
@@ -30,6 +40,67 @@ export default function ServiceDetailScreen() {
 
   const handleChange = (key: string, value: any) => {
     setValues((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // Danh sách dòng địa chỉ cần chọn: lấy từ form_schema.addresses,
+  // nếu dịch vụ không khai báo (mặc định) thì tạo 1 dòng chung.
+  const addressEntries =
+    service?.form_schema.addresses ??
+    (service
+      ? [{ key: "address", label: "Địa chỉ thực hiện dịch vụ", required: true }]
+      : []);
+
+  const pickerKeyFor = (entryKey: string) => `service_${serviceId}_${entryKey}`;
+
+  // Lắng nghe địa chỉ vừa chọn từ màn AddressList, đổ vào values rồi xoá khỏi kênh tạm.
+  useEffect(() => {
+    addressEntries.forEach((entry) => {
+      const pKey = pickerKeyFor(entry.key);
+      const picked = pickedSelections[pKey];
+      if (picked) {
+        handleChange(entry.key, picked);
+        dispatch(clearPickedAddress(pKey));
+      }
+    });
+  }, [pickedSelections]);
+
+  const handleGoToConfirm = () => {
+    if (!service) return;
+
+    const missing = getMissingRequiredFieldLabels(
+      service.form_schema.fields,
+      values,
+      addressEntries,
+    );
+
+    if (groupField && groupItems.length === 0) {
+      missing.push(groupField.label);
+    }
+
+    if (missing.length > 0) {
+      showErrorToast("Thiếu thông tin", `Vui lòng điền: ${missing.join(", ")}`);
+      return;
+    }
+
+    dispatch(
+      setBookingDraft({
+        service,
+        values,
+        addresses: Object.fromEntries(
+          addressEntries
+            .filter((entry) => !!values[entry.key])
+            .map((entry) => [entry.key, values[entry.key]]),
+        ),
+      }),
+    );
+    router.push("/booking/confirm");
+  };
+
+  const handleChooseAddress = (entryKey: string, label: string) => {
+    router.push({
+      pathname: "/profile/address",
+      params: { pickerKey: pickerKeyFor(entryKey), title: label },
+    });
   };
 
   if (isLoading) {
@@ -64,9 +135,6 @@ export default function ServiceDetailScreen() {
     values,
   );
 
-  // Dịch vụ có REPEATABLE_GROUP (máy lạnh, sofa...) dùng footer dạng
-  // "Thiết bị đã chọn" thu gọn/mở rộng. Dịch vụ khác (dọn nhà, chuyển nhà)
-  // dùng footer "Tạm tính" đơn giản như cũ.
   const groupField = service.form_schema.fields.find(
     (f) => f.type === "REPEATABLE_GROUP",
   );
@@ -81,6 +149,10 @@ export default function ServiceDetailScreen() {
       groupItems.filter((_, i) => i !== index),
     );
   };
+
+  const missingRequiredAddress = addressEntries.some(
+    (entry) => entry.required && !values[entry.key],
+  );
 
   return (
     <View className="flex-1 bg-white">
@@ -117,18 +189,16 @@ export default function ServiceDetailScreen() {
             {service.description}
           </Text>
 
-          {service.form_schema.address_count > 1 && (
-            <View className="bg-emerald-50 rounded-2xl p-4 mb-5">
-              <Text className="text-emerald-700 font-semibold text-sm mb-1">
-                Dịch vụ này cần {service.form_schema.address_count} địa chỉ
-              </Text>
-              {service.form_schema.addresses?.map((addr) => (
-                <Text key={addr.key} className="text-gray-700 text-sm">
-                  • {addr.label}
-                </Text>
-              ))}
-            </View>
-          )}
+          {/* Ô chọn địa chỉ — 1 dòng mặc định, hoặc 2 dòng cho chuyển nhà */}
+          {addressEntries.map((entry) => (
+            <AddressPickerField
+              key={entry.key}
+              label={entry.label}
+              required={entry.required}
+              value={values[entry.key]}
+              onPress={() => handleChooseAddress(entry.key, entry.label)}
+            />
+          ))}
 
           <FormSchemaRenderer
             fields={service.form_schema.fields}
@@ -146,10 +216,8 @@ export default function ServiceDetailScreen() {
           items={groupItems}
           pricingConfig={service.pricing_config}
           onRemove={handleRemoveGroupItem}
-          onSubmit={() => {
-            // TODO: điều hướng sang bước tiếp theo (chọn thời gian/thanh toán)
-          }}
-          submitDisabled={groupItems.length === 0}
+          onSubmit={handleGoToConfirm}
+          submitDisabled={groupItems.length === 0 || missingRequiredAddress}
           submitLabel="Tiếp theo"
         />
       ) : (
@@ -164,9 +232,12 @@ export default function ServiceDetailScreen() {
           </View>
           <TouchableOpacity
             className="bg-emerald-700 rounded-xl py-4 items-center"
-            style={{ opacity: estimatedPrice == null ? 0.5 : 1 }}
-            disabled={estimatedPrice == null}
+            style={{
+              opacity:
+                estimatedPrice == null || missingRequiredAddress ? 0.6 : 1,
+            }}
             activeOpacity={0.8}
+            onPress={handleGoToConfirm}
           >
             <Text className="text-white font-bold text-base">Đặt dịch vụ</Text>
           </TouchableOpacity>

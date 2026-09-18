@@ -2,9 +2,10 @@ import ScreenContainer from "@/components/ScreenContainer";
 import AddressForm, {
   AddressFormValues,
 } from "@/components/address/AddressForm";
-import DefaultAddressSwitch from "@/components/address/DefaultAddressSwitch"; // <-- Import component chung
 import ProvinceWardPicker from "@/components/address/ProvinceWardPicker";
 import { useCreateAddressMutation } from "@/services/addressApi";
+import { setPickedAddress } from "@/store/addressPickerSlice";
+import { useAppDispatch } from "@/store/hooks";
 import { Feather } from "@expo/vector-icons";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -17,7 +18,10 @@ export default function AddAddressScreen() {
     addressLine?: string;
     ward?: string;
     province?: string;
+    pickerKey?: string;
   }>();
+
+  const dispatch = useAppDispatch();
 
   const [values, setValues] = useState<AddressFormValues>({
     label: "",
@@ -31,7 +35,6 @@ export default function AddAddressScreen() {
   const [longitude, setLongitude] = useState<string | undefined>(undefined);
   const [error, setError] = useState("");
   const [isNavigating, setIsNavigating] = useState(false);
-  const [isDefault, setIsDefault] = useState(false);
 
   const [createAddress, { isLoading }] = useCreateAddressMutation();
 
@@ -72,7 +75,11 @@ export default function AddAddressScreen() {
     setIsNavigating(true);
     router.push({
       pathname: "/profile/address/select-location",
-      params: { latitude, longitude },
+      params: {
+        latitude,
+        longitude,
+        ...(params.pickerKey ? { pickerKey: params.pickerKey } : {}),
+      },
     });
   };
 
@@ -91,7 +98,7 @@ export default function AddAddressScreen() {
     setError("");
 
     try {
-      await createAddress({
+      const created = await createAddress({
         label: values.label.trim() || undefined,
         receiver_name: values.receiver_name.trim(),
         receiver_phone: values.receiver_phone.trim(),
@@ -100,10 +107,16 @@ export default function AddAddressScreen() {
         city: city.trim(),
         latitude,
         longitude,
-        is_default: isDefault,
       }).unwrap();
 
-      router.dismissAll();
+      if (params.pickerKey) {
+        // Đang ở luồng chọn địa chỉ cho dịch vụ — chọn luôn địa chỉ vừa tạo
+        // rồi nhảy thẳng về màn dịch vụ (bỏ qua choose-method + list).
+        dispatch(setPickedAddress({ key: params.pickerKey, address: created }));
+        router.dismiss(3);
+      } else {
+        router.dismissAll();
+      }
     } catch (e: any) {
       const backendErrors = e?.data?.errors;
       if (backendErrors) {
@@ -158,13 +171,6 @@ export default function AddAddressScreen() {
 
           <AddressForm values={values} onChange={handleChange} />
 
-          {/* Dùng chung component cho màn Add */}
-          <DefaultAddressSwitch
-            isDefault={isDefault}
-            onValueChange={setIsDefault}
-            isEditMode={false}
-          />
-
           {!!error && (
             <Text className="text-red-500 text-sm mb-3">{error}</Text>
           )}
@@ -175,6 +181,7 @@ export default function AddAddressScreen() {
             className="bg-emerald-700 rounded-xl py-4 items-center"
             onPress={handleConfirm}
             disabled={isLoading}
+            activeOpacity={0.8}
           >
             <Text className="text-white font-bold text-base">
               {isLoading ? "Đang lưu..." : "Thêm địa chỉ"}

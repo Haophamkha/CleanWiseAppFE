@@ -114,7 +114,14 @@ export const baseApi = createApi({
   baseQuery: axiosBaseQuery(),
 
   // Các loại cache tag của RTK Query
-  tagTypes: ["Profile", "Addresses", "PublicVouchers", "MyVouchers"],
+  tagTypes: [
+    "Profile",
+    "Addresses",
+    "PublicVouchers",
+    "MyVouchers",
+    "Bookings",
+    "Services",
+  ],
 
   endpoints: () => ({}),
 });

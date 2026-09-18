@@ -1,21 +1,25 @@
 // src/components/service/formFieldShared.tsx
 import type {
-    ConditionalOptionGroup,
-    FieldOption,
-    FormField,
-    PricingConfig,
+  ConditionalOptionGroup,
+  FieldOption,
+  FormField,
+  PricingConfig,
 } from "@/types/Service";
 import { formatVnd } from "@/utils/currency";
 import { Feather } from "@expo/vector-icons";
 import {
-    Image,
-    ScrollView,
-    Switch,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Image,
+  Modal,
+  Pressable,
+  ScrollView,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
+
+import { useEffect, useRef, useState } from "react";
 
 export type Values = Record<string, any>;
 
@@ -484,58 +488,437 @@ export function WeekdayRow({
 }
 
 // ============================================================
-// ATOM: TimeField
+// ATOM: TimeWheelPicker — 2 cột cuộn giờ (8-18h) / phút (00-59)
+// Dùng bên trong Modal của TimeField, không hiện trực tiếp ngoài form.
 // ============================================================
-export function TimeField({
+const WHEEL_ITEM_HEIGHT = 48;
+const WHEEL_VISIBLE_COUNT = 5; // luôn để số lẻ
+const WHEEL_HEIGHT = WHEEL_ITEM_HEIGHT * WHEEL_VISIBLE_COUNT;
+const WHEEL_PADDING = (WHEEL_HEIGHT - WHEEL_ITEM_HEIGHT) / 2;
+
+function WheelColumn({
+  data,
+  selectedIndex,
+  onChangeIndex,
+  formatItem,
+}: {
+  data: number[];
+  selectedIndex: number;
+  onChangeIndex: (index: number) => void;
+  formatItem: (v: number) => string;
+}) {
+  const scrollRef = useRef<any>(null);
+  const didMount = useRef(false);
+  const isInternalUpdate = useRef(false);
+
+  useEffect(() => {
+    if (isInternalUpdate.current) {
+      isInternalUpdate.current = false;
+      return;
+    }
+    scrollRef.current?.scrollTo({
+      y: selectedIndex * WHEEL_ITEM_HEIGHT,
+      animated: didMount.current,
+    });
+    didMount.current = true;
+  }, [selectedIndex]);
+
+  // Chỉ dùng để CẬP NHẬT STATE từ vị trí cuộn thực tế — KHÔNG tự scrollTo
+  // để snap nữa, vì snapToInterval đã để native tự làm việc đó rồi.
+  // Tự scrollTo ở đây sẽ đè lên đà cuộn (momentum) đang chạy dở, gây giật lùi.
+  const reportIndexFromOffset = (y: number) => {
+    const idx = Math.max(
+      0,
+      Math.min(data.length - 1, Math.round(y / WHEEL_ITEM_HEIGHT)),
+    );
+    if (idx !== selectedIndex) {
+      isInternalUpdate.current = true;
+      onChangeIndex(idx);
+    }
+  };
+
+  return (
+    <ScrollView
+      ref={scrollRef}
+      style={{ height: WHEEL_HEIGHT, width: 84 }}
+      showsVerticalScrollIndicator={false}
+      snapToInterval={WHEEL_ITEM_HEIGHT}
+      decelerationRate="fast"
+      contentContainerStyle={{ paddingVertical: WHEEL_PADDING }}
+      onMomentumScrollEnd={(e) => {
+        // Đà cuộn đã dừng hẳn -> native đã snap xong, đọc vị trí cuối cùng.
+        reportIndexFromOffset(e.nativeEvent.contentOffset.y);
+      }}
+      onScrollEndDrag={(e) => {
+        const y = e.nativeEvent.contentOffset.y;
+        const nearestSnapY =
+          Math.round(y / WHEEL_ITEM_HEIGHT) * WHEEL_ITEM_HEIGHT;
+        // Nếu vừa buông tay mà vị trí đã trùng mốc snap -> chắc chắn sẽ
+        // không còn đà cuộn tiếp theo (onMomentumScrollEnd sẽ không bắn),
+        // nên xử lý luôn ở đây. Ngược lại, để yên cho đà cuộn tự chạy tiếp
+        // rồi onMomentumScrollEnd xử lý sau.
+        if (Math.abs(y - nearestSnapY) < 1) {
+          reportIndexFromOffset(y);
+        }
+      }}
+      scrollEventThrottle={16}
+    >
+      {data.map((v, idx) => {
+        const isSelected = idx === selectedIndex;
+        return (
+          <View
+            key={v}
+            style={{
+              height: WHEEL_ITEM_HEIGHT,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: isSelected ? 30 : 20,
+                fontWeight: isSelected ? "800" : "500",
+                color: isSelected ? COLORS.primary : COLORS.textMuted,
+                opacity: isSelected ? 1 : 0.45,
+              }}
+            >
+              {formatItem(v)}
+            </Text>
+          </View>
+        );
+      })}
+    </ScrollView>
+  );
+}
+
+function TimeWheelPicker({
   value,
+  minHour,
+  maxHour,
   onChange,
 }: {
-  value: string | undefined;
+  value: string; // "HH:MM"
+  minHour: number;
+  maxHour: number;
   onChange: (v: string) => void;
 }) {
-  const [hh, mm] =
-    typeof value === "string" && value.includes(":")
-      ? value.split(":")
-      : ["08", "00"];
+  const hours = Array.from(
+    { length: maxHour - minHour + 1 },
+    (_, i) => minHour + i,
+  );
+  const minutes = Array.from({ length: 60 }, (_, i) => i); // 00 -> 59
 
-  const updateTime = (nextHH: string, nextMM: string) => {
-    const h = Math.min(23, Math.max(0, parseInt(nextHH || "0", 10) || 0));
-    const m = Math.min(59, Math.max(0, parseInt(nextMM || "0", 10) || 0));
-    onChange(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+  const [hh, mm] = value.split(":");
+  const parsedHour = Math.min(
+    maxHour,
+    Math.max(minHour, parseInt(hh, 10) || minHour),
+  );
+  const parsedMinute = parseInt(mm, 10) || 0;
+
+  const hourIndex = hours.indexOf(parsedHour);
+  const minuteIndex = minutes.indexOf(parsedMinute);
+
+  const commit = (hIdx: number, mIdx: number) => {
+    onChange(
+      `${String(hours[hIdx]).padStart(2, "0")}:${String(minutes[mIdx]).padStart(2, "0")}`,
+    );
   };
 
   return (
     <View
-      className="flex-row items-center justify-center rounded-xl py-3"
       style={{
+        borderRadius: 20,
         backgroundColor: COLORS.background,
-        borderWidth: 1,
-        borderColor: COLORS.border,
+        paddingVertical: 6,
       }}
     >
-      <TextInput
-        className="text-[20px] font-bold text-center"
-        style={{ color: COLORS.text, minWidth: 48 }}
-        keyboardType="number-pad"
-        maxLength={2}
-        value={hh}
-        onChangeText={(t) => updateTime(t, mm)}
-      />
-      <Text
-        className="text-[20px] font-bold mx-2"
-        style={{ color: COLORS.textMuted }}
+      <View
+        style={{
+          height: WHEEL_HEIGHT,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
-        :
-      </Text>
-      <TextInput
-        className="text-[20px] font-bold text-center"
-        style={{ color: COLORS.text, minWidth: 48 }}
-        keyboardType="number-pad"
-        maxLength={2}
-        value={mm}
-        onChangeText={(t) => updateTime(hh, t)}
-      />
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            top: WHEEL_PADDING,
+            left: 16,
+            right: 16,
+            height: WHEEL_ITEM_HEIGHT,
+            borderRadius: 14,
+            backgroundColor: COLORS.primaryLight,
+            borderWidth: 1,
+            borderColor: COLORS.primaryBorder,
+          }}
+        />
+        <WheelColumn
+          data={hours}
+          selectedIndex={hourIndex === -1 ? 0 : hourIndex}
+          formatItem={(v) => String(v).padStart(2, "0")}
+          onChangeIndex={(idx) =>
+            commit(idx, minuteIndex === -1 ? 0 : minuteIndex)
+          }
+        />
+        <Text
+          style={{
+            fontSize: 26,
+            fontWeight: "800",
+            color: COLORS.text,
+            marginHorizontal: 6,
+          }}
+        >
+          :
+        </Text>
+        <WheelColumn
+          data={minutes}
+          selectedIndex={minuteIndex === -1 ? 0 : minuteIndex}
+          formatItem={(v) => String(v).padStart(2, "0")}
+          onChangeIndex={(idx) => commit(hourIndex === -1 ? 0 : hourIndex, idx)}
+        />
+      </View>
     </View>
+  );
+}
+
+// ============================================================
+// FIELD: TimeField — ô hiển thị giờ gọn, bấm vào mới bung Modal cuộn
+// Giờ giới hạn 8h-18h, phút 00-59
+// ============================================================
+export function TimeField({
+  value,
+  onChange,
+  minHour = 8,
+  maxHour = 18,
+}: {
+  value: string | undefined;
+  onChange: (v: string) => void;
+  minHour?: number;
+  maxHour?: number;
+}) {
+  const defaultValue = `${String(minHour).padStart(2, "0")}:00`;
+  const displayValue = value ?? defaultValue;
+
+  const [visible, setVisible] = useState(false);
+  const [tempValue, setTempValue] = useState(displayValue);
+
+  const open = () => {
+    setTempValue(value ?? defaultValue);
+    setVisible(true);
+  };
+
+  const confirm = () => {
+    onChange(tempValue);
+    setVisible(false);
+  };
+
+  return (
+    <>
+      <TouchableOpacity
+        onPress={open}
+        activeOpacity={0.8}
+        className="flex-row items-center justify-between rounded-2xl px-4 py-4"
+        style={{
+          backgroundColor: COLORS.white,
+          borderWidth: 1,
+          borderColor: COLORS.border,
+        }}
+      >
+        <View className="flex-row items-center">
+          <View
+            className="w-9 h-9 rounded-full items-center justify-center mr-3"
+            style={{ backgroundColor: COLORS.primaryLight }}
+          >
+            <Feather name="clock" size={16} color={COLORS.primary} />
+          </View>
+          <Text
+            className="text-[14px] font-medium"
+            style={{ color: COLORS.textSecondary }}
+          >
+            Giờ bắt đầu
+          </Text>
+        </View>
+        <View className="flex-row items-center">
+          <Text
+            className="text-[20px] font-extrabold mr-1"
+            style={{ color: COLORS.text }}
+          >
+            {displayValue}
+          </Text>
+          <Feather name="chevron-right" size={18} color={COLORS.textMuted} />
+        </View>
+      </TouchableOpacity>
+
+      <Modal
+        visible={visible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setVisible(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: "rgba(17,24,39,0.45)" }}>
+          {/* Vùng backdrop để đóng - KHÔNG chứa nội dung sheet */}
+          <Pressable style={{ flex: 1 }} onPress={() => setVisible(false)} />
+
+          {/* Sheet là View thường, không nằm trong Touchable nào cả */}
+          <View
+            style={{
+              backgroundColor: COLORS.white,
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              paddingBottom: 28,
+              shadowColor: "#000",
+              shadowOpacity: 0.15,
+              shadowOffset: { width: 0, height: -4 },
+              shadowRadius: 16,
+              elevation: 8,
+            }}
+          >
+            <View className="items-center pt-3 pb-1">
+              <View
+                style={{
+                  width: 40,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: COLORS.border,
+                }}
+              />
+            </View>
+
+            <View className="flex-row items-center justify-between px-5 pt-3 pb-2">
+              <TouchableOpacity onPress={() => setVisible(false)} hitSlop={8}>
+                <Text
+                  className="text-[15px] font-medium"
+                  style={{ color: COLORS.textMuted }}
+                >
+                  Huỷ
+                </Text>
+              </TouchableOpacity>
+              <Text
+                className="text-[16px] font-bold"
+                style={{ color: COLORS.text }}
+              >
+                Chọn giờ làm
+              </Text>
+              <TouchableOpacity onPress={confirm} hitSlop={8}>
+                <Text
+                  className="text-[15px] font-bold"
+                  style={{ color: COLORS.primary }}
+                >
+                  Xong
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View className="px-5 pt-2">
+              <TimeWheelPicker
+                value={tempValue}
+                minHour={minHour}
+                maxHour={maxHour}
+                onChange={setTempValue}
+              />
+              <Text
+                className="text-[12px] text-center mt-3"
+                style={{ color: COLORS.textMuted }}
+              >
+                Nhận việc trong khung giờ {String(minHour).padStart(2, "0")}
+                :00 - {String(maxHour).padStart(2, "0")}:00
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </>
+  );
+}
+
+// ============================================================
+// ATOM: DateStripField — dải ngày ngang, cuộn N ngày kể từ ngày mai
+// ============================================================
+const VN_WEEKDAY_SHORT = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+
+function buildDateRange(startOffsetDays: number, count: number): Date[] {
+  const base = new Date();
+  base.setHours(0, 0, 0, 0);
+  const result: Date[] = [];
+  for (let i = 0; i < count; i++) {
+    const d = new Date(base);
+    d.setDate(base.getDate() + startOffsetDays + i);
+    result.push(d);
+  }
+  return result;
+}
+
+function toDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+export function DateStripField({
+  value,
+  minDaysFromNow = 1,
+  rangeDays = 14,
+  onChange,
+}: {
+  value: string | undefined; // "YYYY-MM-DD"
+  minDaysFromNow?: number;
+  rangeDays?: number;
+  onChange: (v: string) => void;
+}) {
+  const dates = buildDateRange(minDaysFromNow, rangeDays);
+
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{ paddingRight: 8 }}
+    >
+      {dates.map((d) => {
+        const key = toDateKey(d);
+        const selected = value === key;
+        return (
+          <TouchableOpacity
+            key={key}
+            onPress={() => onChange(key)}
+            activeOpacity={0.85}
+            style={{
+              width: 56,
+              height: 72,
+              borderRadius: 16,
+              marginRight: 10,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: selected ? COLORS.primary : COLORS.white,
+              borderWidth: 1,
+              borderColor: selected ? COLORS.primary : COLORS.border,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "600",
+                color: selected ? "#fff" : COLORS.textMuted,
+                marginBottom: 4,
+              }}
+            >
+              {VN_WEEKDAY_SHORT[d.getDay()]}
+            </Text>
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: "800",
+                color: selected ? "#fff" : COLORS.text,
+              }}
+            >
+              {d.getDate()}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </ScrollView>
   );
 }
 
@@ -565,11 +948,10 @@ export function FieldControl({
         return (
           <View className="flex-row flex-wrap justify-between">
             {options.map((opt) => (
-              <ImageOptionCard
+              <GridOptionCard
                 key={opt.value}
                 image={opt.image}
                 label={opt.label}
-                description={opt.description}
                 caption={buildCaption(opt, false, pricingConfig)}
                 selected={value === opt.value}
                 onPress={() => onChange(opt.value)}
@@ -578,35 +960,6 @@ export function FieldControl({
           </View>
         );
       }
-      if (field.display === "grid") {
-        return (
-          <View className="flex-row flex-wrap justify-between">
-            {options.map((opt) => (
-              <GridOptionCard
-                key={opt.value}
-                label={opt.label}
-                caption={buildCaption(opt, false, pricingConfig)}
-                selected={value === opt.value}
-                onPress={() => onChange(opt.value)}
-              />
-            ))}
-          </View>
-        );
-      }
-      return (
-        <View>
-          {options.map((opt) => (
-            <OptionCard
-              key={opt.value}
-              label={opt.label}
-              description={opt.description}
-              caption={buildCaption(opt, false, pricingConfig)}
-              selected={value === opt.value}
-              onPress={() => onChange(opt.value)}
-            />
-          ))}
-        </View>
-      );
       return (
         <View>
           {options.map((opt) => (
@@ -725,6 +1078,15 @@ export function FieldControl({
         />
       );
 
+    case "DATE":
+      return (
+        <DateStripField
+          value={value}
+          minDaysFromNow={field.min_days_from_now ?? 1}
+          onChange={onChange}
+        />
+      );
+
     case "TIME":
       return <TimeField value={value} onChange={onChange} />;
 
@@ -738,11 +1100,13 @@ export function FieldControl({
 // (dùng cho SINGLE_SELECT có field.display === "grid", VD: Thời hạn gói)
 // ============================================================
 export function GridOptionCard({
+  image,
   label,
   caption,
   selected,
   onPress,
 }: {
+  image?: string;
   label: string;
   caption?: string;
   selected: boolean;
@@ -764,6 +1128,13 @@ export function GridOptionCard({
           padding: 14,
         }}
       >
+        {!!image && (
+          <Image
+            source={{ uri: image }}
+            style={{ width: "100%", aspectRatio: 1.8, borderRadius: 10 }}
+            resizeMode="cover"
+          />
+        )}
         <View className="flex-row items-center justify-between mb-1">
           <Text
             className="text-[15px] font-bold"

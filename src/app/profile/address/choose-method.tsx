@@ -1,8 +1,10 @@
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 
 export default function ChooseAddressMethodScreen() {
+  const { pickerKey } = useLocalSearchParams<{ pickerKey?: string }>();
+
   return (
     <View className="flex-1 bg-white">
       <View className="flex-row items-center px-5 pt-14 pb-4 border-b border-gray-100">
@@ -18,7 +20,12 @@ export default function ChooseAddressMethodScreen() {
         <TouchableOpacity
           className="flex-row items-center border border-gray-200 rounded-2xl p-5"
           activeOpacity={0.8}
-          onPress={() => router.push("/profile/address/select-location")}
+          onPress={() =>
+            router.push({
+              pathname: "/profile/address/select-location",
+              params: pickerKey ? { pickerKey } : {},
+            })
+          }
         >
           <View className="w-12 h-12 rounded-full bg-emerald-50 items-center justify-center mr-4">
             <Feather name="map-pin" size={22} color="#047857" />
@@ -37,7 +44,12 @@ export default function ChooseAddressMethodScreen() {
         <TouchableOpacity
           className="flex-row items-center border border-gray-200 rounded-2xl p-5"
           activeOpacity={0.8}
-          onPress={() => router.push("/profile/address/add")}
+          onPress={() =>
+            router.push({
+              pathname: "/profile/address/add",
+              params: pickerKey ? { pickerKey } : {},
+            })
+          }
         >
           <View className="w-12 h-12 rounded-full bg-emerald-50 items-center justify-center mr-4">
             <MaterialCommunityIcons
