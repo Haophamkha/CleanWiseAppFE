@@ -11,7 +11,7 @@ export const BOOKING_STATUS_META: Record<
   },
 
   ASSIGNED: {
-    label: "Đã có thợ nhận",
+    label: "Đã nhận",
     color: "#1D4ED8",
     bg: "#DBEAFE",
   },
@@ -35,9 +35,9 @@ export const BOOKING_STATUS_META: Record<
   },
 
   FAILED: {
-    label: "Thất bại",
-    color: "#6B7280",
-    bg: "#F3F4F6",
+    label: "Hết hạn nhận đơn",
+    color: "#C2410C",
+    bg: "#FFEDD5",
   },
 };
 

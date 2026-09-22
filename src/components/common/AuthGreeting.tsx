@@ -8,9 +8,10 @@ export function AuthGreeting() {
   const user = useAppSelector((s) => s.auth.user);
   const isAuthenticated = !!user;
 
-  // Lấy tên hoặc họ tên, ưu tiên first_name cho thân mật giống Shopee/Lazada
   const displayName = user
-    ? `${user.first_name || user.last_name || "Bạn"}`.trim()
+    ? `${user.last_name ?? ""} ${user.first_name ?? ""}`.trim() ||
+      user.username ||
+      "Bạn"
     : "Khách";
 
   return (
@@ -22,7 +23,7 @@ export function AuthGreeting() {
               Xin chào trở lại 👋
             </Text>
             <Text
-              className="text-xl font-bold text-gray-900 mt-1"
+              className="text-lg font-bold text-gray-900 mt-1"
               numberOfLines={1}
             >
               {displayName}
