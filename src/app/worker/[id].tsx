@@ -1,10 +1,10 @@
 import { COLORS } from "@/components/service/formFieldShared";
 import type { BookingScheduleDetail } from "@/types/Booking";
+import { useLazyGetAssignmentConversationQuery } from "@/services/chatApi";
 import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type WorkerProfile = NonNullable<BookingScheduleDetail["worker"]> & {
@@ -53,8 +53,26 @@ function StatCard({
 }
 
 export default function WorkerProfileScreen() {
-  const { data } = useLocalSearchParams<{ id: string; data?: string }>();
+  const { data, assignmentId } = useLocalSearchParams<{ id: string; data?: string; assignmentId?: string }>();
   const insets = useSafeAreaInsets();
+  const [getChat, { isFetching: openingChat }] = useLazyGetAssignmentConversationQuery();
+
+  const openChat = async () => {
+    const selectedAssignment = Number(assignmentId);
+    if (!Number.isInteger(selectedAssignment) || selectedAssignment <= 0) {
+      Alert.alert("Chưa thể nhắn tin", "Hãy mở hồ sơ từ lịch đã được phân công.");
+      return;
+    }
+    try {
+      const result = await getChat(selectedAssignment).unwrap();
+      router.push({
+        pathname: "/messages/[id]",
+        params: { id: String(result.conversation.id), assignmentId: String(selectedAssignment) },
+      });
+    } catch {
+      Alert.alert("Không mở được trò chuyện", "Vui lòng kiểm tra lịch phân công và thử lại.");
+    }
+  };
 
   let worker: WorkerProfile | null = null;
   try {
@@ -98,12 +116,7 @@ export default function WorkerProfileScreen() {
         contentContainerStyle={{ paddingBottom: 24 + insets.bottom }}
       >
         <View style={{ height: 190 + insets.top, overflow: "hidden" }}>
-          <LinearGradient
-            colors={["#0D8A54", "#12A86A", "#5FCB93"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ position: "absolute", inset: 0 }}
-          />
+          <View style={{ position: "absolute", inset: 0, backgroundColor: "#0D9B69" }} />
           <View
             style={{
               position: "absolute",
@@ -271,11 +284,10 @@ export default function WorkerProfileScreen() {
               activeOpacity={0.85}
               style={{ flex: 8, backgroundColor: COLORS.primary }}
               className="rounded-2xl py-3.5 flex-row items-center justify-center"
-              onPress={() => {
-                // TODO: mở màn hình chat với nhân viên khi có tính năng nhắn tin
-              }}
+              onPress={openChat}
+              disabled={openingChat}
             >
-              <Feather name="message-circle" size={17} color="#FFFFFF" />
+              {openingChat ? <ActivityIndicator size="small" color="#FFFFFF" /> : <Feather name="message-circle" size={17} color="#FFFFFF" />}
               <Text className="font-bold text-[14.5px] text-white ml-2">
                 Nhắn tin
               </Text>

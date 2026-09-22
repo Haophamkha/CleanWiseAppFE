@@ -34,7 +34,9 @@ export type BookingWorker = {
 };
 
 export type BookingScheduleDetail = {
-  id: number;
+    id: number;
+    assignment_id: number | null;
+    conversation_id: number | null;
   sequence_no: number;
   scheduled_start: string;
   scheduled_end: string;

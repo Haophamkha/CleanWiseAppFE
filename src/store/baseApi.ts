@@ -115,6 +115,7 @@ export const baseApi = createApi({
 
   // Các loại cache tag của RTK Query
   tagTypes: [
+    "ChatConversations",
     "Profile",
     "Addresses",
     "PublicVouchers",
