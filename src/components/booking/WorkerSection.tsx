@@ -9,10 +9,12 @@ type Worker = NonNullable<BookingScheduleDetail["worker"]>;
 
 function WorkerCard({
   worker,
-  isPending,
+  assignmentId,
+  scheduledStart,
 }: {
   worker: Worker;
-  isPending: boolean;
+  assignmentId: number | null;
+  scheduledStart: string;
 }) {
   const fullName =
     `${worker.last_name ?? ""} ${worker.first_name ?? ""}`.trim() ||
@@ -46,16 +48,19 @@ function WorkerCard({
           >
             {fullName}
           </Text>
+          <Text className="text-xs text-gray-500 mt-1">
+            Lịch {new Date(scheduledStart).toLocaleString("vi-VN")}
+          </Text>
         </View>
 
-        {!isPending && (
+        {!!assignmentId && (
           <Feather name="chevron-right" size={20} color="#9CA3AF" />
         )}
       </View>
     </View>
   );
 
-  if (isPending) {
+  if (!assignmentId) {
     return content;
   }
 
@@ -68,6 +73,7 @@ function WorkerCard({
           params: {
             id: String(worker.worker_id),
             data: JSON.stringify(worker),
+            assignmentId: String(assignmentId),
           },
         });
       }}
@@ -104,18 +110,22 @@ function NoWorkerCard() {
 }
 
 export function WorkerSection({
-  worker,
-  isPending,
+  schedules,
 }: {
-  worker: Worker | null;
-  isPending: boolean;
+  schedules: BookingScheduleDetail[];
 }) {
   return (
     <View className="mb-5">
       <SectionTitle icon="user">Nhân viên thực hiện</SectionTitle>
-      {worker ? (
-        <WorkerCard worker={worker} isPending={isPending} />
-      ) : (
+      {schedules.length ? schedules.map((schedule) => (
+        schedule.worker ? (
+          <View key={schedule.id} className="mb-2">
+            <WorkerCard worker={schedule.worker} assignmentId={schedule.assignment_id} scheduledStart={schedule.scheduled_start} />
+          </View>
+        ) : (
+          <View key={schedule.id} className="mb-2"><NoWorkerCard /></View>
+        )
+      )) : (
         <NoWorkerCard />
       )}
     </View>

@@ -60,7 +60,6 @@ export default function BookingDetailScreen() {
   }
 
   const schedule = booking.schedules[0];
-  const worker = schedule?.worker ?? null;
   const showBottomBar = booking.status === "PENDING";
 
   return (
@@ -87,10 +86,7 @@ export default function BookingDetailScreen() {
           />
         )}
 
-        <WorkerSection
-          worker={worker}
-          isPending={booking.status === "PENDING"}
-        />
+        <WorkerSection schedules={booking.schedules} />
 
         {/* Chi tiết công việc */}
         <View className="mb-5">
