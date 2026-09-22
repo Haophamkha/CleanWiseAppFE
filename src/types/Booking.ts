@@ -1,3 +1,12 @@
+export type PaymentMethod = "CASH" | "BANK_TRANSFER";
+
+export type PaymentStatus =
+  | "PENDING"
+  | "SUCCESS"
+  | "FAILED"
+  | "CANCELLED"
+  | "REFUNDED";
+
 export type BookingScheduleInput = {
   scheduled_start: string;
   scheduled_end: string;
@@ -10,6 +19,18 @@ export type CreateBookingRequest = {
   schedules: BookingScheduleInput[];
   note?: string;
   voucher_code?: string;
+  payment_method: PaymentMethod;
+};
+
+export type BookingWorker = {
+  worker_id: number;
+  first_name: string;
+  last_name: string;
+  avatar: string | null;
+  bio: string | null;
+  experience_years: number;
+  average_rating: string;
+  total_completed_jobs: number;
 };
 
 export type BookingScheduleDetail = {
@@ -21,6 +42,7 @@ export type BookingScheduleDetail = {
   actual_end: string | null;
   status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "MISSED";
   note: string | null;
+  worker: BookingWorker | null;
 };
 
 export type BookingStatus =
@@ -30,6 +52,20 @@ export type BookingStatus =
   | "COMPLETED"
   | "CANCELLED"
   | "FAILED";
+
+export type BookingPayment = {
+  id: number;
+  amount: string;
+  method: PaymentMethod | string;
+  method_display: string;
+  status: PaymentStatus | string;
+  status_display: string;
+  transaction_code: string | null;
+  paid_at: string | null;
+  failure_reason: string | null;
+  created_at: string;
+  updated_at: string;
+};
 
 export type BookingListItem = {
   id: number;
@@ -54,6 +90,7 @@ export type BookingDetail = {
   note: string | null;
   status: BookingStatus;
   payment_status: string;
+  payment: BookingPayment | null;
   price_breakdown: {
     subtotal_amount: string | null;
     discount_amount: string;
