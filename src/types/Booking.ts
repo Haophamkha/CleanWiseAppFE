@@ -7,16 +7,17 @@ export type PaymentStatus =
   | "CANCELLED"
   | "REFUNDED";
 
-export type BookingScheduleInput = {
-  scheduled_start: string;
-  scheduled_end: string;
-};
+// ĐỔI: xoá BookingScheduleInput — BE không còn nhận `schedules` từ
+// client nữa (tự sinh từ service_data qua schedule_builder.py).
 
 export type CreateBookingRequest = {
   service_id: number;
   address_id: number;
+  // ĐỔI: thêm delivery_address_id — chỉ cần khi dịch vụ có address_count = 2
+  // (ví dụ chuyển nhà). BE tự validate bắt buộc/không bắt buộc theo form_schema.
+  delivery_address_id?: number;
   service_data: Record<string, any>;
-  schedules: BookingScheduleInput[];
+  // ĐỔI: bỏ field schedules — BE tự tính lịch làm việc.
   note?: string;
   voucher_code?: string;
   payment_method: PaymentMethod;
@@ -34,9 +35,9 @@ export type BookingWorker = {
 };
 
 export type BookingScheduleDetail = {
-    id: number;
-    assignment_id: number | null;
-    conversation_id: number | null;
+  id: number;
+  assignment_id: number | null;
+  conversation_id: number | null;
   sequence_no: number;
   scheduled_start: string;
   scheduled_end: string;
@@ -81,6 +82,28 @@ export type BookingListItem = {
   created_at: string;
 };
 
+export type BookingListResponse = {
+  results: BookingListItem[];
+  count: number;
+  page: number;
+  total_pages: number;
+  has_next: boolean;
+  has_previous: boolean;
+  page_size: number;
+};
+
+export type BookingAddress = {
+  id: number;
+  label: string | null;
+  address_line: string;
+  ward: string | null;
+  city: string;
+  receiver_name: string;
+  receiver_phone: string;
+  latitude: string | null;
+  longitude: string | null;
+};
+
 export type BookingDetail = {
   id: number;
   booking_code: string;
@@ -88,7 +111,10 @@ export type BookingDetail = {
   form_schema: Record<string, any>;
   pricing_config: Record<string, any>;
   service_data: Record<string, any>;
-  address: number;
+  address: BookingAddress;
+  // ĐỔI: thêm delivery_address — null với dịch vụ 1 địa chỉ,
+  // có giá trị với dịch vụ cần 2 địa chỉ (vd chuyển nhà).
+  delivery_address: BookingAddress | null;
   note: string | null;
   status: BookingStatus;
   payment_status: string;
@@ -105,14 +131,4 @@ export type BookingDetail = {
   schedules: BookingScheduleDetail[];
   created_at: string;
   updated_at: string;
-};
-
-export type BookingListResponse = {
-  results: BookingListItem[];
-  count: number;
-  page: number;
-  total_pages: number;
-  has_next: boolean;
-  has_previous: boolean;
-  page_size: number;
 };

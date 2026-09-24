@@ -10,7 +10,7 @@ import {
 import { formatVnd } from "@/utils/currency";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -24,11 +24,41 @@ export default function BookingScreen() {
   const user = useAppSelector((s) => s.auth.user);
   const isAuthenticated = !!user;
   const [activeTab, setActiveTab] = useState<BookingStatus | "ALL">("ALL");
+  const [page, setPage] = useState(1);
+  const [items, setItems] = useState<BookingListItem[]>([]);
 
   const { data, isLoading, isFetching, isError, refetch } = useGetBookingsQuery(
-    activeTab === "ALL" ? undefined : { status: activeTab },
+    {
+      ...(activeTab === "ALL" ? {} : { status: activeTab }),
+      page,
+    },
     { skip: !isAuthenticated },
   );
+
+  useEffect(() => {
+    if (!data) return;
+    setItems((prev) =>
+      page === 1 ? data.results : [...prev, ...data.results],
+    );
+  }, [data, page]);
+
+  const handleTabChange = (tab: BookingStatus | "ALL") => {
+    setActiveTab(tab);
+    setPage(1);
+    setItems([]);
+  };
+
+  const handleRefresh = () => {
+    setPage(1);
+    setItems([]);
+    refetch();
+  };
+
+  const handleLoadMore = () => {
+    if (data?.has_next && !isFetching) {
+      setPage((p) => p + 1);
+    }
+  };
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -58,17 +88,14 @@ export default function BookingScreen() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{
-                paddingHorizontal: 16,
-                gap: 8,
-              }}
+              contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
             >
               {BOOKING_STATUS_TABS.map((tab) => {
                 const selected = activeTab === tab.key;
                 return (
                   <TouchableOpacity
                     key={tab.key}
-                    onPress={() => setActiveTab(tab.key)}
+                    onPress={() => handleTabChange(tab.key)}
                     activeOpacity={0.7}
                     className={`px-4 py-2 rounded-full flex-row items-center ${
                       selected ? "bg-emerald-700" : "bg-gray-100"
@@ -88,7 +115,7 @@ export default function BookingScreen() {
           </View>
 
           {/* Content List */}
-          {isLoading ? (
+          {isLoading && page === 1 ? (
             <View className="flex-1 items-center justify-center">
               <ActivityIndicator size="large" color="#047857" />
             </View>
@@ -99,7 +126,7 @@ export default function BookingScreen() {
                 Không tải được danh sách đơn hàng
               </Text>
               <TouchableOpacity
-                onPress={refetch}
+                onPress={handleRefresh}
                 className="mt-4 px-4 py-2 bg-emerald-700 rounded-xl"
               >
                 <Text className="text-white font-semibold text-xs">
@@ -109,12 +136,19 @@ export default function BookingScreen() {
             </View>
           ) : (
             <FlatList
-              data={data?.results ?? []}
+              data={items}
               keyExtractor={(item) => String(item.id)}
               contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-              refreshing={isFetching}
-              onRefresh={refetch}
+              refreshing={isFetching && page === 1}
+              onRefresh={handleRefresh}
+              onEndReached={handleLoadMore}
+              onEndReachedThreshold={0.3}
               renderItem={({ item }) => <BookingCard item={item} />}
+              ListFooterComponent={
+                isFetching && page > 1 ? (
+                  <ActivityIndicator className="py-4" color="#047857" />
+                ) : null
+              }
               ListEmptyComponent={
                 <View className="items-center justify-center pt-24">
                   <View className="w-16 h-16 rounded-full bg-emerald-50 items-center justify-center mb-3">
