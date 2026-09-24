@@ -77,6 +77,7 @@ type AxiosBaseQueryArgs = {
   method: AxiosRequestConfig["method"];
   data?: any;
   params?: any;
+  timeout?: number; // ĐỔI: cho phép override timeout riêng cho từng request
 };
 
 const axiosBaseQuery = (): BaseQueryFn<
@@ -84,13 +85,14 @@ const axiosBaseQuery = (): BaseQueryFn<
   unknown,
   unknown
 > => {
-  return async ({ url, method, data, params }) => {
+  return async ({ url, method, data, params, timeout }) => {
     try {
       const result = await axiosInstance({
         url,
         method,
         data,
         params,
+        timeout,
       });
 
       return {
@@ -122,6 +124,8 @@ export const baseApi = createApi({
     "MyVouchers",
     "Bookings",
     "Services",
+    "Wallet",
+    "WalletTransactions",
   ],
 
   endpoints: () => ({}),

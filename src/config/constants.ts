@@ -9,4 +9,5 @@ export const ROUTES = {
   HOME: "/(tabs)/home",
   EDIT_PROFILE: "/profile/edit",
   VOUCHERS: "/vouchers",
+  WALLET: "/profile/wallets/wallet",
 } as const;

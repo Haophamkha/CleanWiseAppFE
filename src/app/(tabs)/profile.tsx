@@ -1,3 +1,4 @@
+import { useConfirm } from "@/components/common/ConfirmProvider";
 import { MenuListItem } from "@/components/common/MenuListItem";
 import { NotificationBellButton } from "@/components/common/NotificationBellButton";
 import { RequireLoginNotice } from "@/components/common/RequireLoginNotice";
@@ -10,12 +11,11 @@ import { Feather } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
 import {
-  Alert,
   Image,
   ScrollView,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 
 export default function ProfileScreen() {
@@ -23,13 +23,12 @@ export default function ProfileScreen() {
   const dispatch = useAppDispatch();
 
   const isAuthenticated = !!user;
+  const confirm = useConfirm();
 
-  // Gọi API lấy profile mới nhất từ server
   const { refetch } = useGetProfileQuery(undefined, {
-    skip: !isAuthenticated, // Chỉ gọi khi đã đăng nhập
+    skip: !isAuthenticated,
   });
 
-  // Tự động đồng bộ vào Redux mỗi khi màn hình Profile được hiển thị/focus lại
   useFocusEffect(
     useCallback(() => {
       if (isAuthenticated) {
@@ -46,24 +45,19 @@ export default function ProfileScreen() {
     ? `${user.last_name ?? ""} ${user.first_name ?? ""}`.trim()
     : "Người dùng";
 
-  const handleLogout = () => {
-    Alert.alert("Đăng xuất", "Bạn có chắc chắn muốn đăng xuất không?", [
-      {
-        text: "Hủy",
-        style: "cancel",
-      },
-      {
-        text: "Đăng xuất",
-        style: "destructive",
-        onPress: async () => {
-          await storage.deleteItem(STORAGE_KEYS.ACCESS_TOKEN);
-          await storage.deleteItem(STORAGE_KEYS.REFRESH_TOKEN);
+  const handleLogout = async () => {
+    const ok = await confirm({
+      title: "Đăng xuất",
+      message: "Bạn có chắc chắn muốn đăng xuất không?",
+      confirmText: "Đăng xuất",
+      danger: true,
+    });
+    if (!ok) return;
 
-          dispatch(clearAuth());
-          router.replace(ROUTES.HOME);
-        },
-      },
-    ]);
+    await storage.deleteItem(STORAGE_KEYS.ACCESS_TOKEN);
+    await storage.deleteItem(STORAGE_KEYS.REFRESH_TOKEN);
+    dispatch(clearAuth());
+    router.replace(ROUTES.HOME);
   };
 
   return (
@@ -126,18 +120,29 @@ export default function ProfileScreen() {
               label="Thông tin cá nhân"
               onPress={() => router.push(ROUTES.EDIT_PROFILE as any)}
             />
+
             <MenuListItem
               icon="map-pin"
               label="Địa chỉ của tôi"
               onPress={() => router.push("/profile/address" as any)}
             />
+
             <MenuListItem icon="heart" label="Nhân viên yêu thích" />
+
+            <MenuListItem
+              icon="credit-card"
+              label="Ví / Thẻ thanh toán"
+              onPress={() => router.push(ROUTES.WALLET as any)}
+            />
+
             <MenuListItem icon="clock" label="Lịch sử thanh toán" />
+
             <MenuListItem
               icon="tag"
               label="Khuyến mãi"
               onPress={() => router.push(ROUTES.VOUCHERS as any)}
             />
+
             <MenuListItem icon="star" label="Đánh giá của tôi" />
           </>
         ) : (
@@ -150,9 +155,9 @@ export default function ProfileScreen() {
         </Text>
 
         <MenuListItem icon="settings" label="Cài đặt" />
+
         <MenuListItem icon="info" label="Về CleanWise" />
 
-        {/* Logout - chỉ hiện khi đã đăng nhập */}
         {isAuthenticated && (
           <TouchableOpacity
             className="flex-row items-center justify-center bg-red-50 rounded-2xl py-4 mt-4 mb-10"

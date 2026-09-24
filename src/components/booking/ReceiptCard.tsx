@@ -100,27 +100,6 @@ export function ReceiptCard({ booking }: { booking: BookingDetail }) {
         </View>
       </View>
 
-      {payment?.method === "BANK_TRANSFER" && (
-        <View
-          className="rounded-2xl items-center justify-center mt-3"
-          style={{
-            height: 170,
-            borderWidth: 1,
-            borderStyle: "dashed",
-            borderColor: "#D1D5DB",
-            backgroundColor: "#F9FAFB",
-          }}
-        >
-          <Feather name="maximize" size={30} color="#9CA3AF" />
-          <Text className="font-semibold text-[13px] text-gray-500 mt-3">
-            QR thanh toán
-          </Text>
-          <Text className="text-[11px] text-gray-400 mt-1">
-            QR sẽ được tích hợp sau
-          </Text>
-        </View>
-      )}
-
       {!!payment?.failure_reason && (
         <View className="mt-3 rounded-xl bg-red-50 p-3">
           <Text className="text-[12px] text-red-700">

@@ -1,3 +1,4 @@
+import { ConfirmProvider } from "@/components/common/ConfirmProvider";
 import { toastConfig } from "@/config/toastConfig";
 import { store } from "@/store/store";
 import { Stack } from "expo-router";
@@ -10,11 +11,13 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <Provider store={store}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(tabs)" />
-        </Stack>
-        <Toast config={toastConfig} />
+        <ConfirmProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(tabs)" />
+          </Stack>
+          <Toast config={toastConfig} />
+        </ConfirmProvider>
       </Provider>
     </SafeAreaProvider>
   );

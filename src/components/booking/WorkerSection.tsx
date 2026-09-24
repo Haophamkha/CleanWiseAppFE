@@ -1,112 +1,21 @@
-import { COLORS } from "@/components/service/formFieldShared";
 import type { BookingScheduleDetail } from "@/types/Booking";
 import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { useMemo, useState } from "react";
+import { Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScheduleItemCard } from "./ScheduleItemCard";
 import { SectionTitle } from "./SectionTitle";
 
-type Worker = NonNullable<BookingScheduleDetail["worker"]>;
+function pickUpcomingSchedule(schedules: BookingScheduleDetail[]) {
+  const now = Date.now();
 
-function WorkerCard({
-  worker,
-  assignmentId,
-  scheduledStart,
-}: {
-  worker: Worker;
-  assignmentId: number | null;
-  scheduledStart: string;
-}) {
-  const fullName =
-    `${worker.last_name ?? ""} ${worker.first_name ?? ""}`.trim() ||
-    "Nhân viên";
-
-  const content = (
-    <View
-      className="rounded-2xl p-4"
-      style={{
-        backgroundColor: "#FFFFFF",
-        borderWidth: 1,
-        borderColor: "#E5E7EB",
-      }}
-    >
-      <View className="flex-row items-center">
-        {worker.avatar ? (
-          <Image
-            source={{ uri: worker.avatar }}
-            className="w-14 h-14 rounded-full"
-          />
-        ) : (
-          <View className="w-14 h-14 rounded-full bg-emerald-100 items-center justify-center">
-            <Feather name="user" size={24} color={COLORS.primary} />
-          </View>
-        )}
-
-        <View className="flex-1 ml-3">
-          <Text
-            className="font-bold text-[15px] text-gray-900"
-            numberOfLines={1}
-          >
-            {fullName}
-          </Text>
-          <Text className="text-xs text-gray-500 mt-1">
-            Lịch {new Date(scheduledStart).toLocaleString("vi-VN")}
-          </Text>
-        </View>
-
-        {!!assignmentId && (
-          <Feather name="chevron-right" size={20} color="#9CA3AF" />
-        )}
-      </View>
-    </View>
+  const upcoming = schedules.find(
+    (s) =>
+      new Date(s.scheduled_start).getTime() >= now &&
+      s.status !== "CANCELLED" &&
+      s.status !== "COMPLETED",
   );
 
-  if (!assignmentId) {
-    return content;
-  }
-
-  return (
-    <TouchableOpacity
-      activeOpacity={0.8}
-      onPress={() => {
-        router.push({
-          pathname: "/worker/[id]",
-          params: {
-            id: String(worker.worker_id),
-            data: JSON.stringify(worker),
-            assignmentId: String(assignmentId),
-          },
-        });
-      }}
-    >
-      {content}
-    </TouchableOpacity>
-  );
-}
-
-function NoWorkerCard() {
-  return (
-    <View
-      className="rounded-2xl p-4 flex-row items-center"
-      style={{
-        backgroundColor: "#F8FAFC",
-        borderWidth: 1,
-        borderColor: "#E5E7EB",
-      }}
-    >
-      <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mr-3">
-        <Feather name="user" size={21} color="#9CA3AF" />
-      </View>
-
-      <View className="flex-1">
-        <Text className="font-semibold text-[14px] text-gray-700">
-          Chưa có nhân viên
-        </Text>
-        <Text className="text-[12px] text-gray-500 mt-1">
-          Đơn hàng đang chờ nhân viên nhận việc.
-        </Text>
-      </View>
-    </View>
-  );
+  return upcoming ?? schedules[0];
 }
 
 export function WorkerSection({
@@ -114,20 +23,106 @@ export function WorkerSection({
 }: {
   schedules: BookingScheduleDetail[];
 }) {
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const displaySchedule = useMemo(
+    () => pickUpcomingSchedule(schedules),
+    [schedules],
+  );
+
+  if (!schedules.length) {
+    return null;
+  }
+
+  const isMultiple = schedules.length > 1;
+
   return (
     <View className="mb-5">
-      <SectionTitle icon="user">Nhân viên thực hiện</SectionTitle>
-      {schedules.length ? schedules.map((schedule) => (
-        schedule.worker ? (
-          <View key={schedule.id} className="mb-2">
-            <WorkerCard worker={schedule.worker} assignmentId={schedule.assignment_id} scheduledStart={schedule.scheduled_start} />
-          </View>
-        ) : (
-          <View key={schedule.id} className="mb-2"><NoWorkerCard /></View>
-        )
-      )) : (
-        <NoWorkerCard />
+      <SectionTitle icon="user">
+        {isMultiple ? "Buổi làm việc sắp tới" : "Buổi làm việc"}
+      </SectionTitle>
+
+      {displaySchedule && <ScheduleItemCard schedule={displaySchedule} />}
+
+      {isMultiple && (
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => setModalVisible(true)}
+          className="flex-row items-center justify-center mt-3 py-3 rounded-2xl"
+          style={{ backgroundColor: "#F0FDF4" }}
+        >
+          <Text className="font-bold text-[14px]" style={{ color: "#047857" }}>
+            Xem tất cả {schedules.length} buổi
+          </Text>
+          <Feather
+            name="chevron-right"
+            size={16}
+            color="#047857"
+            style={{ marginLeft: 4 }}
+          />
+        </TouchableOpacity>
       )}
+
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={{ flex: 1, backgroundColor: "rgba(17,24,39,0.45)" }}
+          activeOpacity={1}
+          onPress={() => setModalVisible(false)}
+        >
+          <View style={{ flex: 1 }} />
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View
+              style={{
+                backgroundColor: "#FFFFFF",
+                borderTopLeftRadius: 28,
+                borderTopRightRadius: 28,
+                maxHeight: "80%",
+                paddingBottom: 28,
+              }}
+            >
+              <View className="items-center pt-3 pb-1">
+                <View
+                  style={{
+                    width: 40,
+                    height: 4,
+                    borderRadius: 2,
+                    backgroundColor: "#E5E7EB",
+                  }}
+                />
+              </View>
+
+              <View className="flex-row items-center justify-between px-5 py-3">
+                <Text className="text-[16px] font-bold text-gray-900">
+                  Tất cả {schedules.length} buổi
+                </Text>
+                <TouchableOpacity onPress={() => setModalVisible(false)}>
+                  <Feather name="x" size={22} color="#111827" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView
+                className="px-5"
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 12 }}
+              >
+                {schedules.map((schedule) => (
+                  <View key={schedule.id} className="mb-3">
+                    <ScheduleItemCard schedule={schedule} />
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }

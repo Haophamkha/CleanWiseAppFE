@@ -56,9 +56,6 @@ const isEmptyValue = (value: any) =>
   value === "" ||
   (Array.isArray(value) && value.length === 0);
 
-// Trả về danh sách nhãn (label) của các field bắt buộc mà chưa có giá trị,
-// bỏ qua TEXTAREA (ghi chú), TASK_CHECKLIST và REPEATABLE_GROUP
-// (2 loại sau không dùng chung 1 kiểu "value" đơn giản nên xử lý riêng ở nơi gọi).
 export function getMissingRequiredFieldLabels(
   fields: FormField[],
   values: Record<string, any>,

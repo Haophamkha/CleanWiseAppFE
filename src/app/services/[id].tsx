@@ -237,6 +237,7 @@ export default function ServiceDetailScreen() {
                 estimatedPrice == null || missingRequiredAddress ? 0.6 : 1,
             }}
             activeOpacity={0.8}
+            disabled={estimatedPrice == null || missingRequiredAddress}
             onPress={handleGoToConfirm}
           >
             <Text className="text-white font-bold text-base">Đặt dịch vụ</Text>
