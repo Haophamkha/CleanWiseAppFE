@@ -1,15 +1,19 @@
 import { AddressSummaryCard } from "@/components/booking/AddressSummaryCard";
 import { ServiceOptionsSummary } from "@/components/booking/ServiceOptionsSummary";
 import { COLORS } from "@/components/service/formFieldShared";
-import { ROUTES } from "@/config/constants";
+import { BookingVoucherModal } from "@/components/voucher/BookingVoucherModal";
 import { useCreateBookingMutation } from "@/services/bookingApi";
 import { clearBookingDraft } from "@/store/bookingDraftSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import type {
+  UserVoucher,
+  ValidateVoucherResponse,
+} from "@/types/Voucher";
 import { formatVnd } from "@/utils/currency";
 import { calculateEstimatedPrice } from "@/utils/servicePricing";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Modal,
@@ -81,12 +85,19 @@ export default function BookingConfirmScreen() {
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CASH");
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
+  const [voucherModalVisible, setVoucherModalVisible] = useState(false);
+  const [selectedVoucher, setSelectedVoucher] = useState<UserVoucher | null>(
+    null,
+  );
+  const [voucherValidation, setVoucherValidation] =
+    useState<ValidateVoucherResponse | null>(null);
 
   const { service, values, addresses } = draft;
+  const serviceFields = service?.form_schema?.fields ?? [];
 
   // ĐỔI: dịch vụ chuyển nhà cần 2 địa chỉ (pickup_address + delivery_address);
   // các dịch vụ khác chỉ có 1 entry chung (key "address").
-  const isMovingService = service?.form_schema.address_count === 2;
+  const isMovingService = service?.form_schema?.address_count === 2;
   const pickupAddress =
     addresses?.pickup_address ?? Object.values(addresses ?? {})[0];
   const deliveryAddress = addresses?.delivery_address;
@@ -94,16 +105,33 @@ export default function BookingConfirmScreen() {
   // ĐỔI: loại lịch của dịch vụ — ONCE (mặc định) hoặc RECURRING_WEEKLY.
   // BE tự tính danh sách buổi làm việc cụ thể từ service_data theo loại này,
   // FE chỉ cần biết loại để hiển thị + validate đúng field bắt buộc.
-  const scheduleType: string = service?.form_schema.schedule_type ?? "ONCE";
+  const scheduleType: string = service?.form_schema?.schedule_type ?? "ONCE";
 
   const estimatedPrice = useMemo(() => {
     if (!service) return null;
     return calculateEstimatedPrice(
-      service.form_schema.fields,
+      serviceFields,
       service.pricing_config,
       values,
     );
   }, [service, values]);
+
+  const discountAmount = voucherValidation
+    ? Number(voucherValidation.discount_amount)
+    : 0;
+  const totalAmount = voucherValidation
+    ? Number(voucherValidation.total_amount)
+    : estimatedPrice;
+
+  const clearSelectedVoucher = () => {
+    setSelectedVoucher(null);
+    setVoucherValidation(null);
+  };
+
+  useEffect(() => {
+    setSelectedVoucher(null);
+    setVoucherValidation(null);
+  }, [estimatedPrice]);
 
   // ĐỔI: scheduledStart chỉ có ý nghĩa với lịch ONCE, dùng để hiển thị,
   // không còn dùng để build payload gửi lên (BE tự tính).
@@ -118,7 +146,7 @@ export default function BookingConfirmScreen() {
 
   const durationHours = useMemo(() => {
     if (!service) return 2;
-    return extractDurationHours(service.form_schema.fields, values);
+    return extractDurationHours(serviceFields, values);
   }, [service, values]);
 
   const scheduledEnd = useMemo(() => {
@@ -144,7 +172,7 @@ export default function BookingConfirmScreen() {
   }
 
   const buildServiceData = () => {
-    const allowedKeys = new Set(service.form_schema.fields.map((f) => f.key));
+    const allowedKeys = new Set(serviceFields.map((f) => f.key));
     return Object.fromEntries(
       Object.entries(values).filter(([k]) => allowedKeys.has(k)),
     );
@@ -201,7 +229,7 @@ export default function BookingConfirmScreen() {
     try {
       const serviceData = buildServiceData();
 
-      const missingFields = service.form_schema.fields
+      const missingFields = serviceFields
         .filter((field) => {
           const value = serviceData[field.key];
 
@@ -237,6 +265,7 @@ export default function BookingConfirmScreen() {
         delivery_address_id: isMovingService ? deliveryAddress?.id : undefined,
         service_data: serviceData,
         payment_method: paymentMethod,
+        voucher_code: selectedVoucher?.voucher.code,
         note:
           typeof values.note === "string" && values.note.trim()
             ? values.note.trim()
@@ -247,7 +276,7 @@ export default function BookingConfirmScreen() {
 
       if (paymentMethod === "BANK_TRANSFER") {
         router.replace({
-          pathname: "/booking/qr",
+            pathname: "/booking/qr" as any,
           params: {
             bookingId: String(result.id),
             code: result.booking_code,
@@ -262,20 +291,26 @@ export default function BookingConfirmScreen() {
         });
       }
     } catch (err: any) {
+      const voucherError = err?.data?.errors?.voucher_code;
       const message =
+        voucherError ||
         err?.data?.errors?.service_data ||
         err?.data?.service_data?.__extra__ ||
         err?.data?.message ||
         (typeof err?.data === "string" ? err.data : null) ||
         "Đặt lịch thất bại, vui lòng thử lại.";
 
-      Alert.alert("Không thể đặt lịch", String(message));
+      if (voucherError) clearSelectedVoucher();
+      Alert.alert(
+        voucherError ? "Voucher không còn hợp lệ" : "Không thể đặt lịch",
+        Array.isArray(message) ? message.join("\n") : String(message),
+      );
     }
   };
 
   // ĐỔI: loại thêm weekdays/package_duration khỏi "Chi tiết công việc" vì
   // đã hiển thị riêng ở "Thời gian làm việc" (cùng lý do với date/start_time).
-  const summaryFields = service.form_schema.fields.filter(
+  const summaryFields = serviceFields.filter(
     (f) =>
       f.key !== "date" &&
       f.key !== "start_time" &&
@@ -495,8 +530,13 @@ export default function BookingConfirmScreen() {
               </View>
               <View className="flex-row items-center justify-between mb-3">
                 <Text style={{ color: COLORS.textMuted }}>Giảm giá</Text>
-                <Text className="font-bold" style={{ color: COLORS.text }}>
-                  0 đ
+                <Text
+                  className="font-bold"
+                  style={{
+                    color: discountAmount > 0 ? COLORS.primary : COLORS.text,
+                  }}
+                >
+                  {discountAmount > 0 ? `-${formatVnd(discountAmount)}` : "0đ"}
                 </Text>
               </View>
 
@@ -515,34 +555,80 @@ export default function BookingConfirmScreen() {
                     className="font-extrabold text-[17px]"
                     style={{ color: COLORS.primary }}
                   >
-                    {estimatedPrice != null ? formatVnd(estimatedPrice) : "—"}
+                    {totalAmount != null ? formatVnd(totalAmount) : "—"}
                   </Text>
                 </View>
               </View>
 
-              <TouchableOpacity
-                onPress={() => router.push(ROUTES.VOUCHERS as any)}
-                activeOpacity={0.8}
-                className="flex-row items-center justify-between rounded-2xl px-4 py-3.5"
-                style={{
-                  backgroundColor: COLORS.primaryLight,
-                  borderWidth: 1,
-                  borderColor: COLORS.primaryBorder,
-                }}
-              >
-                <Text
-                  className="font-bold text-[14px]"
-                  style={{ color: COLORS.primary }}
-                >
-                  Thêm Voucher
-                </Text>
+              {selectedVoucher && voucherValidation ? (
                 <View
-                  className="w-6 h-6 rounded-full items-center justify-center"
+                  className="rounded-2xl px-4 py-3.5"
                   style={{ backgroundColor: COLORS.primary }}
                 >
-                  <Feather name="plus" size={14} color="#fff" />
+                  <View className="flex-row items-start">
+                    <View className="w-9 h-9 rounded-xl bg-white/20 items-center justify-center mr-3">
+                      <Feather name="tag" size={17} color="#FFFFFF" />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-white font-extrabold text-sm" numberOfLines={1}>
+                        {selectedVoucher.voucher.code}
+                      </Text>
+                      <Text className="text-emerald-100 text-xs mt-1" numberOfLines={1}>
+                        {selectedVoucher.voucher.name} · Giảm {formatVnd(discountAmount)}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View className="flex-row mt-3 pt-3 border-t border-white/20">
+                    <TouchableOpacity
+                      className="flex-1 items-center py-1"
+                      onPress={() => setVoucherModalVisible(true)}
+                    >
+                      <Text className="text-white font-bold text-xs">Đổi voucher</Text>
+                    </TouchableOpacity>
+                    <View className="w-px bg-white/20" />
+                    <TouchableOpacity
+                      className="flex-1 items-center py-1"
+                      onPress={clearSelectedVoucher}
+                    >
+                      <Text className="text-white font-bold text-xs">Bỏ voucher</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => setVoucherModalVisible(true)}
+                  disabled={estimatedPrice == null}
+                  activeOpacity={0.8}
+                  className="flex-row items-center justify-between rounded-2xl px-4 py-3.5"
+                  style={{
+                    backgroundColor: COLORS.primaryLight,
+                    borderWidth: 1,
+                    borderColor: COLORS.primaryBorder,
+                    opacity: estimatedPrice == null ? 0.55 : 1,
+                  }}
+                >
+                  <View className="flex-1 pr-3">
+                    <Text
+                      className="font-bold text-[14px]"
+                      style={{ color: COLORS.primary }}
+                    >
+                      Thêm Voucher
+                    </Text>
+                    {estimatedPrice == null && (
+                      <Text className="text-gray-400 text-[11px] mt-1">
+                        Voucher khả dụng sau khi dịch vụ có giá
+                      </Text>
+                    )}
+                  </View>
+                  <View
+                    className="w-6 h-6 rounded-full items-center justify-center"
+                    style={{ backgroundColor: COLORS.primary }}
+                  >
+                    <Feather name="plus" size={14} color="#fff" />
+                  </View>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
 
@@ -622,6 +708,18 @@ export default function BookingConfirmScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <BookingVoucherModal
+        visible={voucherModalVisible}
+        subtotalAmount={estimatedPrice ?? 0}
+        selectedVoucherId={selectedVoucher?.id}
+        onClose={() => setVoucherModalVisible(false)}
+        onApplied={(userVoucher, validation) => {
+          setSelectedVoucher(userVoucher);
+          setVoucherValidation(validation);
+        }}
+        onClear={clearSelectedVoucher}
+      />
 
       {/* Modal chọn phương thức thanh toán */}
       <Modal
@@ -727,8 +825,8 @@ export default function BookingConfirmScreen() {
             <Text className="text-gray-500 text-sm">Tổng tiền</Text>
 
             <Text className="text-emerald-700 font-bold text-lg">
-              {estimatedPrice != null
-                ? formatVnd(estimatedPrice)
+              {totalAmount != null
+                ? formatVnd(totalAmount)
                 : "Chờ báo giá"}
             </Text>
           </View>

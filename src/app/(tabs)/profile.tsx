@@ -127,7 +127,11 @@ export default function ProfileScreen() {
               onPress={() => router.push("/profile/address" as any)}
             />
 
-            <MenuListItem icon="heart" label="Nhân viên yêu thích" />
+            <MenuListItem
+              icon="heart"
+              label="Nhân viên yêu thích"
+              onPress={() => router.push(ROUTES.FAVORITE_WORKERS as any)}
+            />
 
             <MenuListItem
               icon="credit-card"

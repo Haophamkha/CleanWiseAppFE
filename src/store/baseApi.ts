@@ -38,10 +38,17 @@ axiosInstance.interceptors.request.use(async (config) => {
   }
 
   if (__DEV__) {
+    const loggedBody =
+      config.data &&
+      typeof config.data === "object" &&
+      Object.prototype.hasOwnProperty.call(config.data, "account_number")
+        ? { ...config.data, account_number: "[REDACTED]" }
+        : config.data;
+
     console.log("[REQUEST]", config.method?.toUpperCase(), config.url, {
       hasAuthHeader: !!config.headers?.Authorization,
       isFormData: config.data instanceof FormData,
-      body: config.data,
+      body: loggedBody,
     });
   }
 
@@ -126,6 +133,10 @@ export const baseApi = createApi({
     "Services",
     "Wallet",
     "WalletTransactions",
+    "FavoriteWorkers",
+    "WorkerProfile",
+    "PaymentMethods",
+    "BankCatalog",
   ],
 
   endpoints: () => ({}),

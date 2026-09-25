@@ -1,13 +1,28 @@
 import { COLORS } from "@/components/service/formFieldShared";
-import type { BookingScheduleDetail } from "@/types/Booking";
 import { useLazyGetAssignmentConversationQuery } from "@/services/chatApi";
+import {
+  useAddFavoriteWorkerMutation,
+  useGetWorkerProfileQuery,
+  useRemoveFavoriteWorkerMutation,
+} from "@/services/favoriteWorkerApi";
+import type { BookingScheduleDetail } from "@/types/Booking";
+import type { FavoriteWorker } from "@/types/FavoriteWorker";
+import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
-import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-type WorkerProfile = NonNullable<BookingScheduleDetail["worker"]> & {
+type WorkerProfile = (NonNullable<BookingScheduleDetail["worker"]> | FavoriteWorker) & {
   total_completed_jobs?: number;
   work_area?: string;
   skills?: string[];
@@ -53,9 +68,42 @@ function StatCard({
 }
 
 export default function WorkerProfileScreen() {
-  const { data, assignmentId } = useLocalSearchParams<{ id: string; data?: string; assignmentId?: string }>();
+  const { id, data, assignmentId } = useLocalSearchParams<{
+    id: string;
+    data?: string;
+    assignmentId?: string;
+  }>();
   const insets = useSafeAreaInsets();
+  const workerId = Number(id);
+  const routeWorker = useMemo(() => {
+    try {
+      return data ? (JSON.parse(data) as WorkerProfile) : null;
+    } catch {
+      return null;
+    }
+  }, [data]);
+  const {
+    data: fetchedWorker,
+    isLoading: loadingWorker,
+    isError: workerError,
+    refetch,
+  } = useGetWorkerProfileQuery(workerId, {
+    skip: !Number.isInteger(workerId) || workerId <= 0,
+  });
   const [getChat, { isFetching: openingChat }] = useLazyGetAssignmentConversationQuery();
+  const [addFavorite, { isLoading: addingFavorite }] = useAddFavoriteWorkerMutation();
+  const [removeFavorite, { isLoading: removingFavorite }] = useRemoveFavoriteWorkerMutation();
+  const [favoriteOverride, setFavoriteOverride] = useState<boolean | null>(null);
+  const [reconcilingFavorite, setReconcilingFavorite] = useState(false);
+
+  const worker = (fetchedWorker ?? routeWorker) as WorkerProfile | null;
+  const liked = favoriteOverride ?? worker?.is_favorite ?? false;
+  const updatingFavorite =
+    addingFavorite || removingFavorite || reconcilingFavorite;
+
+  useEffect(() => {
+    setFavoriteOverride(null);
+  }, [fetchedWorker?.is_favorite]);
 
   const openChat = async () => {
     const selectedAssignment = Number(assignmentId);
@@ -74,28 +122,93 @@ export default function WorkerProfileScreen() {
     }
   };
 
-  let worker: WorkerProfile | null = null;
-  try {
-    worker = data ? (JSON.parse(data) as WorkerProfile) : null;
-  } catch {
-    worker = null;
-  }
+  const toggleFavorite = async () => {
+    if (!Number.isInteger(workerId) || workerId <= 0 || updatingFavorite) return;
 
-  const [liked, setLiked] = useState(false);
+    const nextLiked = !liked;
+    setFavoriteOverride(nextLiked);
+
+    const showSuccess = () => {
+      if (nextLiked) {
+        showSuccessToast(
+          "Đã thêm vào yêu thích",
+          "Bạn có thể xem lại trong mục Tài khoản.",
+        );
+      } else {
+        showSuccessToast("Đã bỏ yêu thích");
+      }
+    };
+
+    // Phản hồi ngay trên giao diện; đồng bộ BE tiếp tục chạy nền.
+    showSuccess();
+
+    const reconcileFavoriteState = async () => {
+      // DELETE/PUT có thể đã commit sau khi response phía app bị timeout.
+      // Chờ ngắn và đọc lại vài lần để không báo lỗi giả vì race condition.
+      const retryDelays = [250, 650, 1200];
+      for (const delay of retryDelays) {
+        await new Promise<void>((resolve) => setTimeout(resolve, delay));
+        try {
+          const refreshedWorker = await refetch().unwrap();
+          if (refreshedWorker.is_favorite === nextLiked) return true;
+        } catch {
+          // Tiếp tục lần đối soát kế tiếp nếu GET tạm thời cũng lỗi.
+        }
+      }
+      return false;
+    };
+
+    try {
+      if (nextLiked) {
+        await addFavorite(workerId).unwrap();
+      } else {
+        await removeFavorite(workerId).unwrap();
+      }
+    } catch (error: any) {
+      setReconcilingFavorite(true);
+      try {
+        if (await reconcileFavoriteState()) {
+          setFavoriteOverride(nextLiked);
+          return;
+        }
+      } finally {
+        setReconcilingFavorite(false);
+      }
+
+      setFavoriteOverride(null);
+      showErrorToast(
+        "Không thể cập nhật",
+        error?.data?.message ?? "Vui lòng kiểm tra kết nối và thử lại.",
+      );
+    }
+  };
+
+  if (loadingWorker && !routeWorker) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text className="text-gray-400 mt-3">Đang tải hồ sơ nhân viên...</Text>
+      </View>
+    );
+  }
 
   if (!worker) {
     return (
       <View className="flex-1 items-center justify-center bg-white px-6">
         <Feather name="alert-circle" size={36} color="#DC2626" />
         <Text className="text-gray-900 font-semibold mt-4">
-          Không tìm thấy thông tin nhân viên
+          {workerError
+            ? "Không tải được thông tin nhân viên"
+            : "Không tìm thấy thông tin nhân viên"}
         </Text>
 
         <TouchableOpacity
           className="mt-5 bg-emerald-700 rounded-xl px-6 py-3"
-          onPress={() => router.back()}
+          onPress={() => (workerError ? refetch() : router.back())}
         >
-          <Text className="text-white font-bold">Quay lại</Text>
+          <Text className="text-white font-bold">
+            {workerError ? "Thử lại" : "Quay lại"}
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -302,9 +415,10 @@ export default function WorkerProfileScreen() {
                 borderColor: "#E5E7EB",
               }}
               className="rounded-2xl py-3.5 items-center justify-center"
-              onPress={() => {
-                setLiked((prev) => !prev);
-              }}
+              onPress={toggleFavorite}
+              disabled={updatingFavorite}
+              accessibilityRole="button"
+              accessibilityLabel={liked ? "Bỏ yêu thích" : "Thêm vào yêu thích"}
             >
               <Feather
                 name="heart"

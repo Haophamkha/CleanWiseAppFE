@@ -368,12 +368,7 @@ export default function WalletScreen() {
 
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={() =>
-              Alert.alert(
-                "Sắp ra mắt",
-                "Tính năng thêm thẻ ngân hàng sẽ sớm được cập nhật.",
-              )
-            }
+            onPress={() => router.push("/profile/payment-methods" as any)}
             className="flex-row items-center rounded-2xl px-4 py-4"
             style={{
               backgroundColor: COLORS.white,
@@ -397,13 +392,13 @@ export default function WalletScreen() {
                 className="font-bold text-[15px]"
                 style={{ color: COLORS.text }}
               >
-                Thêm thẻ ngân hàng
+                Tài khoản ngân hàng
               </Text>
               <Text
                 className="text-[12.5px] mt-0.5"
                 style={{ color: COLORS.textMuted }}
               >
-                Liên kết thẻ để rút tiền nhanh hơn
+                Quản lý tài khoản nhận hoàn tiền và rút ví
               </Text>
             </View>
             <Feather name="chevron-right" size={18} color={COLORS.textMuted} />

@@ -39,3 +39,15 @@ export type UserVoucher = {
   is_usable: boolean;
   created_at: string;
 };
+
+export type ValidateVoucherRequest = {
+  code: string;
+  subtotal_amount: string | number;
+};
+
+export type ValidateVoucherResponse = {
+  voucher: Voucher;
+  subtotal_amount: string;
+  discount_amount: string;
+  total_amount: string;
+};

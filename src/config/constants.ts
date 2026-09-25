@@ -10,4 +10,6 @@ export const ROUTES = {
   EDIT_PROFILE: "/profile/edit",
   VOUCHERS: "/vouchers",
   WALLET: "/profile/wallets/wallet",
+  FAVORITE_WORKERS: "/profile/favorite-workers",
+  PAYMENT_METHODS: "/profile/payment-methods",
 } as const;
