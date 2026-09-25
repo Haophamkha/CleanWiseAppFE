@@ -1,5 +1,10 @@
 import { baseApi } from "@/store/baseApi";
-import type { UserVoucher, Voucher } from "@/types/Voucher";
+import type {
+  UserVoucher,
+  ValidateVoucherRequest,
+  ValidateVoucherResponse,
+  Voucher,
+} from "@/types/Voucher";
 
 const unwrap = (response: any) =>
   response?.data?.data ?? response?.data ?? response;
@@ -31,6 +36,17 @@ export const voucherApi = baseApi.injectEndpoints({
       transformResponse: unwrap,
       invalidatesTags: ["PublicVouchers", "MyVouchers"],
     }),
+    validateVoucher: builder.mutation<
+      ValidateVoucherResponse,
+      ValidateVoucherRequest
+    >({
+      query: (body) => ({
+        url: "/api/customer/vouchers/validate/",
+        method: "POST",
+        data: body,
+      }),
+      transformResponse: unwrap,
+    }),
   }),
   overrideExisting: false,
 });
@@ -39,4 +55,5 @@ export const {
   useGetPublicVouchersQuery,
   useGetMyVouchersQuery,
   useClaimVoucherByCodeMutation,
+  useValidateVoucherMutation,
 } = voucherApi;

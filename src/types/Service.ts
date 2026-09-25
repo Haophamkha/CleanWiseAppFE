@@ -42,6 +42,7 @@ export type FormField = {
 export type FormSchema = {
   version: number;
   address_count: number;
+  schedule_type?: "ONCE" | "RECURRING_WEEKLY";
   addresses?: { key: string; label: string; required: boolean }[];
   task_checklist?: string;
   // ĐỔI: "ONCE" (mặc định) hoặc "RECURRING_WEEKLY" — quyết định

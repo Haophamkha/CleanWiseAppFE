@@ -26,6 +26,7 @@ export type BookingWorker = {
   experience_years: number;
   average_rating: string;
   total_completed_jobs: number;
+  is_favorite: boolean;
 };
 
 export type BookingScheduleImage = {
@@ -127,6 +128,10 @@ export type BookingDetail = {
     discount_amount: string;
     total_amount: string | null;
     pricing_config_snapshot?: Record<string, any>;
+    voucher?: {
+      code: string;
+      name: string;
+    } | null;
   } | null;
   subtotal_amount: string | null;
   discount_amount: string;
