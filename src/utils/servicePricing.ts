@@ -87,12 +87,26 @@ export function getItemTotalPrice(
   return total;
 }
 
+/**
+ * Giá dịch vụ 1 LẦN hoặc REPEATABLE_GROUP (KHÔNG dùng cho dịch vụ định kỳ
+ * pricing_unit === "PER_SESSION" — dùng calculateRecurringPrice bên dưới,
+ * vì cách tính hoàn toàn khác: phải nhân theo số buổi + trừ % giảm gói).
+ */
 export function calculateEstimatedPrice(
   fields: FormField[],
   pricingConfig: PricingConfig | undefined,
   values: Record<string, any>,
 ): number | null {
   if (!pricingConfig) return null;
+
+  // ĐỔI: dịch vụ định kỳ tính theo buổi có cách tính riêng, không cộng
+  // dồn base_prices như dịch vụ 1 lần được.
+  if (pricingConfig.pricing_unit === "PER_SESSION") {
+    return (
+      calculateRecurringPrice(fields, pricingConfig, values)?.subtotal ?? null
+    );
+  }
+
   let total = 0;
   let hasBase = false;
 
@@ -183,4 +197,99 @@ export function getStartingPrice(pricingConfig?: PricingConfig): number | null {
   collect(pricingConfig?.price_matrix);
   collect(pricingConfig?.unit_prices);
   return numbers.length ? Math.min(...numbers) : null;
+}
+
+// ============================================================
+// DỊCH VỤ ĐỊNH KỲ (pricing_unit === "PER_SESSION")
+// ============================================================
+
+const WEEKDAY_KEYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+const PACKAGE_WEEKS: Record<string, number> = {
+  "1_MONTH": 4,
+  "2_MONTHS": 8,
+  "3_MONTHS": 12,
+  "6_MONTHS": 24,
+};
+
+export interface RecurringPriceResult {
+  unitPrice: number;
+  sessionsCount: number;
+  discountPercent: number;
+  grossSubtotal: number;
+  subtotal: number;
+}
+
+/**
+ * Tính giá cho dịch vụ định kỳ (pricing_unit === "PER_SESSION"), PHẢI khớp
+ * 100% với backend (apps/bookings/booking_service.py::create_booking +
+ * get_package_discount_percent), vì đây chỉ là số hiển thị tạm tính trước
+ * khi khách bấm đặt — giá thật vẫn do BE tính lại và chốt trong booking.
+ *
+ * subtotal = unit_price * sessions_count * (1 - discount_percent / 100)
+ * sessions_count = số thứ đã chọn/tuần * số tuần của package_duration
+ *
+ * Trả về null nếu chưa đủ thông tin (chưa chọn duration/weekdays/package).
+ */
+export function calculateRecurringPrice(
+  fields: FormField[],
+  pricingConfig: PricingConfig | undefined,
+  values: Record<string, any>,
+): RecurringPriceResult | null {
+  if (
+    !pricingConfig?.base_prices ||
+    pricingConfig.pricing_unit !== "PER_SESSION"
+  ) {
+    return null;
+  }
+
+  const durationField = findFieldByOptionValues(
+    fields,
+    Object.keys(pricingConfig.base_prices),
+  );
+  const durationValue = durationField ? values[durationField.key] : undefined;
+  const basePrice = durationValue
+    ? (pricingConfig.base_prices as Record<string, number>)[durationValue]
+    : undefined;
+  if (typeof basePrice !== "number") return null;
+
+  const weekdaysField = fields.find((f) => f.type === "WEEKDAY_MULTI_SELECT");
+  const weekdays: string[] = weekdaysField
+    ? (values[weekdaysField.key] ?? [])
+    : [];
+  const validWeekdays = weekdays.filter((d) => WEEKDAY_KEYS.includes(d));
+  if (validWeekdays.length === 0) return null;
+
+  const packageField = fields.find((f) => f.key === "package_duration");
+  const packageValue = packageField ? values[packageField.key] : undefined;
+  const weeks = packageValue ? PACKAGE_WEEKS[packageValue] : undefined;
+  if (!weeks) return null;
+
+  let unitPrice = basePrice;
+  if (pricingConfig.additional_services) {
+    const additionalField = fields.find((f) => f.type === "MULTI_SELECT");
+    const selected: string[] = additionalField
+      ? (values[additionalField.key] ?? [])
+      : [];
+    selected.forEach((v) => {
+      const price = pricingConfig.additional_services?.[v];
+      if (typeof price === "number") unitPrice += price;
+    });
+  }
+
+  const sessionsCount = validWeekdays.length * weeks;
+  const grossSubtotal = unitPrice * sessionsCount;
+
+  let discountPercent = 0;
+  const discountMap = pricingConfig.package_discount_percent;
+  if (
+    discountMap &&
+    packageValue &&
+    typeof discountMap[packageValue] === "number"
+  ) {
+    discountPercent = discountMap[packageValue];
+  }
+
+  const subtotal = Math.round(grossSubtotal * (1 - discountPercent / 100));
+
+  return { unitPrice, sessionsCount, discountPercent, grossSubtotal, subtotal };
 }

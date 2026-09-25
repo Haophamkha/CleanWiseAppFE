@@ -10,7 +10,10 @@ import type {
   ValidateVoucherResponse,
 } from "@/types/Voucher";
 import { formatVnd } from "@/utils/currency";
-import { calculateEstimatedPrice } from "@/utils/servicePricing";
+import {
+  calculateEstimatedPrice,
+  calculateRecurringPrice,
+} from "@/utils/servicePricing";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -35,7 +38,6 @@ const PAYMENT_METHODS: {
   { value: "BANK_TRANSFER", label: "Chuyển khoản", icon: "bank" },
 ];
 
-// ĐỔI: label hiển thị cho weekdays / package_duration của dịch vụ định kỳ.
 const WEEKDAY_LABELS: Record<string, string> = {
   MON: "T2",
   TUE: "T3",
@@ -72,7 +74,6 @@ function capitalizeFirst(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-// ĐỔI: format danh sách thứ trong tuần cho dịch vụ định kỳ.
 function formatWeekdays(weekdays: string[] | undefined): string {
   if (!weekdays || weekdays.length === 0) return "—";
   return weekdays.map((d) => WEEKDAY_LABELS[d] ?? d).join(", ");
@@ -95,17 +96,23 @@ export default function BookingConfirmScreen() {
   const { service, values, addresses } = draft;
   const serviceFields = service?.form_schema?.fields ?? [];
 
-  // ĐỔI: dịch vụ chuyển nhà cần 2 địa chỉ (pickup_address + delivery_address);
-  // các dịch vụ khác chỉ có 1 entry chung (key "address").
+
   const isMovingService = service?.form_schema?.address_count === 2;
   const pickupAddress =
     addresses?.pickup_address ?? Object.values(addresses ?? {})[0];
   const deliveryAddress = addresses?.delivery_address;
 
-  // ĐỔI: loại lịch của dịch vụ — ONCE (mặc định) hoặc RECURRING_WEEKLY.
-  // BE tự tính danh sách buổi làm việc cụ thể từ service_data theo loại này,
-  // FE chỉ cần biết loại để hiển thị + validate đúng field bắt buộc.
+
   const scheduleType: string = service?.form_schema?.schedule_type ?? "ONCE";
+
+  const recurringPrice = useMemo(() => {
+    if (!service) return null;
+    return calculateRecurringPrice(
+      service.form_schema.fields,
+      service.pricing_config,
+      values,
+    );
+  }, [service, values]);
 
   const estimatedPrice = useMemo(() => {
     if (!service) return null;
@@ -116,9 +123,26 @@ export default function BookingConfirmScreen() {
     );
   }, [service, values]);
 
-  const discountAmount = voucherValidation
+  // Giá trước khi giảm — dịch vụ định kỳ lấy grossSubtotal, dịch vụ 1 lần
+  // (không có discount gói) thì bằng chính estimatedPrice.
+  const grossPrice = recurringPrice
+    ? recurringPrice.grossSubtotal
+    : estimatedPrice;
+
+  // ĐỔI: discountAmount hiển thị giờ gồm 2 phần cộng dồn — giảm giá gói định
+  // kỳ (packageDiscount, nếu có) và giảm giá voucher (voucherDiscount, nếu đã
+  // áp dụng). estimatedPrice vốn đã là giá SAU giảm giá gói (calculateEstimatedPrice
+  // trả thẳng recurringPrice.subtotal cho dịch vụ PER_SESSION — dùng làm
+  // subtotalAmount khi validate voucher bên dưới), nên totalAmount không cộng
+  // packageDiscount lần nữa — chỉ trừ voucher như cũ.
+  const packageDiscount = recurringPrice
+    ? recurringPrice.grossSubtotal - recurringPrice.subtotal
+    : 0;
+  const voucherDiscount = voucherValidation
     ? Number(voucherValidation.discount_amount)
     : 0;
+  const discountAmount = packageDiscount + voucherDiscount;
+
   const totalAmount = voucherValidation
     ? Number(voucherValidation.total_amount)
     : estimatedPrice;
@@ -254,11 +278,7 @@ export default function BookingConfirmScreen() {
         return;
       }
 
-      // =========================
-      // BUILD PAYLOAD
-      // ĐỔI: bỏ hẳn "schedules" — BE tự sinh từ service_data.
-      // Thêm delivery_address_id khi là dịch vụ chuyển nhà.
-      // =========================
+
       const payload = {
         service_id: service.id,
         address_id: pickupAddress.id,
@@ -308,8 +328,6 @@ export default function BookingConfirmScreen() {
     }
   };
 
-  // ĐỔI: loại thêm weekdays/package_duration khỏi "Chi tiết công việc" vì
-  // đã hiển thị riêng ở "Thời gian làm việc" (cùng lý do với date/start_time).
   const summaryFields = serviceFields.filter(
     (f) =>
       f.key !== "date" &&
@@ -523,13 +541,23 @@ export default function BookingConfirmScreen() {
               </Text>
 
               <View className="flex-row items-center justify-between mb-2">
-                <Text style={{ color: COLORS.textMuted }}>Giá dịch vụ</Text>
+                <Text style={{ color: COLORS.textMuted }}>
+                  Giá dịch vụ
+                  {recurringPrice
+                    ? ` (${recurringPrice.sessionsCount} buổi)`
+                    : ""}
+                </Text>
                 <Text className="font-bold" style={{ color: COLORS.text }}>
-                  {estimatedPrice != null ? formatVnd(estimatedPrice) : "—"}
+                  {grossPrice != null ? formatVnd(grossPrice) : "—"}
                 </Text>
               </View>
               <View className="flex-row items-center justify-between mb-3">
-                <Text style={{ color: COLORS.textMuted }}>Giảm giá</Text>
+                <Text style={{ color: COLORS.textMuted }}>
+                  Giảm giá
+                  {recurringPrice && recurringPrice.discountPercent > 0
+                    ? ` (${recurringPrice.discountPercent}%)`
+                    : ""}
+                </Text>
                 <Text
                   className="font-bold"
                   style={{
@@ -574,7 +602,7 @@ export default function BookingConfirmScreen() {
                         {selectedVoucher.voucher.code}
                       </Text>
                       <Text className="text-emerald-100 text-xs mt-1" numberOfLines={1}>
-                        {selectedVoucher.voucher.name} · Giảm {formatVnd(discountAmount)}
+                        {selectedVoucher.voucher.name} · Giảm {formatVnd(voucherDiscount)}
                       </Text>
                     </View>
                   </View>

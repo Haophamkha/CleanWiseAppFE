@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS, getSelectedOption } from "./formFieldShared";
 
 type Values = Record<string, any>;
@@ -39,6 +39,7 @@ export function RepeatableItemsFooter({
   const [expanded, setExpanded] = useState(false);
   const isAuthenticated = !!useAppSelector((state) => state.auth.user);
   const displayedSubmitLabel = isAuthenticated ? submitLabel : "Đăng nhập ngay";
+  const insets = useSafeAreaInsets();
 
   const itemFields = groupField.item_fields ?? [];
   const categoryField = itemFields[0];
@@ -205,29 +206,30 @@ export function RepeatableItemsFooter({
         )}
 
         {/* Bottom */}
-        <SafeAreaView edges={["bottom"]}>
-          <View className="px-6 pt-4 pb-2 border-t border-gray-100">
-            <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-gray-500 text-sm">Tổng tiền</Text>
+        <View
+          className="px-6 pt-4 border-t border-gray-100"
+          style={{ paddingBottom: insets.bottom + 12 }}
+        >
+          <View className="flex-row items-center justify-between mb-3">
+            <Text className="text-gray-500 text-sm">Tổng tiền</Text>
 
-              <Text className="text-emerald-700 font-bold text-lg">
-                {items.length > 0 ? formatVnd(totalPrice) : "Chưa đủ thông tin"}
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              className="bg-emerald-700 rounded-xl py-4 items-center"
-              style={{ opacity: submitDisabled ? 0.6 : 1 }}
-              activeOpacity={0.8}
-              onPress={onSubmit}
-              disabled={submitDisabled}
-            >
-              <Text className="text-white font-bold text-base">
-                {displayedSubmitLabel}
-              </Text>
-            </TouchableOpacity>
+            <Text className="text-emerald-700 font-bold text-lg">
+              {items.length > 0 ? formatVnd(totalPrice) : "Chưa đủ thông tin"}
+            </Text>
           </View>
-        </SafeAreaView>
+
+          <TouchableOpacity
+            className="bg-emerald-700 rounded-xl py-4 items-center"
+            style={{ opacity: submitDisabled ? 0.6 : 1 }}
+            activeOpacity={0.8}
+            onPress={onSubmit}
+            disabled={submitDisabled}
+          >
+            <Text className="text-white font-bold text-base">
+              {displayedSubmitLabel}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </>
   );

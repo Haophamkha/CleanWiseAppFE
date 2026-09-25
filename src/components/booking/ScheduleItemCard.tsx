@@ -101,26 +101,28 @@ function WorkerRow({
       {worker.avatar ? (
         <Image
           source={{ uri: worker.avatar }}
-          className="w-11 h-11 rounded-full"
+          className="w-16 h-16 rounded-full"
         />
       ) : (
-        <View className="w-11 h-11 rounded-full bg-emerald-100 items-center justify-center">
-          <Feather name="user" size={18} color={COLORS.primary} />
+        <View className="w-16 h-16 rounded-full bg-emerald-100 items-center justify-center">
+          <Feather name="user" size={24} color={COLORS.primary} />
         </View>
       )}
 
       <View className="flex-1 ml-3">
         <Text
-          className="font-semibold text-[14px] text-gray-900"
+          className="font-semibold text-[16px] text-gray-900"
           numberOfLines={1}
         >
           {fullName}
         </Text>
-        <Text className="text-[12px] text-gray-500">Nhân viên thực hiện</Text>
+        <Text className="text-[13px] text-gray-500 mt-0.5">
+          Nhân viên thực hiện
+        </Text>
       </View>
 
       {!!assignmentId && (
-        <Feather name="chevron-right" size={18} color="#9CA3AF" />
+        <Feather name="chevron-right" size={20} color="#9CA3AF" />
       )}
     </View>
   );
@@ -151,15 +153,15 @@ function WorkerRow({
 function NoWorkerRow() {
   return (
     <View className="flex-row items-center mt-3 pt-3 border-t border-gray-100">
-      <View className="w-11 h-11 rounded-full bg-gray-100 items-center justify-center">
-        <Feather name="user" size={18} color="#9CA3AF" />
+      <View className="w-16 h-16 rounded-full bg-gray-100 items-center justify-center">
+        <Feather name="user" size={24} color="#9CA3AF" />
       </View>
 
       <View className="flex-1 ml-3">
-        <Text className="font-semibold text-[14px] text-gray-700">
+        <Text className="font-semibold text-[16px] text-gray-700">
           Chưa có nhân viên
         </Text>
-        <Text className="text-[12px] text-gray-500">
+        <Text className="text-[13px] text-gray-500 mt-0.5">
           Đang chờ nhân viên nhận việc
         </Text>
       </View>
@@ -169,8 +171,10 @@ function NoWorkerRow() {
 
 export function ScheduleItemCard({
   schedule,
+  onPress,
 }: {
   schedule: BookingScheduleDetail;
+  onPress?: (schedule: BookingScheduleDetail) => void;
 }) {
   const { weekday, dateStr, startTime, endTime } = formatDateRange(
     schedule.scheduled_start,
@@ -178,7 +182,9 @@ export function ScheduleItemCard({
   );
 
   return (
-    <View
+    <TouchableOpacity
+      activeOpacity={onPress ? 0.85 : 1}
+      onPress={onPress ? () => onPress(schedule) : undefined}
       className="rounded-2xl p-4"
       style={{
         backgroundColor: "#FFFFFF",
@@ -186,23 +192,23 @@ export function ScheduleItemCard({
         borderColor: "#E5E7EB",
       }}
     >
-      <View className="flex-row items-center justify-between mb-1">
-        <Text className="font-bold text-[13px] text-gray-500">
+      <View className="flex-row items-center justify-between mb-2">
+        <Text className="font-bold text-[15px] text-gray-500">
           Buổi {schedule.sequence_no}
         </Text>
         <StatusBadge status={schedule.status} />
       </View>
 
-      <View className="flex-row items-center mt-1">
-        <Feather name="calendar" size={15} color={COLORS.primary} />
-        <Text className="ml-2 text-[14px] font-semibold text-gray-900">
+      <View className="flex-row items-center mt-1.5">
+        <Feather name="calendar" size={18} color={COLORS.primary} />
+        <Text className="ml-2 text-[16px] font-semibold text-gray-900">
           {weekday}, {dateStr}
         </Text>
       </View>
 
-      <View className="flex-row items-center mt-1.5">
-        <Feather name="clock" size={15} color={COLORS.primary} />
-        <Text className="ml-2 text-[13px] text-gray-600">
+      <View className="flex-row items-center mt-2">
+        <Feather name="clock" size={18} color={COLORS.primary} />
+        <Text className="ml-2 text-[15px] text-gray-600">
           {startTime} - {endTime}
         </Text>
       </View>
@@ -224,6 +230,6 @@ export function ScheduleItemCard({
       ) : (
         <NoWorkerRow />
       )}
-    </View>
+    </TouchableOpacity>
   );
 }

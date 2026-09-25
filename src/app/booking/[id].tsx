@@ -2,11 +2,13 @@ import { BookingBottomBar } from "@/components/booking/BookingBottomBar";
 import { BookingHeader } from "@/components/booking/BookingHeader";
 import { BookingProgressBar } from "@/components/booking/BookingProgressBar";
 import { CancelBookingModal } from "@/components/booking/CancelBookingModal";
+import { PackageScheduleSection } from "@/components/booking/PackageScheduleSection";
 import { ReceiptCard } from "@/components/booking/ReceiptCard";
+import { ReviewFeedbackButtons } from "@/components/booking/ReviewFeedbackButtons";
 import { ScheduleCard } from "@/components/booking/ScheduleCard";
 import { SectionTitle } from "@/components/booking/SectionTitle";
 import { ServiceOptionsSummary } from "@/components/booking/ServiceOptionsSummary";
-import { WorkerSection } from "@/components/booking/WorkerSection";
+import { SingleScheduleSection } from "@/components/booking/SingleScheduleSection";
 import { COLORS } from "@/components/service/formFieldShared";
 import {
   useCancelBookingMutation,
@@ -25,8 +27,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-// Khớp với CANCELLABLE_STATUSES bên BE (booking_service.py):
-// chỉ PENDING và ASSIGNED mới được hủy.
 const CANCELLABLE_STATUSES = ["PENDING", "ASSIGNED"];
 
 export default function BookingDetailScreen() {
@@ -74,13 +74,13 @@ export default function BookingDetailScreen() {
     );
   }
 
-  const schedule = booking.schedules[0];
+  const isPackage = booking.schedules.length > 1;
+  const singleSchedule = booking.schedules[0];
 
-  // Khớp thêm điều kiện BE: không cho hủy nếu có buổi đang IN_PROGRESS,
-  // dù status tổng của booking vẫn đang PENDING/ASSIGNED.
   const hasInProgressSchedule = booking.schedules.some(
     (s) => s.status === "IN_PROGRESS",
   );
+
   const isCancellable =
     CANCELLABLE_STATUSES.includes(booking.status) && !hasInProgressSchedule;
 
@@ -125,14 +125,26 @@ export default function BookingDetailScreen() {
       >
         <BookingProgressBar status={booking.status} />
 
-        {schedule && (
-          <ScheduleCard
-            start={schedule.scheduled_start}
-            end={schedule.scheduled_end}
-          />
+        {isPackage ? (
+          <PackageScheduleSection schedules={booking.schedules} />
+        ) : (
+          <>
+            {singleSchedule && (
+              <ScheduleCard
+                start={singleSchedule.scheduled_start}
+                end={singleSchedule.scheduled_end}
+              />
+            )}
+            {singleSchedule && (
+              <SingleScheduleSection schedule={singleSchedule} />
+            )}
+            {singleSchedule?.status === "COMPLETED" && (
+              <View className="mb-5">
+                <ReviewFeedbackButtons />
+              </View>
+            )}
+          </>
         )}
-
-        <WorkerSection schedules={booking.schedules} />
         <View className="mb-5 bg-white rounded-2xl border border-gray-100 p-4">
           <SectionTitle icon="map-pin">
             {booking.delivery_address ? "Địa chỉ chuyển đi" : "Địa chỉ"}
@@ -180,9 +192,8 @@ export default function BookingDetailScreen() {
           </View>
         )}
 
-        {/* Chi tiết công việc */}
         <View className="mb-5">
-          <SectionTitle icon="clipboard">Chi tiết công việc</SectionTitle>
+          <SectionTitle icon="clipboard">Thanh toán</SectionTitle>
 
           <ServiceOptionsSummary
             fields={booking.form_schema?.fields ?? []}

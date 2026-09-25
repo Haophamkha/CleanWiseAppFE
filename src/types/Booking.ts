@@ -7,17 +7,11 @@ export type PaymentStatus =
   | "CANCELLED"
   | "REFUNDED";
 
-// ĐỔI: xoá BookingScheduleInput — BE không còn nhận `schedules` từ
-// client nữa (tự sinh từ service_data qua schedule_builder.py).
-
 export type CreateBookingRequest = {
   service_id: number;
   address_id: number;
-  // ĐỔI: thêm delivery_address_id — chỉ cần khi dịch vụ có address_count = 2
-  // (ví dụ chuyển nhà). BE tự validate bắt buộc/không bắt buộc theo form_schema.
   delivery_address_id?: number;
   service_data: Record<string, any>;
-  // ĐỔI: bỏ field schedules — BE tự tính lịch làm việc.
   note?: string;
   voucher_code?: string;
   payment_method: PaymentMethod;
@@ -35,6 +29,14 @@ export type BookingWorker = {
   is_favorite: boolean;
 };
 
+export type BookingScheduleImage = {
+  id: number;
+  image: string;
+  image_type: "BEFORE" | "AFTER" | "ISSUE" | "OTHER";
+  note: string | null;
+  created_at: string;
+};
+
 export type BookingScheduleDetail = {
   id: number;
   assignment_id: number | null;
@@ -47,6 +49,7 @@ export type BookingScheduleDetail = {
   status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "MISSED";
   note: string | null;
   worker: BookingWorker | null;
+  images?: BookingScheduleImage[];
 };
 
 export type BookingStatus =
