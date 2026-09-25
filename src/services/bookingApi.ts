@@ -22,7 +22,7 @@ export const bookingApi = baseApi.injectEndpoints({
         timeout: 30000,
       }),
       transformResponse: unwrap,
-      invalidatesTags: ["Bookings"],
+      invalidatesTags: ["Bookings", "MyVouchers"],
     }),
 
     // ============================================================
@@ -104,6 +104,7 @@ export const bookingApi = baseApi.injectEndpoints({
         "Bookings",
         "Wallet",
         "WalletTransactions",
+        "MyVouchers",
       ],
     }),
   }),

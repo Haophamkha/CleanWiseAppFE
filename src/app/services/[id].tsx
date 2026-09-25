@@ -38,6 +38,10 @@ export default function ServiceDetailScreen() {
 
   const [values, setValues] = useState<Record<string, any>>({});
 
+  // Dữ liệu dịch vụ cũ có thể chưa có form_schema/fields. Luôn chuẩn hóa
+  // thành mảng để màn hình chi tiết không bị crash khi render.
+  const serviceFields = service?.form_schema?.fields ?? [];
+
   const handleChange = (key: string, value: any) => {
     setValues((prev) => ({ ...prev, [key]: value }));
   };
@@ -45,7 +49,7 @@ export default function ServiceDetailScreen() {
   // Danh sách dòng địa chỉ cần chọn: lấy từ form_schema.addresses,
   // nếu dịch vụ không khai báo (mặc định) thì tạo 1 dòng chung.
   const addressEntries =
-    service?.form_schema.addresses ??
+    service?.form_schema?.addresses ??
     (service
       ? [{ key: "address", label: "Địa chỉ thực hiện dịch vụ", required: true }]
       : []);
@@ -68,7 +72,7 @@ export default function ServiceDetailScreen() {
     if (!service) return;
 
     const missing = getMissingRequiredFieldLabels(
-      service.form_schema.fields,
+      serviceFields,
       values,
       addressEntries,
     );
@@ -130,12 +134,12 @@ export default function ServiceDetailScreen() {
 
   const visual = getServiceVisual(service.section_code);
   const estimatedPrice = calculateEstimatedPrice(
-    service.form_schema.fields,
+    serviceFields,
     service.pricing_config,
     values,
   );
 
-  const groupField = service.form_schema.fields.find(
+  const groupField = serviceFields.find(
     (f) => f.type === "REPEATABLE_GROUP",
   );
   const groupItems: Record<string, any>[] = groupField
@@ -201,10 +205,10 @@ export default function ServiceDetailScreen() {
           ))}
 
           <FormSchemaRenderer
-            fields={service.form_schema.fields}
+            fields={serviceFields}
             values={values}
             pricingConfig={service.pricing_config}
-            taskChecklist={service.form_schema.task_checklist}
+            taskChecklist={service.form_schema?.task_checklist}
             onChange={handleChange}
           />
         </View>
