@@ -6,7 +6,10 @@ import { useCreateBookingMutation } from "@/services/bookingApi";
 import { clearBookingDraft } from "@/store/bookingDraftSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { formatVnd } from "@/utils/currency";
-import { calculateEstimatedPrice } from "@/utils/servicePricing";
+import {
+  calculateEstimatedPrice,
+  calculateRecurringPrice,
+} from "@/utils/servicePricing";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
@@ -96,6 +99,19 @@ export default function BookingConfirmScreen() {
   // FE chỉ cần biết loại để hiển thị + validate đúng field bắt buộc.
   const scheduleType: string = service?.form_schema.schedule_type ?? "ONCE";
 
+  // ĐỔI: dịch vụ định kỳ (pricing_unit === "PER_SESSION") có breakdown riêng
+  // (giá gốc trước giảm / % giảm / giá sau giảm) — cần để hiển thị đúng dòng
+  // "Giảm giá" thay vì hard-code 0đ như trước (bug: discount đã bị gộp thẳng
+  // vào "Giá dịch vụ" khiến khách không thấy được mình được giảm bao nhiêu).
+  const recurringPrice = useMemo(() => {
+    if (!service) return null;
+    return calculateRecurringPrice(
+      service.form_schema.fields,
+      service.pricing_config,
+      values,
+    );
+  }, [service, values]);
+
   const estimatedPrice = useMemo(() => {
     if (!service) return null;
     return calculateEstimatedPrice(
@@ -104,6 +120,15 @@ export default function BookingConfirmScreen() {
       values,
     );
   }, [service, values]);
+
+  // Giá trước khi giảm — dịch vụ định kỳ lấy grossSubtotal, dịch vụ 1 lần
+  // (không có discount) thì bằng chính estimatedPrice.
+  const grossPrice = recurringPrice
+    ? recurringPrice.grossSubtotal
+    : estimatedPrice;
+  const discountAmount = recurringPrice
+    ? recurringPrice.grossSubtotal - recurringPrice.subtotal
+    : 0;
 
   // ĐỔI: scheduledStart chỉ có ý nghĩa với lịch ONCE, dùng để hiển thị,
   // không còn dùng để build payload gửi lên (BE tự tính).
@@ -488,15 +513,30 @@ export default function BookingConfirmScreen() {
               </Text>
 
               <View className="flex-row items-center justify-between mb-2">
-                <Text style={{ color: COLORS.textMuted }}>Giá dịch vụ</Text>
+                <Text style={{ color: COLORS.textMuted }}>
+                  Giá dịch vụ
+                  {recurringPrice
+                    ? ` (${recurringPrice.sessionsCount} buổi)`
+                    : ""}
+                </Text>
                 <Text className="font-bold" style={{ color: COLORS.text }}>
-                  {estimatedPrice != null ? formatVnd(estimatedPrice) : "—"}
+                  {grossPrice != null ? formatVnd(grossPrice) : "—"}
                 </Text>
               </View>
               <View className="flex-row items-center justify-between mb-3">
-                <Text style={{ color: COLORS.textMuted }}>Giảm giá</Text>
-                <Text className="font-bold" style={{ color: COLORS.text }}>
-                  0 đ
+                <Text style={{ color: COLORS.textMuted }}>
+                  Giảm giá
+                  {recurringPrice && recurringPrice.discountPercent > 0
+                    ? ` (${recurringPrice.discountPercent}%)`
+                    : ""}
+                </Text>
+                <Text
+                  className="font-bold"
+                  style={{
+                    color: discountAmount > 0 ? COLORS.primary : COLORS.text,
+                  }}
+                >
+                  {discountAmount > 0 ? `-${formatVnd(discountAmount)}` : "0 đ"}
                 </Text>
               </View>
 

@@ -18,6 +18,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { showErrorToast } from "@/utils/toast";
 import { getMissingRequiredFieldLabels } from "@/utils/validators";
@@ -27,6 +28,7 @@ export default function ServiceDetailScreen() {
   const serviceId = Number(id);
   const dispatch = useAppDispatch();
   const pickedSelections = useAppSelector((s) => s.addressPicker.selections);
+  const insets = useSafeAreaInsets();
 
   const {
     data: service,
@@ -221,7 +223,10 @@ export default function ServiceDetailScreen() {
           submitLabel="Tiếp theo"
         />
       ) : (
-        <View className="px-6 pb-8 pt-4 border-t border-gray-100 bg-white">
+        <View
+          className="px-6 pt-4 border-t border-gray-100 bg-white"
+          style={{ paddingBottom: insets.bottom + 16 }}
+        >
           <View className="flex-row items-center justify-between mb-3">
             <Text className="text-gray-500 text-sm">Tạm tính</Text>
             <Text className="text-emerald-700 font-bold text-lg">
