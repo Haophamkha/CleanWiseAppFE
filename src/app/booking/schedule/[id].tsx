@@ -5,14 +5,16 @@ import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import {
-    Image,
-    Modal,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  Modal,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { ComplaintModal } from "@/components/complaints/ComplaintModal";
 
 const WEEKDAY_LABELS = [
   "Chủ nhật",
@@ -147,9 +149,16 @@ function InfoRow({
 }
 
 export default function ScheduleDetailScreen() {
-  const { data } = useLocalSearchParams<{ id: string; data: string }>();
+  const { data, bookingId, bookingStatus } = useLocalSearchParams<{
+    id: string;
+    data: string;
+    bookingId: string;
+    bookingStatus: string;
+  }>();
   const insets = useSafeAreaInsets();
   const [viewerImage, setViewerImage] = useState<string | null>(null);
+
+  const [complaintVisible, setComplaintVisible] = useState(false);
 
   const schedule: BookingScheduleDetail | null = useMemo(() => {
     if (!data) return null;
@@ -183,6 +192,13 @@ export default function ScheduleDetailScreen() {
   const actualEnd = formatFull(schedule.actual_end);
   const images = schedule.images ?? [];
   const canReview = schedule.status === "COMPLETED";
+
+  const canComplaint =
+    bookingStatus === "PENDING" ||
+    bookingStatus === "ASSIGNED" ||
+    bookingStatus === "IN_PROGRESS" ||
+    bookingStatus === "COMPLETED";
+
   const worker = schedule.worker;
 
   const groupedImages = images.reduce<Record<string, typeof images>>(
@@ -431,10 +447,31 @@ export default function ScheduleDetailScreen() {
           )}
         </View>
 
-        {canReview && <ReviewFeedbackButtons style={{ marginTop: 20 }} />}
+        {canComplaint && (
+          <ReviewFeedbackButtons
+            style={{ marginTop: 20 }}
+            onReview={
+              canReview
+                ? () => {
+                    // TODO: mở màn hình đánh giá
+                  }
+                : undefined
+            }
+            onFeedback={() => {
+              setComplaintVisible(true);
+            }}
+          />
+        )}
       </ScrollView>
 
-      {/* Xem ảnh full screen */}
+      <ComplaintModal
+        visible={complaintVisible}
+        bookingId={Number(bookingId)}
+        scheduleId={schedule.id}
+        bookingStatus={bookingStatus}
+        onClose={() => setComplaintVisible(false)}
+      />
+
       <Modal
         visible={!!viewerImage}
         transparent
