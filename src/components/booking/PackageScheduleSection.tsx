@@ -21,8 +21,12 @@ function pickUpcomingSchedule(schedules: BookingScheduleDetail[]) {
 
 export function PackageScheduleSection({
   schedules,
+  bookingId,
+  bookingStatus,
 }: {
   schedules: BookingScheduleDetail[];
+  bookingId: number;
+  bookingStatus: string;
 }) {
   const displaySchedule = useMemo(
     () => pickUpcomingSchedule(schedules),
@@ -37,6 +41,8 @@ export function PackageScheduleSection({
       params: {
         id: String(schedule.id),
         data: JSON.stringify(schedule),
+        bookingId: String(bookingId),
+        bookingStatus,
       },
     });
   };

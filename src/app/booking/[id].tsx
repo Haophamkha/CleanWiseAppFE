@@ -126,7 +126,11 @@ export default function BookingDetailScreen() {
         <BookingProgressBar status={booking.status} />
 
         {isPackage ? (
-          <PackageScheduleSection schedules={booking.schedules} />
+          <PackageScheduleSection
+            schedules={booking.schedules}
+            bookingId={booking.id}
+            bookingStatus={booking.status}
+          />
         ) : (
           <>
             {singleSchedule && (
