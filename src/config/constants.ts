@@ -12,4 +12,5 @@ export const ROUTES = {
   WALLET: "/profile/wallets/wallet",
   FAVORITE_WORKERS: "/profile/favorite-workers",
   PAYMENT_METHODS: "/profile/payment-methods",
+  BOOKING_CONFIRM: "/booking/confirm",
 } as const;

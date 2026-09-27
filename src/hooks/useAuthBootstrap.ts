@@ -1,4 +1,5 @@
 import { STORAGE_KEYS } from "@/config/constants";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { storage } from "@/utils/storage";
 import { useEffect, useState } from "react";
 
@@ -19,6 +20,8 @@ export function useAuthBootstrap() {
       setIsReady(true);
     })();
   }, []);
+
+  usePushNotifications(isReady && isAuthenticated);
 
   return { isReady, isAuthenticated };
 }

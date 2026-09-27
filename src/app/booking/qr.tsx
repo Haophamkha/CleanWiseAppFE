@@ -1,27 +1,27 @@
 import { COLORS } from "@/components/service/formFieldShared";
 import { ROUTES } from "@/config/constants";
 import {
-    useCreatePaymentLinkMutation,
-    useGetBookingDetailQuery,
+  useCreatePaymentLinkMutation,
+  useGetBookingDetailQuery,
 } from "@/services/bookingApi";
 import { Feather } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { router, useLocalSearchParams } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    Animated,
-    Easing,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Animated,
+  Easing,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const QR_TTL_SECONDS = 5 * 60;
-// Sau khi hết hạn, tự động điều hướng về confirm sau khoảng thời gian này (ms)
 const AUTO_REDIRECT_DELAY_MS = 2500;
 
 function formatCountdown(sec: number) {
@@ -44,6 +44,8 @@ export default function BookingQrScreen() {
   const [secondsLeft, setSecondsLeft] = useState(QR_TTL_SECONDS);
   const [expired, setExpired] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showQr, setShowQr] = useState(false);
+  const [opening, setOpening] = useState(false);
 
   const fetchLink = () => {
     setSecondsLeft(QR_TTL_SECONDS);
@@ -58,8 +60,18 @@ export default function BookingQrScreen() {
     setTimeout(() => setCopied(false), 1500);
   };
 
-  // Quay về trang confirm để tạo đơn đặt lịch mới (booking cũ đã hết hạn QR)
-  // Dùng replace để không quay lại được QR screen cũ bằng nút back
+  const handleOpenCheckout = async () => {
+    if (!link?.checkout_url || expired) return;
+    try {
+      setOpening(true);
+      await WebBrowser.openBrowserAsync(link.checkout_url, {
+        presentationStyle: WebBrowser.WebBrowserPresentationStyle.FORM_SHEET,
+      });
+    } finally {
+      setOpening(false);
+    }
+  };
+
   const handleGoBackToConfirm = () => {
     router.replace(ROUTES.BOOKING_CONFIRM as any);
   };
@@ -72,7 +84,7 @@ export default function BookingQrScreen() {
   }, [id]);
 
   useEffect(() => {
-    if (!link?.qr_code || expired) return;
+    if (!link?.checkout_url || expired) return;
 
     if (secondsLeft <= 0) {
       setExpired(true);
@@ -84,9 +96,9 @@ export default function BookingQrScreen() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [secondsLeft, link?.qr_code, expired]);
+  }, [secondsLeft, link?.checkout_url, expired]);
 
-  // Tự động chuyển về confirm sau khi QR hết hạn (cho user vài giây để thấy trạng thái)
+  // Tự động chuyển về confirm sau khi hết hạn (cho user vài giây để thấy trạng thái)
   useEffect(() => {
     if (!expired) return;
 
@@ -106,6 +118,7 @@ export default function BookingQrScreen() {
 
   useEffect(() => {
     if (paymentStatus === "SUCCESS") {
+      WebBrowser.dismissBrowser();
       router.replace({ pathname: "/booking/success" as any, params: { code } });
     }
   }, [paymentStatus, code]);
@@ -135,9 +148,9 @@ export default function BookingQrScreen() {
   const isUrgent = secondsLeft <= 60 && !expired;
 
   const steps = [
-    "Mở app ngân hàng hoặc ví điện tử bất kỳ",
-    "Chọn quét mã QR và quét mã ở trên",
-    "Kiểm tra số tiền và xác nhận chuyển khoản",
+    "Nhấn “Mở trang thanh toán”",
+    "Chọn ngân hàng hoặc ví điện tử bạn muốn dùng",
+    "Xác nhận thanh toán trong app đó",
   ];
 
   return (
@@ -155,7 +168,7 @@ export default function BookingQrScreen() {
           <Feather name="arrow-left" size={20} color="#111827" />
         </TouchableOpacity>
         <Text className="text-[17px] font-bold text-gray-900 flex-1">
-          Quét mã thanh toán
+          Thanh toán đơn hàng
         </Text>
       </View>
 
@@ -227,7 +240,7 @@ export default function BookingQrScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Card QR */}
+        {/* Card thanh toán chính */}
         <View
           style={{
             width: "100%",
@@ -260,10 +273,10 @@ export default function BookingQrScreen() {
             </Text>
           </View>
 
-          <View className="items-center pt-7 pb-6">
+          <View className="items-center px-5 pt-7 pb-6">
             {isLoading && (
               <View
-                style={{ height: 240 }}
+                style={{ height: 160 }}
                 className="items-center justify-center"
               >
                 <ActivityIndicator size="large" color={COLORS.primary} />
@@ -271,14 +284,14 @@ export default function BookingQrScreen() {
                   className="text-[13px] mt-3"
                   style={{ color: COLORS.textMuted }}
                 >
-                  Đang tạo mã QR...
+                  Đang tạo link thanh toán...
                 </Text>
               </View>
             )}
 
             {Boolean(error) && !isLoading && (
               <View
-                style={{ height: 240 }}
+                style={{ height: 160 }}
                 className="items-center justify-center px-6"
               >
                 <View
@@ -295,29 +308,43 @@ export default function BookingQrScreen() {
                   style={{ color: COLORS.danger }}
                   className="text-center text-[13px] font-medium"
                 >
-                  Không tạo được mã QR, vui lòng thử lại.
+                  Không tạo được link thanh toán, vui lòng thử lại.
                 </Text>
               </View>
             )}
 
-            {link?.qr_code && !expired && (
-              <View style={{ marginBottom: 18 }}>
-                <View
-                  style={{
-                    padding: 16,
-                    borderRadius: 20,
-                    borderWidth: 1,
-                    borderColor: COLORS.border,
-                  }}
+            {link?.checkout_url && !expired && !isLoading && !error && (
+              <>
+                <TouchableOpacity
+                  onPress={handleOpenCheckout}
+                  activeOpacity={0.85}
+                  disabled={opening}
+                  className="flex-row items-center justify-center w-full rounded-2xl py-4"
+                  style={{ backgroundColor: COLORS.primary }}
                 >
-                  <QRCode value={link.qr_code} size={220} />
-                </View>
+                  {opening ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <>
+                      <Feather name="external-link" size={17} color="#fff" />
+                      <Text className="text-white font-bold ml-2 text-[15px]">
+                        Mở trang thanh toán
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+
+                <Text
+                  className="text-[11.5px] text-center mt-2.5 px-2"
+                  style={{ color: COLORS.textMuted }}
+                >
+                  Bạn có thể chọn ngân hàng hoặc ví điện tử bất kỳ ngay trong
+                  trang thanh toán
+                </Text>
 
                 <View
                   style={{
-                    position: "absolute",
-                    bottom: -14,
-                    alignSelf: "center",
+                    marginTop: 14,
                     paddingHorizontal: 12,
                     paddingVertical: 5,
                     borderRadius: 999,
@@ -340,15 +367,49 @@ export default function BookingQrScreen() {
                     className="ml-1 text-[11px] font-bold"
                     style={{ color: isUrgent ? "#fff" : COLORS.primary }}
                   >
-                    {formatCountdown(secondsLeft)}
+                    Còn {formatCountdown(secondsLeft)}
                   </Text>
                 </View>
-              </View>
+
+                {/* QR để phụ - toggle */}
+                <TouchableOpacity
+                  onPress={() => setShowQr((v) => !v)}
+                  activeOpacity={0.7}
+                  className="flex-row items-center mt-5"
+                >
+                  <Text
+                    className="text-[12.5px] font-semibold"
+                    style={{ color: COLORS.textSecondary }}
+                  >
+                    {showQr ? "Ẩn mã QR" : "Hoặc quét mã QR"}
+                  </Text>
+                  <Feather
+                    name={showQr ? "chevron-up" : "chevron-down"}
+                    size={15}
+                    color={COLORS.textSecondary}
+                    style={{ marginLeft: 4 }}
+                  />
+                </TouchableOpacity>
+
+                {showQr && (
+                  <View
+                    style={{
+                      marginTop: 14,
+                      padding: 16,
+                      borderRadius: 20,
+                      borderWidth: 1,
+                      borderColor: COLORS.border,
+                    }}
+                  >
+                    <QRCode value={link.qr_code} size={200} />
+                  </View>
+                )}
+              </>
             )}
 
             {expired && (
               <View
-                style={{ height: 220, width: 220 }}
+                style={{ height: 220 }}
                 className="items-center justify-center rounded-2xl"
               >
                 <View
@@ -361,7 +422,7 @@ export default function BookingQrScreen() {
                   className="text-center text-[13px] font-medium"
                   style={{ color: COLORS.textMuted }}
                 >
-                  Mã QR đã hết hạn
+                  Link thanh toán đã hết hạn
                 </Text>
                 <Text
                   className="text-center text-[12px] mt-1"
@@ -372,19 +433,19 @@ export default function BookingQrScreen() {
               </View>
             )}
 
-            {/* Trạng thái / nút quay lại */}
-            <View
-              style={{
-                width: "100%",
-                borderTopWidth: 1,
-                borderStyle: "dashed",
-                borderColor: COLORS.border,
-                marginTop: 4,
-                paddingTop: 16,
-              }}
-              className="items-center"
-            >
-              {!expired ? (
+            {/* Trạng thái */}
+            {!expired && link?.checkout_url && (
+              <View
+                style={{
+                  width: "100%",
+                  borderTopWidth: 1,
+                  borderStyle: "dashed",
+                  borderColor: COLORS.border,
+                  marginTop: 20,
+                  paddingTop: 16,
+                }}
+                className="items-center"
+              >
                 <View className="flex-row items-center">
                   <Animated.View
                     style={{
@@ -403,20 +464,22 @@ export default function BookingQrScreen() {
                     Đang chờ thanh toán...
                   </Text>
                 </View>
-              ) : (
-                <TouchableOpacity
-                  onPress={handleGoBackToConfirm}
-                  activeOpacity={0.85}
-                  className="flex-row items-center px-5 py-2.5 rounded-2xl"
-                  style={{ backgroundColor: COLORS.primary }}
-                >
-                  <Feather name="refresh-cw" size={15} color="#fff" />
-                  <Text className="text-white font-bold ml-2 text-[13px]">
-                    Đặt lại để lấy mã QR mới
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
+              </View>
+            )}
+
+            {expired && (
+              <TouchableOpacity
+                onPress={handleGoBackToConfirm}
+                activeOpacity={0.85}
+                className="flex-row items-center px-5 py-2.5 rounded-2xl mt-2"
+                style={{ backgroundColor: COLORS.primary }}
+              >
+                <Feather name="refresh-cw" size={15} color="#fff" />
+                <Text className="text-white font-bold ml-2 text-[13px]">
+                  Đặt lại để lấy link mới
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
