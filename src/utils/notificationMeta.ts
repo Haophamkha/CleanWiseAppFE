@@ -6,8 +6,6 @@ interface NotificationTypeMeta {
   iconName: string;
 }
 
-// Icon theo type - màu nền/màu icon tính riêng theo trạng thái đã đọc,
-// xử lý trong NotificationItem.
 const NOTIFICATION_TYPE_MAP: Record<string, NotificationTypeMeta> = {
   BOOKING: {
     label: "Đơn hàng",
@@ -19,15 +17,15 @@ const NOTIFICATION_TYPE_MAP: Record<string, NotificationTypeMeta> = {
     iconLibrary: "feather",
     iconName: "check-circle",
   },
-  PROMOTION: {
-    label: "Khuyến mãi",
+  ASSIGNMENT: {
+    label: "Phân công",
     iconLibrary: "feather",
-    iconName: "tag",
+    iconName: "user-check",
   },
-  REVIEW: {
-    label: "Đánh giá",
+  COMPLAINT: {
+    label: "Khiếu nại",
     iconLibrary: "feather",
-    iconName: "star",
+    iconName: "alert-circle",
   },
   SYSTEM: {
     label: "Hệ thống",
@@ -47,6 +45,6 @@ export const NOTIFICATION_FILTER_OPTIONS: {
   { value: "ALL", label: "Tất cả" },
   { value: "BOOKING", label: "Đơn hàng" },
   { value: "PAYMENT", label: "Thanh toán" },
-  { value: "PROMOTION", label: "Khuyến mãi" },
-  { value: "REVIEW", label: "Đánh giá" },
+  { value: "ASSIGNMENT", label: "Phân công" },
+  { value: "COMPLAINT", label: "Khiếu nại" },
 ];
