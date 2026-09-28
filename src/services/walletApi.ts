@@ -63,11 +63,17 @@ export const walletApi = baseApi.injectEndpoints({
       providesTags: ["WalletTransactions"],
     }),
 
-    requestWithdraw: builder.mutation<WalletTransaction, { amount: number }>({
-      query: (body) => ({
+    requestWithdraw: builder.mutation<
+      WalletTransaction,
+      { amount: number; idempotencyKey: string }
+    >({
+      query: ({ idempotencyKey, ...body }) => ({
         url: "/api/customer/wallet/withdraw/",
         method: "POST",
         data: body,
+        headers: {
+          "Idempotency-Key": idempotencyKey,
+        },
       }),
       transformResponse: unwrap,
       invalidatesTags: ["Wallet", "WalletTransactions"],

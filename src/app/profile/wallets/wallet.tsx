@@ -1,30 +1,29 @@
 import { LoadingOverlay } from "@/components/common/LoadingOverlay";
 import { COLORS } from "@/components/service/formFieldShared";
+import { useIdempotencyKey } from "@/hooks/useIdempotencyKey";
 import { useRefreshControl } from "@/hooks/useRefreshControl";
 import {
-    useGetWalletQuery,
-    useRequestWithdrawMutation,
+  useGetWalletQuery,
+  useRequestWithdrawMutation,
 } from "@/services/walletApi";
 import { formatVnd } from "@/utils/currency";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Modal,
-    Pressable,
-    RefreshControl,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// Tông màu riêng cho ví: đậm hơn COLORS.primary một chút để tách bạch
-// với phần còn lại của app, gợi cảm giác "khối tài sản" chắc chắn.
 const WALLET_DARK = "#065F46";
 
 function DecorRing({
@@ -69,10 +68,16 @@ function WithdrawModal({
 }) {
   const [amountText, setAmountText] = useState("");
   const [requestWithdraw, { isLoading }] = useRequestWithdrawMutation();
+  const { getKey, resetKey } = useIdempotencyKey();
 
   const quickAmounts = [50000, 100000, 200000, 500000].filter(
     (v) => v <= balance,
   );
+
+  const handleClose = () => {
+    resetKey(); // đóng modal mà chưa submit thành công -> coi như hủy ý định rút hiện tại
+    onClose();
+  };
 
   const handleSubmit = async () => {
     const amount = Number(amountText.replace(/[^0-9]/g, ""));
@@ -87,7 +92,8 @@ function WithdrawModal({
     }
 
     try {
-      await requestWithdraw({ amount }).unwrap();
+      await requestWithdraw({ amount, idempotencyKey: getKey() }).unwrap();
+      resetKey(); // thành công -> lần rút tiếp theo (hành động mới) sẽ có key khác
       setAmountText("");
       onClose();
       Alert.alert(
@@ -95,6 +101,8 @@ function WithdrawModal({
         "Yêu cầu rút tiền đã được ghi nhận, chờ admin xử lý.",
       );
     } catch (err: any) {
+      // KHÔNG resetKey() ở đây -> nếu user bấm lại do lỗi mạng, dùng đúng
+      // key cũ, BE nhận diện là cùng 1 lần thử, không tạo request rút mới
       const message =
         err?.data?.amount?.[0] ||
         err?.data?.message ||
@@ -108,11 +116,11 @@ function WithdrawModal({
       visible={visible}
       transparent
       animationType="slide"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <Pressable
         style={{ flex: 1, backgroundColor: "rgba(5,20,15,0.55)" }}
-        onPress={onClose}
+        onPress={handleClose}
       >
         <View style={{ flex: 1 }} />
         <Pressable onPress={(e) => e.stopPropagation()}>

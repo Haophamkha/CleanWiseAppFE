@@ -1,7 +1,7 @@
 import ScreenContainer from "@/components/ScreenContainer";
-import { ROUTES } from "@/config/constants";
-import { useRegisterMutation } from "@/services/authApi";
+import { saveTokens, useRegisterMutation } from "@/services/authApi";
 import { setUser } from "@/store/authSlice";
+import { baseApi } from "@/store/baseApi";
 import { useAppDispatch } from "@/store/hooks";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import { registerSchema } from "@/utils/validators";
@@ -48,12 +48,15 @@ export default function RegisterScreen() {
     setError("");
     try {
       const res = await register(form).unwrap();
+
+      await saveTokens(res.access, res.refresh);
+      dispatch(baseApi.util.resetApiState());
       dispatch(setUser(res.user));
+
       showSuccessToast(
         "Tạo tài khoản thành công",
         `Chào mừng ${res.user.first_name || ""} đến với CleanWise`,
       );
-      router.replace(ROUTES.HOME);
     } catch (e: any) {
       const errors = e?.data?.errors;
       let message = "Tạo tài khoản thất bại, vui lòng thử lại";
