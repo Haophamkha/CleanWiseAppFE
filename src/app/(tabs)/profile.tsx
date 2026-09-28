@@ -2,21 +2,16 @@ import { useConfirm } from "@/components/common/ConfirmProvider";
 import { MenuListItem } from "@/components/common/MenuListItem";
 import { NotificationBellButton } from "@/components/common/NotificationBellButton";
 import { RequireLoginNotice } from "@/components/common/RequireLoginNotice";
-import { ROUTES, STORAGE_KEYS } from "@/config/constants";
+import { ROUTES } from "@/config/constants";
 import { useGetProfileQuery } from "@/services/authApi";
-import { clearAuth, setUser } from "@/store/authSlice";
+import { setUser } from "@/store/authSlice";
+import { performLogout } from "@/store/baseApi";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { storage } from "@/utils/storage";
 import { Feather } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
-import {
-  Image,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View
-} from "react-native";
+
+import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 export default function ProfileScreen() {
   const user = useAppSelector((s) => s.auth.user);
@@ -54,10 +49,7 @@ export default function ProfileScreen() {
     });
     if (!ok) return;
 
-    await storage.deleteItem(STORAGE_KEYS.ACCESS_TOKEN);
-    await storage.deleteItem(STORAGE_KEYS.REFRESH_TOKEN);
-    dispatch(clearAuth());
-    router.replace(ROUTES.HOME);
+    await performLogout(ROUTES.HOME);
   };
 
   return (

@@ -11,23 +11,23 @@ const unwrap = (response: any) =>
 
 export const bookingApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    // ============================================================
-    // Tạo booking
-    // ============================================================
-    createBooking: builder.mutation<BookingDetail, CreateBookingRequest>({
-      query: (body) => ({
+    createBooking: builder.mutation<
+      BookingDetail,
+      CreateBookingRequest & { idempotencyKey: string }
+    >({
+      query: ({ idempotencyKey, ...body }) => ({
         url: "/api/customer/bookings/",
         method: "POST",
         data: body,
         timeout: 30000,
+        headers: {
+          "Idempotency-Key": idempotencyKey,
+        },
       }),
       transformResponse: unwrap,
       invalidatesTags: ["Bookings", "MyVouchers"],
     }),
 
-    // ============================================================
-    // Danh sách booking
-    // ============================================================
     getBookings: builder.query<
       BookingListResponse,
       {
@@ -45,9 +45,6 @@ export const bookingApi = baseApi.injectEndpoints({
       providesTags: ["Bookings"],
     }),
 
-    // ============================================================
-    // Chi tiết booking
-    // ============================================================
     getBookingDetail: builder.query<BookingDetail, number>({
       query: (id) => ({
         url: `/api/customer/bookings/${id}/`,
@@ -57,27 +54,27 @@ export const bookingApi = baseApi.injectEndpoints({
       providesTags: (result, error, id) => [{ type: "Bookings", id }],
     }),
 
-    // ============================================================
-    // Tạo payment link / QR
-    // ============================================================
     createPaymentLink: builder.mutation<
       {
         checkout_url: string;
         qr_code: string;
         payment_link_id: string;
       },
-      number
+      {
+        bookingId: number;
+        idempotencyKey: string;
+      }
     >({
-      query: (bookingId) => ({
+      query: ({ bookingId, idempotencyKey }) => ({
         url: `/api/customer/bookings/${bookingId}/payment-link/`,
         method: "POST",
+        headers: {
+          "Idempotency-Key": idempotencyKey,
+        },
       }),
       transformResponse: unwrap,
     }),
 
-    // ============================================================
-    // Hủy booking
-    // ============================================================
     cancelBooking: builder.mutation<
       {
         id: number;
@@ -93,12 +90,11 @@ export const bookingApi = baseApi.injectEndpoints({
         url: `/api/customer/bookings/${id}/cancel/`,
         method: "POST",
         data: { reason },
+        headers: {
+          "Idempotency-Key": `cancel-booking-${id}`,
+        },
       }),
       transformResponse: unwrap,
-
-      // Đơn đã thanh toán online sẽ được BE tự hoàn tiền vào ví
-      // khi hủy, nên invalidate luôn Wallet/WalletTransactions
-      // để số dư cập nhật theo.
       invalidatesTags: (result, error, { id }) => [
         { type: "Bookings", id },
         "Bookings",

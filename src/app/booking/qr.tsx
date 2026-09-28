@@ -50,7 +50,10 @@ export default function BookingQrScreen() {
   const fetchLink = () => {
     setSecondsLeft(QR_TTL_SECONDS);
     setExpired(false);
-    createPaymentLink(id);
+    createPaymentLink({
+      bookingId: id,
+      idempotencyKey: `payment-link-booking-${id}`,
+    });
   };
 
   const handleCopyCode = async () => {

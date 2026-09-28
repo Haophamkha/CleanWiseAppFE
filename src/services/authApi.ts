@@ -13,7 +13,7 @@ import type { AuthResponse, CustomerProfileResponse } from "@/types/Response";
 import type { Gender } from "@/types/User";
 import { storage } from "@/utils/storage";
 
-const saveTokens = async (access: string, refresh: string) => {
+export const saveTokens = async (access: string, refresh: string) => {
   await storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, access);
   await storage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refresh);
 };
@@ -43,12 +43,6 @@ export const authApi = baseApi.injectEndpoints({
         data: body,
       }),
       transformResponse: unwrapResponse,
-      onQueryStarted: async (_arg, { queryFulfilled }) => {
-        try {
-          const { data } = await queryFulfilled;
-          await saveTokens(data.access, data.refresh);
-        } catch {}
-      },
     }),
     register: builder.mutation<AuthResponse, RegisterRequest>({
       query: (body) => ({
@@ -57,12 +51,6 @@ export const authApi = baseApi.injectEndpoints({
         data: body,
       }),
       transformResponse: unwrapResponse,
-      onQueryStarted: async (_arg, { queryFulfilled }) => {
-        try {
-          const { data } = await queryFulfilled;
-          await saveTokens(data.access, data.refresh);
-        } catch {}
-      },
     }),
     loginWithGoogle: builder.mutation<AuthResponse, GoogleLoginRequest>({
       query: (body) => ({
@@ -71,12 +59,6 @@ export const authApi = baseApi.injectEndpoints({
         data: body,
       }),
       transformResponse: unwrapResponse,
-      onQueryStarted: async (_arg, { queryFulfilled }) => {
-        try {
-          const { data } = await queryFulfilled;
-          await saveTokens(data.access, data.refresh);
-        } catch {}
-      },
     }),
     getProfile: builder.query<CustomerProfileResponse, void>({
       query: () => ({

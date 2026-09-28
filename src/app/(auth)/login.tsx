@@ -2,6 +2,7 @@ import ScreenContainer from "@/components/ScreenContainer";
 import { ROUTES } from "@/config/constants";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import {
+  saveTokens,
   useLoginMutation,
   useLoginWithGoogleMutation,
 } from "@/services/authApi";
@@ -36,6 +37,13 @@ export default function LoginScreen() {
     setError("");
     try {
       const res = await loginWithGoogle({ id_token: idToken }).unwrap();
+      if (res.user.role !== "CUSTOMER") {
+        const msg = "Tài khoản này không dùng được trên ứng dụng khách hàng";
+        setError(msg);
+        showErrorToast("Đăng nhập thất bại", msg);
+        return;
+      }
+      await saveTokens(res.access, res.refresh); // đợi ghi xong rồi mới đi tiếp
       dispatch(setUser(res.user));
       showSuccessToast(
         "Đăng nhập thành công",
@@ -50,8 +58,6 @@ export default function LoginScreen() {
     }
   };
 
-  const { request, promptAsync } = useGoogleAuth(handleGoogleSuccess);
-
   const handleLogin = async () => {
     const result = loginSchema.safeParse({ phone, password });
     if (!result.success) {
@@ -63,6 +69,13 @@ export default function LoginScreen() {
 
     try {
       const res = await login({ phone, password }).unwrap();
+      if (res.user.role !== "CUSTOMER") {
+        const msg = "Tài khoản này không dùng được trên ứng dụng khách hàng";
+        setError(msg);
+        showErrorToast("Đăng nhập thất bại", msg);
+        return;
+      }
+      await saveTokens(res.access, res.refresh);
       dispatch(setUser(res.user));
       showSuccessToast(
         "Đăng nhập thành công",
@@ -70,9 +83,12 @@ export default function LoginScreen() {
       );
       router.replace(ROUTES.HOME);
     } catch (e: any) {
+      const status = e?.status;
       const errors = e?.data?.errors;
       let message = "Đăng nhập thất bại, vui lòng thử lại";
-      if (errors && typeof errors === "object") {
+      if (status === 429) {
+        message = "Bạn thử quá nhiều lần, vui lòng đợi một phút rồi thử lại";
+      } else if (errors && typeof errors === "object") {
         const firstField = Object.keys(errors)[0];
         const firstMessage = Array.isArray(errors[firstField])
           ? errors[firstField][0]
@@ -85,6 +101,8 @@ export default function LoginScreen() {
       showErrorToast("Đăng nhập thất bại", message);
     }
   };
+
+  const { request, promptAsync } = useGoogleAuth(handleGoogleSuccess);
 
   return (
     <ScreenContainer>
