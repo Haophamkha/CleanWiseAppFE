@@ -1,19 +1,23 @@
+// components/address/ProvinceWardPicker.tsx
+import { EmptyState, Input } from "@/components/ui";
+import { COLORS } from "@/constants/theme";
 import {
-    Province,
-    useGetProvincesQuery,
-    useGetWardsByProvinceQuery,
-    Ward,
+  Province,
+  useGetProvincesQuery,
+  useGetWardsByProvinceQuery,
+  Ward,
 } from "@/services/provinceApi";
 import { Feather } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import {
-    FlatList,
-    Modal,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   initialProvince?: string;
@@ -21,186 +25,207 @@ type Props = {
   onSelect: (province: string, ward: string) => void;
 };
 
+// Bỏ dấu để gõ "ha noi" vẫn tìm ra "Hà Nội"
+const normalize = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .trim();
+
+const sameName = (a: string, b: string) =>
+  a.trim().toLowerCase() === b.trim().toLowerCase();
+
+function PickerField({
+  label,
+  value,
+  placeholder,
+  disabled,
+  onPress,
+}: {
+  label: string;
+  value?: string;
+  placeholder: string;
+  disabled?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <View className="mb-4">
+      <Text className="text-sm font-medium text-ink mb-2">{label}</Text>
+      <TouchableOpacity
+        onPress={onPress}
+        disabled={disabled}
+        activeOpacity={0.7}
+        className={`flex-row items-center justify-between bg-canvas border border-line rounded-lg px-4 py-4 ${
+          disabled ? "opacity-60" : ""
+        }`}
+      >
+        <Text
+          numberOfLines={1}
+          className={`flex-1 mr-2 text-base ${
+            value ? "text-ink" : "text-ink-muted"
+          }`}
+        >
+          {value ?? placeholder}
+        </Text>
+        <Feather name="chevron-down" size={18} color={COLORS.inkMuted} />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 export default function ProvinceWardPicker({
   initialProvince = "",
   initialWard = "",
   onSelect,
 }: Props) {
+  const insets = useSafeAreaInsets();
   const [selectedProvince, setSelectedProvince] = useState<Province | null>(
     null,
   );
-
   const [selectedWard, setSelectedWard] = useState<Ward | null>(null);
-
   const [pickerVisible, setPickerVisible] = useState<
     "province" | "ward" | null
   >(null);
-
   const [search, setSearch] = useState("");
 
   const { data: provinces, isLoading: loadingProvinces } =
     useGetProvincesQuery();
-
   const { data: wards, isLoading: loadingWards } = useGetWardsByProvinceQuery(
     selectedProvince?.code ?? 0,
-    {
-      skip: !selectedProvince,
-    },
+    { skip: !selectedProvince },
   );
 
-  // Fill tỉnh ban đầu khi Edit
+  // Điền tỉnh ban đầu (màn sửa, hoặc kết quả từ bản đồ)
   useEffect(() => {
     if (!initialProvince || !provinces?.length) return;
-
-    const province = provinces.find(
-      (item) =>
-        item.name.trim().toLowerCase() === initialProvince.trim().toLowerCase(),
-    );
-
-    if (province) {
-      setSelectedProvince(province);
-    }
+    const province = provinces.find((p) => sameName(p.name, initialProvince));
+    if (province) setSelectedProvince(province);
   }, [initialProvince, provinces]);
 
-  // Fill xã/phường ban đầu sau khi đã load wards
+  // Điền phường/xã sau khi danh sách phường đã tải
   useEffect(() => {
-    if (!initialWard || !wards?.length) return;
-
-    const ward = wards.find(
-      (item) =>
-        item.name.trim().toLowerCase() === initialWard.trim().toLowerCase(),
-    );
-
-    if (ward) {
-      setSelectedWard(ward);
+    if (!initialWard) {
+      setSelectedWard(null);
+      return;
     }
+    if (!wards?.length) return;
+    const ward = wards.find((w) => sameName(w.name, initialWard));
+    if (ward) setSelectedWard(ward);
   }, [initialWard, wards]);
 
-  const filteredProvinces = (provinces ?? []).filter((province) =>
-    province.name.toLowerCase().includes(search.toLowerCase()),
-  );
-
-  const filteredWards = (wards ?? []).filter((ward) =>
-    ward.name.toLowerCase().includes(search.toLowerCase()),
-  );
-
-  const handlePickProvince = (province: Province) => {
-    setSelectedProvince(province);
-    setSelectedWard(null);
-
-    setPickerVisible(null);
-    setSearch("");
-
-    // Chưa có ward mới nên reset ward
-    onSelect(province.name, "");
-  };
-
-  const handlePickWard = (ward: Ward) => {
-    setSelectedWard(ward);
-
-    if (selectedProvince) {
-      onSelect(selectedProvince.name, ward.name);
-    }
-
-    setPickerVisible(null);
-    setSearch("");
-  };
+  const isProvince = pickerVisible === "province";
+  const items: (Province | Ward)[] = (isProvince ? provinces : wards) ?? [];
+  const keyword = normalize(search);
+  const filtered = keyword
+    ? items.filter((item) => normalize(item.name).includes(keyword))
+    : items;
+  const selectedCode = isProvince ? selectedProvince?.code : selectedWard?.code;
+  const loading = isProvince ? loadingProvinces : loadingWards;
 
   const closePicker = () => {
     setPickerVisible(null);
     setSearch("");
   };
 
+  const handlePick = (item: Province | Ward) => {
+    if (isProvince) {
+      setSelectedProvince(item as Province);
+      setSelectedWard(null);
+      onSelect(item.name, "");
+    } else {
+      setSelectedWard(item as Ward);
+      if (selectedProvince) onSelect(selectedProvince.name, item.name);
+    }
+    closePicker();
+  };
+
   return (
     <View>
-      {/* TỈNH / THÀNH PHỐ */}
-      <Text className="text-gray-700 font-medium mb-1">Tỉnh/Thành phố</Text>
-
-      <TouchableOpacity
-        className="flex-row items-center justify-between border border-gray-200 bg-gray-50 rounded-xl px-4 py-3 mb-4"
+      <PickerField
+        label="Tỉnh/Thành phố"
+        value={selectedProvince?.name}
+        placeholder="Chọn tỉnh/thành phố"
         onPress={() => setPickerVisible("province")}
-      >
-        <Text className={selectedProvince ? "text-gray-900" : "text-gray-400"}>
-          {selectedProvince?.name ?? "Chọn tỉnh/thành phố"}
-        </Text>
-
-        <Feather name="chevron-down" size={18} color="#9CA3AF" />
-      </TouchableOpacity>
-
-      {/* PHƯỜNG / XÃ */}
-      <Text className="text-gray-700 font-medium mb-1">Phường/Xã</Text>
-
-      <TouchableOpacity
-        className="flex-row items-center justify-between border border-gray-200 bg-gray-50 rounded-xl px-4 py-3 mb-4"
-        onPress={() => {
-          if (selectedProvince) {
-            setPickerVisible("ward");
-          }
-        }}
+      />
+      <PickerField
+        label="Phường/Xã"
+        value={selectedWard?.name}
+        placeholder={
+          selectedProvince ? "Chọn phường/xã" : "Vui lòng chọn tỉnh/thành trước"
+        }
         disabled={!selectedProvince}
-      >
-        <Text className={selectedWard ? "text-gray-900" : "text-gray-400"}>
-          {selectedWard?.name ??
-            (selectedProvince
-              ? "Chọn phường/xã"
-              : "Vui lòng chọn tỉnh/thành trước")}
-        </Text>
+        onPress={() => setPickerVisible("ward")}
+      />
 
-        <Feather name="chevron-down" size={18} color="#9CA3AF" />
-      </TouchableOpacity>
-
-      {/* MODAL */}
       <Modal
         visible={pickerVisible !== null}
         animationType="slide"
         onRequestClose={closePicker}
       >
-        <View className="flex-1 bg-white pt-14 px-5">
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-lg font-bold text-gray-900">
-              {pickerVisible === "province"
-                ? "Chọn tỉnh/thành phố"
-                : "Chọn phường/xã"}
+        <View
+          className="flex-1 bg-surface"
+          style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+        >
+          <View className="flex-row items-center justify-between px-5 py-3 border-b border-line">
+            <Text className="text-lg font-bold text-ink">
+              {isProvince ? "Chọn tỉnh/thành phố" : "Chọn phường/xã"}
             </Text>
-
-            <TouchableOpacity onPress={closePicker}>
-              <Feather name="x" size={22} color="#111827" />
+            <TouchableOpacity
+              onPress={closePicker}
+              activeOpacity={0.7}
+              className="w-10 h-10 rounded-full bg-canvas items-center justify-center"
+            >
+              <Feather name="x" size={20} color={COLORS.ink} />
             </TouchableOpacity>
           </View>
 
-          <TextInput
-            className="border border-gray-200 rounded-xl px-4 py-3 mb-4"
-            placeholder="Tìm kiếm..."
-            placeholderTextColor="#9CA3AF"
-            value={search}
-            onChangeText={setSearch}
-          />
+          <View className="px-5 pt-4">
+            <Input
+              icon="search"
+              placeholder="Tìm kiếm..."
+              value={search}
+              onChangeText={setSearch}
+              autoCorrect={false}
+            />
+          </View>
 
-          {(pickerVisible === "province" ? loadingProvinces : loadingWards) ? (
-            <Text className="text-gray-400 text-center mt-10">Đang tải...</Text>
+          {loading ? (
+            <View className="items-center py-10">
+              <ActivityIndicator color={COLORS.primary} />
+            </View>
           ) : (
             <FlatList
-              data={
-                pickerVisible === "province" ? filteredProvinces : filteredWards
-              }
+              data={filtered}
               keyExtractor={(item) => String(item.code)}
               keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{
+                paddingHorizontal: 20,
+                paddingBottom: 24,
+              }}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  className="py-4 border-b border-gray-100"
-                  onPress={() =>
-                    pickerVisible === "province"
-                      ? handlePickProvince(item as Province)
-                      : handlePickWard(item as Ward)
-                  }
+                  onPress={() => handlePick(item)}
+                  activeOpacity={0.6}
+                  className="flex-row items-center justify-between py-4 border-b border-line"
                 >
-                  <Text className="text-gray-900">{item.name}</Text>
+                  <Text
+                    className={`flex-1 mr-3 text-base ${
+                      item.code === selectedCode
+                        ? "font-semibold text-primary"
+                        : "text-ink"
+                    }`}
+                  >
+                    {item.name}
+                  </Text>
+                  {item.code === selectedCode && (
+                    <Feather name="check" size={18} color={COLORS.primary} />
+                  )}
                 </TouchableOpacity>
               )}
               ListEmptyComponent={
-                <Text className="text-gray-400 text-center mt-10">
-                  Không tìm thấy dữ liệu
-                </Text>
+                <EmptyState icon="search" title="Không tìm thấy dữ liệu" />
               }
             />
           )}

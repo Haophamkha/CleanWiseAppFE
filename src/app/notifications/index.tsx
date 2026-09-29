@@ -1,144 +1,122 @@
-import NotificationFilterTabs, {
-  NotificationFilter,
-} from "@/components/notification/NotificationFilterTabs";
+import { ScreenHeader } from "@/components/common/ScreenHeader";
+import NotificationFilterTabs from "@/components/notification/NotificationFilterTabs";
 import NotificationItem from "@/components/notification/NotificationItem";
-import {
-  useGetNotificationsQuery,
-  useMarkAllNotificationsReadMutation,
-  useMarkNotificationReadMutation,
-} from "@/services/notificationApi";
-import { AppNotification } from "@/types/Notification";
+import { Badge } from "@/components/ui/Badge";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { COLORS, SHADOWS } from "@/constants/theme";
+import { useNotifications } from "@/features/notification/hooks/useNotifications";
 import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   RefreshControl,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function NotificationsScreen() {
-  const [filter, setFilter] = useState<NotificationFilter>("ALL");
-  const [page, setPage] = useState(1);
-  const [accumulated, setAccumulated] = useState<AppNotification[]>([]);
+  const insets = useSafeAreaInsets();
+  const {
+    filter,
+    page,
+    items,
+    unreadCount,
+    isLoading,
+    isFetching,
+    isMarkingAll,
+    changeFilter,
+    loadMore,
+    pressNotification,
+    confirmMarkAllRead,
+    refresh,
+  } = useNotifications();
 
-  const queryParams = useMemo(
-    () => ({
-      page,
-      page_size: 20,
-      ...(filter !== "ALL" ? { type: filter } : {}),
-    }),
-    [filter, page],
-  );
-
-  const { data, isFetching, isLoading, refetch } =
-    useGetNotificationsQuery(queryParams);
-  const [markRead] = useMarkNotificationReadMutation();
-  const [markAllRead, { isLoading: isMarkingAll }] =
-    useMarkAllNotificationsReadMutation();
-
-  const items = page === 1 ? (data?.results ?? []) : accumulated;
-
-  const handleChangeFilter = (value: NotificationFilter) => {
-    setFilter(value);
-    setPage(1);
-    setAccumulated([]);
-  };
-
-  const handleLoadMore = () => {
-    if (data?.has_next && !isFetching) {
-      setAccumulated([
-        ...(page === 1 ? data.results : accumulated),
-        ...(data.results ?? []),
-      ]);
-      setPage((p) => p + 1);
-    }
-  };
-
-  const handlePressNotification = (notification: AppNotification) => {
-    if (!notification.is_read) markRead(notification.id);
-    if (notification.related_booking) {
-      router.push(`/booking/${notification.related_booking}` as any);
-    }
-  };
-
-  const handleMarkAllRead = () => {
-    if (!data?.unread_count) return;
-    Alert.alert(
-      "Đánh dấu tất cả đã đọc",
-      "Đánh dấu toàn bộ thông báo là đã đọc?",
-      [
-        { text: "Hủy", style: "cancel" },
-        { text: "Đồng ý", onPress: () => markAllRead() },
-      ],
-    );
-  };
-
-  const handleRefresh = () => {
-    setPage(1);
-    setAccumulated([]);
-    refetch();
-  };
+  const canMarkAll = unreadCount > 0 && !isMarkingAll;
 
   return (
-    <View className="flex-1 bg-gray-50">
-      <View className="flex-row items-center justify-between px-5 pt-14 pb-4">
-        <TouchableOpacity onPress={() => router.back()}>
-          <Feather name="arrow-left" size={22} color="#111827" />
-        </TouchableOpacity>
-
-        <Text className="text-lg font-bold text-gray-900">Thông báo</Text>
-
-        <TouchableOpacity
-          onPress={handleMarkAllRead}
-          activeOpacity={0.7}
-          disabled={isMarkingAll || !data?.unread_count}
-        >
-          <Text
-            className={`text-sm font-semibold ${
-              data?.unread_count ? "text-emerald-600" : "text-gray-300"
-            }`}
-          >
-            Đọc tất cả
-          </Text>
-        </TouchableOpacity>
+    <View className="flex-1 bg-canvas">
+      <View className="bg-surface" style={{ paddingTop: insets.top }}>
+        <ScreenHeader
+          title="Thông báo"
+          right={
+            <TouchableOpacity
+              onPress={confirmMarkAllRead}
+              disabled={!canMarkAll}
+              activeOpacity={0.8}
+              className={`flex-row items-center justify-center h-10 px-4 rounded-full border ${
+                canMarkAll
+                  ? "bg-primary border-primary"
+                  : "bg-canvas border-line"
+              }`}
+              style={canMarkAll ? SHADOWS.float : undefined}
+            >
+              {isMarkingAll ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Feather
+                  name="check-circle"
+                  size={18}
+                  color={canMarkAll ? "#FFFFFF" : COLORS.inkMuted}
+                />
+              )}
+              <Text
+                className={`ml-2 text-sm font-bold ${
+                  canMarkAll ? "text-white" : "text-ink-muted"
+                }`}
+              >
+                Đọc tất cả
+              </Text>
+            </TouchableOpacity>
+          }
+        />
       </View>
 
-      <NotificationFilterTabs value={filter} onChange={handleChangeFilter} />
+      <NotificationFilterTabs value={filter} onChange={changeFilter} />
+
+      {unreadCount > 0 && (
+        <View className="flex-row items-center px-5 pb-2">
+          <Badge label={`${unreadCount} chưa đọc`} tone="primary" />
+        </View>
+      )}
 
       <FlatList
         key={filter}
         data={items}
         keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: 4,
+          paddingBottom: insets.bottom + 24,
+        }}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />
+          <RefreshControl
+            refreshing={false}
+            onRefresh={refresh}
+            tintColor={COLORS.primary}
+            colors={[COLORS.primary]}
+          />
         }
         onEndReachedThreshold={0.4}
-        onEndReached={handleLoadMore}
+        onEndReached={loadMore}
         renderItem={({ item }) => (
-          <NotificationItem
-            notification={item}
-            onPress={handlePressNotification}
-          />
+          <NotificationItem notification={item} onPress={pressNotification} />
         )}
         ListFooterComponent={
           isFetching && page > 1 ? (
-            <ActivityIndicator className="my-4" color="#047857" />
+            <ActivityIndicator className="my-4" color={COLORS.primary} />
           ) : null
         }
         ListEmptyComponent={
-          !isLoading ? (
-            <View className="items-center justify-center mt-24">
-              <Feather name="bell-off" size={40} color="#D1D5DB" />
-              <Text className="text-gray-400 mt-3">Không có thông báo nào</Text>
+          isLoading ? (
+            <ActivityIndicator className="mt-24" color={COLORS.primary} />
+          ) : (
+            <View className="mt-16">
+              <EmptyState icon="bell-off" title="Không có thông báo nào" />
             </View>
-          ) : null
+          )
         }
       />
     </View>

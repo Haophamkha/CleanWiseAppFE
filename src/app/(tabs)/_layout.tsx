@@ -1,7 +1,8 @@
-import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { COLORS } from "@/constants/theme";
 import { useChatSocket } from "@/hooks/useChatSocket";
 import { useGetConversationsQuery } from "@/services/chatApi";
 import { useAppSelector } from "@/store/hooks";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -12,26 +13,29 @@ export default function TabsLayout() {
     skip: !user,
     refetchOnMountOrArgChange: 15,
   });
-  useChatSocket(!!user, (event) => {
-    if (event.type === "message.created" || event.type === "messages.read") refetch();
-  }, refetch);
-  const unreadCount = user ? conversations?.total_unread ?? 0 : 0;
+  useChatSocket(
+    !!user,
+    (event) => {
+      if (event.type === "message.created" || event.type === "messages.read")
+        refetch();
+    },
+    refetch,
+  );
+  const unreadCount = user ? (conversations?.total_unread ?? 0) : 0;
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#047857",
-        tabBarInactiveTintColor: "#9CA3AF",
-
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: COLORS.inkMuted,
         tabBarStyle: {
           height: 60 + (insets.bottom > 0 ? insets.bottom : 10),
           paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
           paddingTop: 8,
-          borderTopColor: "#F3F4F6",
-          backgroundColor: "#FFFFFF",
+          borderTopColor: COLORS.line,
+          backgroundColor: COLORS.surface,
         },
-
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: "600",
@@ -77,7 +81,12 @@ export default function TabsLayout() {
         name="messages"
         options={{
           title: "Tin nhắn",
-          tabBarBadge: unreadCount > 0 ? (unreadCount > 99 ? "99+" : unreadCount) : undefined,
+          tabBarBadge:
+            unreadCount > 0
+              ? unreadCount > 99
+                ? "99+"
+                : unreadCount
+              : undefined,
           tabBarBadgeStyle: { backgroundColor: "#EF4444", color: "#FFFFFF" },
           tabBarIcon: ({ color, size }) => (
             <Feather name="message-circle" size={size} color={color} />

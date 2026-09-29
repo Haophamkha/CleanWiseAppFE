@@ -1,173 +1,93 @@
-import { useConfirm } from "@/components/common/ConfirmProvider";
+// app/(tabs)/profile.tsx
+import { MenuGroup } from "@/components/common/MenuGroup";
 import { MenuListItem } from "@/components/common/MenuListItem";
-import { NotificationBellButton } from "@/components/common/NotificationBellButton";
 import { RequireLoginNotice } from "@/components/common/RequireLoginNotice";
+import { ProfileHeader } from "@/components/profile/ProfileHeader";
+import type { FeatherName } from "@/components/ui";
 import { ROUTES } from "@/config/constants";
-import { useGetProfileQuery } from "@/services/authApi";
-import { setUser } from "@/store/authSlice";
-import { performLogout } from "@/store/baseApi";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { COLORS } from "@/constants/theme";
+import { useProfile } from "@/features/profile/hooks/useProfile";
 import { Feather } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
-import { useCallback } from "react";
+import { router } from "expo-router";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+type MenuItem = {
+  icon: FeatherName;
+  label: string;
+  href?: string; // không có href = chưa làm, hiện "Sắp có"
+};
+
+const ACCOUNT_ITEMS: MenuItem[] = [
+  { icon: "user", label: "Thông tin cá nhân", href: ROUTES.EDIT_PROFILE },
+  { icon: "map-pin", label: "Địa chỉ của tôi", href: ROUTES.ADDRESS },
+  {
+    icon: "heart",
+    label: "Nhân viên yêu thích",
+    href: ROUTES.FAVORITE_WORKERS,
+  },
+  { icon: "credit-card", label: "Ví / Thẻ thanh toán", href: ROUTES.WALLET },
+  { icon: "clock", label: "Lịch sử thanh toán" },
+  { icon: "tag", label: "Khuyến mãi", href: ROUTES.VOUCHERS },
+  { icon: "star", label: "Đánh giá của tôi" },
+];
+
+const SUPPORT_ITEMS: MenuItem[] = [
+  { icon: "settings", label: "Cài đặt" },
+  { icon: "info", label: "Về CleanWise" },
+];
+
+const renderItems = (items: MenuItem[]) =>
+  items.map((item) => (
+    <MenuListItem
+      key={item.label}
+      icon={item.icon}
+      label={item.label}
+      comingSoon={!item.href}
+      onPress={item.href ? () => router.push(item.href as any) : undefined}
+    />
+  ));
 
 export default function ProfileScreen() {
-  const user = useAppSelector((s) => s.auth.user);
-  const dispatch = useAppDispatch();
-
-  const isAuthenticated = !!user;
-  const confirm = useConfirm();
-
-  const { refetch } = useGetProfileQuery(undefined, {
-    skip: !isAuthenticated,
-  });
-
-  useFocusEffect(
-    useCallback(() => {
-      if (isAuthenticated) {
-        refetch().then((res) => {
-          if (res.data) {
-            dispatch(setUser(res.data));
-          }
-        });
-      }
-    }, [isAuthenticated]),
-  );
-
-  const displayName = user
-    ? `${user.last_name ?? ""} ${user.first_name ?? ""}`.trim()
-    : "Người dùng";
-
-  const handleLogout = async () => {
-    const ok = await confirm({
-      title: "Đăng xuất",
-      message: "Bạn có chắc chắn muốn đăng xuất không?",
-      confirmText: "Đăng xuất",
-      danger: true,
-    });
-    if (!ok) return;
-
-    await performLogout(ROUTES.HOME);
-  };
+  const p = useProfile();
 
   return (
-    <View className="flex-1 bg-gray-50">
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-5 pt-14 pb-4 bg-gray-50">
-        <TouchableOpacity>
-          <Feather name="menu" size={24} color="#111827" />
-        </TouchableOpacity>
+    <View className="flex-1 bg-canvas">
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 32 }}
+      >
+        <ProfileHeader
+          isAuthenticated={p.isAuthenticated}
+          name={p.displayName}
+          subtitle={p.subtitle}
+          avatar={p.avatar}
+          onEdit={() => router.push(ROUTES.EDIT_PROFILE as any)}
+        />
 
-        <Text className="text-xl font-bold text-emerald-700">Tài khoản</Text>
+        <View className="px-5 pt-5">
+          {p.isAuthenticated ? (
+            <MenuGroup title="Tài khoản">
+              {renderItems(ACCOUNT_ITEMS)}
+            </MenuGroup>
+          ) : (
+            <RequireLoginNotice message="Đăng nhập để xem thông tin cá nhân, địa chỉ, đơn hàng và ưu đãi của bạn" />
+          )}
 
-        {isAuthenticated ? (
-          <NotificationBellButton />
-        ) : (
-          <View style={{ width: 22 }} />
-        )}
-      </View>
+          <MenuGroup title="Hỗ trợ">{renderItems(SUPPORT_ITEMS)}</MenuGroup>
 
-      <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
-        {/* Profile card */}
-        <View className="bg-emerald-50 rounded-3xl items-center py-8 mb-6">
-          <View
-            className="w-24 h-24 rounded-full bg-white items-center justify-center border-4 border-white overflow-hidden"
-            style={{
-              shadowColor: "#000",
-              shadowOpacity: 0.06,
-              shadowRadius: 8,
-              elevation: 2,
-            }}
-          >
-            {user?.avatar ? (
-              <Image
-                source={{ uri: user.avatar }}
-                style={{
-                  width: 96,
-                  height: 96,
-                }}
-                resizeMode="cover"
-              />
-            ) : (
-              <Feather name="user" size={40} color="#9CA3AF" />
-            )}
-          </View>
-
-          <Text className="text-xl font-bold text-gray-900 mt-4">
-            {isAuthenticated ? displayName : "Khách"}
-          </Text>
+          {p.isAuthenticated && (
+            <TouchableOpacity
+              className="flex-row items-center justify-center bg-danger-light rounded-xl py-4"
+              onPress={p.logout}
+              activeOpacity={0.7}
+            >
+              <Feather name="log-out" size={18} color={COLORS.danger} />
+              <Text className="text-danger font-semibold text-base ml-2">
+                Đăng xuất
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
-
-        {/* SECTION 1: Thông tin */}
-        <Text className="text-gray-500 font-semibold text-xs uppercase tracking-wide mb-3 ml-1">
-          Thông tin
-        </Text>
-
-        {isAuthenticated ? (
-          <>
-            <MenuListItem
-              icon="user"
-              label="Thông tin cá nhân"
-              onPress={() => router.push(ROUTES.EDIT_PROFILE as any)}
-            />
-
-            <MenuListItem
-              icon="map-pin"
-              label="Địa chỉ của tôi"
-              onPress={() => router.push("/profile/address" as any)}
-            />
-
-            <MenuListItem
-              icon="heart"
-              label="Nhân viên yêu thích"
-              onPress={() => router.push(ROUTES.FAVORITE_WORKERS as any)}
-            />
-
-            <MenuListItem
-              icon="credit-card"
-              label="Ví / Thẻ thanh toán"
-              onPress={() => router.push(ROUTES.WALLET as any)}
-            />
-
-            <MenuListItem icon="clock" label="Lịch sử thanh toán" />
-
-            <MenuListItem
-              icon="tag"
-              label="Khuyến mãi"
-              onPress={() => router.push(ROUTES.VOUCHERS as any)}
-            />
-
-            <MenuListItem icon="star" label="Đánh giá của tôi" />
-          </>
-        ) : (
-          <RequireLoginNotice message="Đăng nhập để xem thông tin cá nhân, địa chỉ, đơn hàng và ưu đãi của bạn" />
-        )}
-
-        {/* SECTION 2: Hỗ trợ */}
-        <Text className="text-gray-500 font-semibold text-xs uppercase tracking-wide mb-3 ml-1 mt-4">
-          Hỗ trợ
-        </Text>
-
-        <MenuListItem icon="settings" label="Cài đặt" />
-
-        <MenuListItem icon="info" label="Về CleanWise" />
-
-        {isAuthenticated && (
-          <TouchableOpacity
-            className="flex-row items-center justify-center bg-red-50 rounded-2xl py-4 mt-4 mb-10"
-            onPress={handleLogout}
-            activeOpacity={0.7}
-          >
-            <Feather name="log-out" size={18} color="#DC2626" />
-            <Text className="text-red-600 font-bold text-base ml-2">
-              Đăng xuất
-            </Text>
-          </TouchableOpacity>
-        )}
-
-        {!isAuthenticated && <View className="h-10" />}
       </ScrollView>
     </View>
   );

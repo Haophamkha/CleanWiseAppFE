@@ -1,3 +1,4 @@
+import { COLORS, SHADOWS } from "@/constants/theme";
 import { AppNotification } from "@/types/Notification";
 import { formatNotificationTime } from "@/utils/formatTime";
 import { getNotificationTypeMeta } from "@/utils/notificationMeta";
@@ -15,52 +16,76 @@ export default function NotificationItem({
 }: NotificationItemProps) {
   const meta = getNotificationTypeMeta(notification.type);
   const isUnread = !notification.is_read;
-  const iconBgClass = isUnread ? "bg-emerald-50" : "bg-gray-100";
-  const iconColor = isUnread ? "#047857" : "#6B7280";
 
   return (
     <TouchableOpacity
       onPress={() => onPress(notification)}
-      activeOpacity={0.7}
-      className={`flex-row bg-white rounded-2xl p-4 mb-3 ${
-        isUnread ? "border-l-4 border-emerald-600" : ""
+      activeOpacity={0.75}
+      className={`flex-row rounded-2xl border p-4 mb-3 ${
+        isUnread
+          ? "bg-primary-soft border-primary-border"
+          : "bg-surface border-line"
       }`}
-      style={{
-        shadowColor: "#000",
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 1,
-      }}
+      style={SHADOWS.card}
     >
       <View
-        className={`w-11 h-11 rounded-full items-center justify-center mr-3 ${iconBgClass}`}
+        className="items-center justify-center mr-3 rounded-2xl"
+        style={{
+          width: 56,
+          height: 56,
+          backgroundColor: meta.iconBgColor,
+          opacity: isUnread ? 1 : 0.85,
+        }}
       >
-        {meta.iconLibrary === "material-community" ? (
-          <MaterialCommunityIcons
-            name={meta.iconName as any}
-            size={20}
-            color={iconColor}
-          />
-        ) : (
-          <Feather name={meta.iconName as any} size={18} color={iconColor} />
-        )}
+        <MaterialCommunityIcons
+          name={meta.iconName as any}
+          size={28}
+          color={meta.iconColor}
+        />
       </View>
 
       <View className="flex-1">
+        <View className="flex-row items-center justify-between mb-1">
+          <Text
+            className="text-[11px] font-bold uppercase tracking-wide"
+            style={{ color: meta.iconColor }}
+          >
+            {meta.label}
+          </Text>
+          <Text className="text-[11px] text-ink-muted">
+            {formatNotificationTime(notification.created_at)}
+          </Text>
+        </View>
+
+        <View className="flex-row items-start">
+          <Text
+            className={`flex-1 text-[15px] ${
+              isUnread ? "font-bold text-ink" : "font-semibold text-ink-soft"
+            }`}
+            numberOfLines={2}
+          >
+            {notification.title}
+          </Text>
+          {isUnread && (
+            <View className="w-2.5 h-2.5 rounded-full bg-primary mt-1.5 ml-2" />
+          )}
+        </View>
+
         <Text
-          className={`text-gray-900 text-[15px] mb-1 ${
-            isUnread ? "font-bold" : "font-semibold"
-          }`}
+          className="text-ink-soft text-sm leading-5 mt-1"
+          numberOfLines={2}
         >
-          {notification.title}
-        </Text>
-        <Text className="text-gray-500 text-sm leading-5" numberOfLines={2}>
           {notification.message}
         </Text>
-        <Text className="text-gray-400 text-xs mt-2 text-right">
-          {formatNotificationTime(notification.created_at)}
-        </Text>
+
+        {notification.related_booking ? (
+          <View className="flex-row items-center mt-2">
+            <Text className="text-xs font-semibold text-primary">
+              Xem đơn hàng
+            </Text>
+            <Feather name="chevron-right" size={14} color={COLORS.primary} />
+          </View>
+        ) : null}
       </View>
     </TouchableOpacity>
   );

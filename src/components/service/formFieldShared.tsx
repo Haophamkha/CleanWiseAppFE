@@ -1,4 +1,6 @@
 // src/components/service/formFieldShared.tsx
+import { BottomSheet } from "@/components/ui/BottomSheet";
+import { COLORS, SHADOWS } from "@/constants/theme";
 import type {
   ConditionalOptionGroup,
   FieldOption,
@@ -7,10 +9,10 @@ import type {
 } from "@/types/Service";
 import { formatVnd } from "@/utils/currency";
 import { Feather } from "@expo/vector-icons";
+import { useEffect, useRef, useState } from "react";
 import {
+  Animated,
   Image,
-  Modal,
-  Pressable,
   ScrollView,
   Switch,
   Text,
@@ -19,22 +21,10 @@ import {
   View,
 } from "react-native";
 
-import { useEffect, useRef, useState } from "react";
+// COLORS giờ lấy từ theme: các file cũ import từ đây vẫn chạy và tự đổi theo theme.
+export { COLORS };
 
 export type Values = Record<string, any>;
-
-export const COLORS = {
-  primary: "#047857",
-  primaryLight: "#ECFDF5",
-  primaryBorder: "#A7F3D0",
-  text: "#111827",
-  textSecondary: "#374151",
-  textMuted: "#6B7280",
-  border: "#E5E7EB",
-  background: "#F3F4F6",
-  white: "#FFFFFF",
-  danger: "#DC2626",
-};
 
 export const isConditional = (
   options: FieldOption[] | ConditionalOptionGroup[] | undefined,
@@ -64,8 +54,7 @@ export function getSelectedOption(
   return options.find((o) => o.value === siblingValues[field.key]);
 }
 
-// Chỉ trả về GIÁ, không nối description vào — description đã được
-// OptionCard/ImageOptionCard tự hiển thị riêng, nối vào đây sẽ bị lặp chữ.
+// Chỉ trả về GIÁ, description đã được các card tự hiển thị riêng.
 export function buildCaption(
   opt: FieldOption,
   isAdditive: boolean,
@@ -79,9 +68,25 @@ export function buildCaption(
   return isAdditive ? `+${formatVnd(price)}` : formatVnd(price);
 }
 
+// Ô chọn tròn: đã chọn = nền màu chính + dấu tích
+function Radio({ selected, size = 24 }: { selected: boolean; size?: number }) {
+  return selected ? (
+    <View
+      className="rounded-full bg-primary items-center justify-center"
+      style={{ width: size, height: size }}
+    >
+      <Feather name="check" size={size * 0.58} color={COLORS.white} />
+    </View>
+  ) : (
+    <View
+      className="rounded-full border-2 border-line bg-surface"
+      style={{ width: size, height: size }}
+    />
+  );
+}
+
 // ============================================================
-// ATOM: OptionCard — thẻ chọn dạng danh sách dọc, full width
-// (dùng cho SINGLE_SELECT không có ảnh: Thời lượng, Quy mô nhà, Công suất...)
+// OptionCard — thẻ chọn dọc (Thời lượng, Quy mô nhà, Công suất...)
 // ============================================================
 export function OptionCard({
   label,
@@ -99,61 +104,34 @@ export function OptionCard({
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.8}
-      className="rounded-2xl px-4 py-4 mb-3"
-      style={{
-        borderWidth: selected ? 2 : 1,
-        borderColor: selected ? COLORS.primary : COLORS.border,
-        backgroundColor: selected ? COLORS.primaryLight : COLORS.white,
-        shadowColor: "#000",
-        shadowOpacity: selected ? 0.06 : 0.03,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 6,
-        elevation: selected ? 2 : 1,
-      }}
+      activeOpacity={0.85}
+      className={`flex-row items-center rounded-2xl border-2 p-4 mb-3 ${
+        selected ? "bg-primary-soft border-primary" : "bg-surface border-line"
+      }`}
+      style={selected ? SHADOWS.card : undefined}
     >
-      <View className="flex-row items-center justify-between">
-        <View className="flex-1 pr-3">
-          <Text
-            className="text-[16px] font-bold"
-            style={{ color: selected ? COLORS.primary : COLORS.text }}
-          >
-            {label}
+      <Radio selected={selected} />
+      <View className="flex-1 mx-3">
+        <Text
+          className={`text-base font-bold ${
+            selected ? "text-primary-dark" : "text-ink"
+          }`}
+        >
+          {label}
+        </Text>
+        {!!description && (
+          <Text className="text-[13px] text-ink-muted mt-0.5">
+            {description}
           </Text>
-          {!!description && (
-            <Text
-              className="text-[13px] mt-1"
-              style={{ color: COLORS.textMuted }}
-            >
-              {description}
-            </Text>
-          )}
-        </View>
-        {selected ? (
-          <View
-            className="w-6 h-6 rounded-full items-center justify-center"
-            style={{ backgroundColor: COLORS.primary }}
-          >
-            <Feather name="check" size={14} color="#fff" />
-          </View>
-        ) : (
-          <View
-            className="w-6 h-6 rounded-full"
-            style={{ borderWidth: 2, borderColor: COLORS.border }}
-          />
         )}
       </View>
       {!!caption && (
         <View
-          className="self-start mt-2.5 px-2.5 py-1 rounded-lg"
-          style={{
-            backgroundColor: selected ? "#FFFFFF" : COLORS.background,
-          }}
+          className={`px-2.5 py-1 rounded-full ${
+            selected ? "bg-primary-light" : "bg-canvas"
+          }`}
         >
-          <Text
-            className="text-[13px] font-bold"
-            style={{ color: COLORS.primary }}
-          >
+          <Text className="text-[13px] font-bold text-primary-dark">
             {caption}
           </Text>
         </View>
@@ -163,8 +141,7 @@ export function OptionCard({
 }
 
 // ============================================================
-// ATOM: ImageOptionCard — lưới 2 cột có ảnh minh hoạ
-// (dùng cho field có options chứa `image`: Loại nhà, Dịch vụ thêm...)
+// ImageOptionCard — lưới 2 cột có ảnh (Loại nhà, Dịch vụ thêm...)
 // ============================================================
 export function ImageOptionCard({
   image,
@@ -189,26 +166,12 @@ export function ImageOptionCard({
       className="mb-3"
     >
       <View
-        style={{
-          borderWidth: selected ? 2 : 1,
-          borderColor: selected ? COLORS.primary : COLORS.border,
-          borderRadius: 18,
-          overflow: "hidden",
-          backgroundColor: COLORS.white,
-          shadowColor: "#000",
-          shadowOpacity: selected ? 0.08 : 0.04,
-          shadowOffset: { width: 0, height: 3 },
-          shadowRadius: 8,
-          elevation: selected ? 3 : 1,
-        }}
+        className={`overflow-hidden border-2 bg-surface ${
+          selected ? "border-primary" : "border-line"
+        }`}
+        style={[{ borderRadius: 20 }, selected ? SHADOWS.card : undefined]}
       >
-        <View
-          style={{
-            width: "100%",
-            aspectRatio: 1,
-            backgroundColor: COLORS.background,
-          }}
-        >
+        <View style={{ width: "100%", aspectRatio: 1 }} className="bg-canvas">
           {!!image && (
             <Image
               source={{ uri: image }}
@@ -216,41 +179,30 @@ export function ImageOptionCard({
               resizeMode="cover"
             />
           )}
-          {selected && (
-            <View
-              className="absolute top-2 right-2 w-6 h-6 rounded-full items-center justify-center"
-              style={{ backgroundColor: COLORS.primary }}
-            >
-              <Feather name="check" size={14} color="#fff" />
-            </View>
-          )}
+          <View className="absolute top-2 right-2">
+            <Radio selected={selected} size={26} />
+          </View>
         </View>
-        <View className="px-3 py-3">
+        <View className="p-3">
           <Text
             numberOfLines={1}
-            className="text-[14px] font-bold"
-            style={{ color: selected ? COLORS.primary : COLORS.text }}
+            className={`text-[14px] font-bold ${
+              selected ? "text-primary-dark" : "text-ink"
+            }`}
           >
             {label}
           </Text>
           {!!description && (
             <Text
               numberOfLines={2}
-              className="text-[11px] mt-0.5"
-              style={{ color: COLORS.textMuted }}
+              className="text-[11px] mt-0.5 text-ink-muted"
             >
               {description}
             </Text>
           )}
           {!!caption && (
-            <View
-              className="self-start mt-2 px-2 py-1 rounded-md"
-              style={{ backgroundColor: COLORS.primaryLight }}
-            >
-              <Text
-                className="text-[12px] font-bold"
-                style={{ color: COLORS.primary }}
-              >
+            <View className="self-start mt-2 px-2 py-1 rounded-full bg-primary-light">
+              <Text className="text-[12px] font-bold text-primary-dark">
                 {caption}
               </Text>
             </View>
@@ -262,7 +214,7 @@ export function ImageOptionCard({
 }
 
 // ============================================================
-// ATOM: Pill — chip nhỏ (fallback cho MULTI_SELECT không có ảnh)
+// Pill — chip (MULTI_SELECT không ảnh)
 // ============================================================
 export function Pill({
   label,
@@ -278,37 +230,44 @@ export function Pill({
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.8}
-      className="px-4 py-2.5 rounded-xl border mr-2 mb-2"
-      style={{
-        backgroundColor: selected ? COLORS.primary : COLORS.white,
-        borderColor: selected ? COLORS.primary : COLORS.border,
-        maxWidth: 220,
-      }}
+      activeOpacity={0.85}
+      className={`flex-row items-center px-4 py-2.5 rounded-full border mr-2 mb-2 ${
+        selected ? "bg-primary border-primary" : "bg-surface border-line"
+      }`}
+      style={[{ maxWidth: 240 }, selected ? SHADOWS.card : undefined]}
     >
-      <Text
-        className="text-[14px]"
-        style={{
-          color: selected ? COLORS.white : COLORS.textSecondary,
-          fontWeight: selected ? "600" : "500",
-        }}
-      >
-        {label}
-      </Text>
-      {!!caption && (
-        <Text
-          className="text-[11px] mt-0.5"
-          style={{ color: selected ? "#D1FAE5" : COLORS.textMuted }}
-        >
-          {caption}
-        </Text>
+      {selected && (
+        <Feather
+          name="check"
+          size={14}
+          color={COLORS.white}
+          style={{ marginRight: 6 }}
+        />
       )}
+      <View className="shrink">
+        <Text
+          className={`text-[14px] font-semibold ${
+            selected ? "text-white" : "text-ink-soft"
+          }`}
+        >
+          {label}
+        </Text>
+        {!!caption && (
+          <Text
+            className={`text-[11px] mt-0.5 ${
+              selected ? "text-white/80" : "text-ink-muted"
+            }`}
+          >
+            {caption}
+          </Text>
+        )}
+      </View>
     </TouchableOpacity>
   );
 }
 
 // ============================================================
-// ATOM: TabBar — thanh tab ngang (dùng cho category chọn trong REPEATABLE_GROUP)
+// TabBar — thanh tab ngang dạng pill
 // ============================================================
 export function TabBar({
   options,
@@ -323,8 +282,9 @@ export function TabBar({
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
+      style={{ flexGrow: 0 }}
       className="mb-4"
-      contentContainerStyle={{ paddingRight: 8 }}
+      contentContainerStyle={{ paddingRight: 8, gap: 8 }}
     >
       {options.map((opt) => {
         const selected = value === opt.value;
@@ -332,15 +292,16 @@ export function TabBar({
           <TouchableOpacity
             key={opt.value}
             onPress={() => onChange(opt.value)}
-            activeOpacity={0.8}
-            className="px-4 py-2.5 rounded-xl mr-2"
-            style={{
-              backgroundColor: selected ? COLORS.primary : COLORS.background,
-            }}
+            activeOpacity={0.85}
+            className={`h-10 px-5 rounded-full items-center justify-center border ${
+              selected ? "bg-primary border-primary" : "bg-surface border-line"
+            }`}
+            style={selected ? SHADOWS.card : undefined}
           >
             <Text
-              className="text-[14px] font-bold"
-              style={{ color: selected ? "#fff" : COLORS.textSecondary }}
+              className={`text-[14px] font-bold ${
+                selected ? "text-white" : "text-ink-soft"
+              }`}
             >
               {opt.label}
             </Text>
@@ -352,7 +313,7 @@ export function TabBar({
 }
 
 // ============================================================
-// ATOM: QuantityStepper
+// QuantityStepper
 // ============================================================
 export function QuantityStepper({
   value,
@@ -365,36 +326,37 @@ export function QuantityStepper({
   max?: number;
   onChange: (v: number) => void;
 }) {
+  const atMin = value <= min;
+  const atMax = value >= max;
   return (
-    <View className="flex-row items-center">
+    <View className="flex-row items-center self-start rounded-full bg-canvas p-1">
       <TouchableOpacity
         onPress={() => onChange(Math.max(min, value - 1))}
+        disabled={atMin}
         activeOpacity={0.8}
-        className="w-10 h-10 rounded-xl items-center justify-center"
-        style={{ backgroundColor: COLORS.background }}
+        className="w-10 h-10 rounded-full bg-surface items-center justify-center"
+        style={[SHADOWS.card, { opacity: atMin ? 0.45 : 1 }]}
       >
-        <Feather name="minus" size={16} color={COLORS.textSecondary} />
+        <Feather name="minus" size={17} color={COLORS.ink} />
       </TouchableOpacity>
-      <Text
-        className="mx-4 text-[16px] font-bold min-w-[24px] text-center"
-        style={{ color: COLORS.text }}
-      >
+      <Text className="mx-5 text-lg font-extrabold min-w-[24px] text-center text-ink">
         {value}
       </Text>
       <TouchableOpacity
         onPress={() => onChange(Math.min(max, value + 1))}
+        disabled={atMax}
         activeOpacity={0.8}
-        className="w-10 h-10 rounded-xl items-center justify-center"
-        style={{ backgroundColor: COLORS.background }}
+        className="w-10 h-10 rounded-full bg-primary items-center justify-center"
+        style={{ opacity: atMax ? 0.45 : 1 }}
       >
-        <Feather name="plus" size={16} color={COLORS.textSecondary} />
+        <Feather name="plus" size={17} color={COLORS.white} />
       </TouchableOpacity>
     </View>
   );
 }
 
 // ============================================================
-// ATOM: BooleanToggleRow
+// BooleanToggleRow
 // ============================================================
 export function BooleanToggleRow({
   label,
@@ -409,25 +371,16 @@ export function BooleanToggleRow({
 }) {
   return (
     <View
-      className="flex-row items-center justify-between rounded-xl px-4 py-3 mb-3"
-      style={{
-        backgroundColor: COLORS.background,
-        borderWidth: 1,
-        borderColor: COLORS.border,
-      }}
+      className={`flex-row items-center justify-between rounded-2xl border px-4 py-3.5 mb-3 ${
+        value
+          ? "bg-primary-soft border-primary-border"
+          : "bg-surface border-line"
+      }`}
     >
       <View className="flex-1 mr-3">
-        <Text
-          className="text-[14px] font-medium"
-          style={{ color: COLORS.text }}
-        >
-          {label}
-        </Text>
+        <Text className="text-[15px] font-semibold text-ink">{label}</Text>
         {!!description && (
-          <Text
-            className="text-[12px] mt-0.5"
-            style={{ color: COLORS.textMuted }}
-          >
+          <Text className="text-[12px] mt-0.5 text-ink-muted">
             {description}
           </Text>
         )}
@@ -436,14 +389,14 @@ export function BooleanToggleRow({
         value={value}
         onValueChange={onChange}
         trackColor={{ false: COLORS.border, true: COLORS.primaryBorder }}
-        thumbColor={value ? COLORS.primary : "#FFFFFF"}
+        thumbColor={value ? COLORS.primary : COLORS.white}
       />
     </View>
   );
 }
 
 // ============================================================
-// ATOM: WeekdayRow
+// WeekdayRow
 // ============================================================
 export function WeekdayRow({
   options,
@@ -468,15 +421,18 @@ export function WeekdayRow({
                   : [...value, opt.value],
               )
             }
-            activeOpacity={0.8}
-            className="w-11 h-11 rounded-full items-center justify-center"
-            style={{
-              backgroundColor: isSelected ? COLORS.primary : COLORS.background,
-            }}
+            activeOpacity={0.85}
+            className={`w-11 h-11 rounded-full items-center justify-center border ${
+              isSelected
+                ? "bg-primary border-primary"
+                : "bg-surface border-line"
+            }`}
+            style={isSelected ? SHADOWS.float : undefined}
           >
             <Text
-              className="text-xs font-bold"
-              style={{ color: isSelected ? COLORS.white : COLORS.textMuted }}
+              className={`text-xs font-bold ${
+                isSelected ? "text-white" : "text-ink-muted"
+              }`}
             >
               {opt.label.replace("Thứ ", "T")}
             </Text>
@@ -488,11 +444,10 @@ export function WeekdayRow({
 }
 
 // ============================================================
-// ATOM: TimeWheelPicker — 2 cột cuộn giờ (8-18h) / phút (00-59)
-// Dùng bên trong Modal của TimeField, không hiện trực tiếp ngoài form.
+// TimeWheelPicker — 2 cột cuộn giờ / phút (trong BottomSheet của TimeField)
 // ============================================================
-const WHEEL_ITEM_HEIGHT = 48;
-const WHEEL_VISIBLE_COUNT = 5; // luôn để số lẻ
+const WHEEL_ITEM_HEIGHT = 56;
+const WHEEL_VISIBLE_COUNT = 5;
 const WHEEL_HEIGHT = WHEEL_ITEM_HEIGHT * WHEEL_VISIBLE_COUNT;
 const WHEEL_PADDING = (WHEEL_HEIGHT - WHEEL_ITEM_HEIGHT) / 2;
 
@@ -510,6 +465,10 @@ function WheelColumn({
   const scrollRef = useRef<any>(null);
   const didMount = useRef(false);
   const isInternalUpdate = useRef(false);
+  // Vị trí cuộn theo thời gian thực, dùng để nội suy độ đậm từng số
+  const scrollY = useRef(
+    new Animated.Value(selectedIndex * WHEEL_ITEM_HEIGHT),
+  ).current;
 
   useEffect(() => {
     if (isInternalUpdate.current) {
@@ -523,9 +482,6 @@ function WheelColumn({
     didMount.current = true;
   }, [selectedIndex]);
 
-  // Chỉ dùng để CẬP NHẬT STATE từ vị trí cuộn thực tế — KHÔNG tự scrollTo
-  // để snap nữa, vì snapToInterval đã để native tự làm việc đó rồi.
-  // Tự scrollTo ở đây sẽ đè lên đà cuộn (momentum) đang chạy dở, gây giật lùi.
   const reportIndexFromOffset = (y: number) => {
     const idx = Math.max(
       0,
@@ -538,56 +494,72 @@ function WheelColumn({
   };
 
   return (
-    <ScrollView
+    <Animated.ScrollView
       ref={scrollRef}
-      style={{ height: WHEEL_HEIGHT, width: 84 }}
+      style={{ height: WHEEL_HEIGHT, flex: 1 }}
       showsVerticalScrollIndicator={false}
       snapToInterval={WHEEL_ITEM_HEIGHT}
       decelerationRate="fast"
       contentContainerStyle={{ paddingVertical: WHEEL_PADDING }}
-      onMomentumScrollEnd={(e) => {
-        // Đà cuộn đã dừng hẳn -> native đã snap xong, đọc vị trí cuối cùng.
-        reportIndexFromOffset(e.nativeEvent.contentOffset.y);
-      }}
+      scrollEventThrottle={16}
+      onScroll={Animated.event(
+        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+        { useNativeDriver: true },
+      )}
+      onMomentumScrollEnd={(e) =>
+        reportIndexFromOffset(e.nativeEvent.contentOffset.y)
+      }
       onScrollEndDrag={(e) => {
         const y = e.nativeEvent.contentOffset.y;
         const nearestSnapY =
           Math.round(y / WHEEL_ITEM_HEIGHT) * WHEEL_ITEM_HEIGHT;
-        // Nếu vừa buông tay mà vị trí đã trùng mốc snap -> chắc chắn sẽ
-        // không còn đà cuộn tiếp theo (onMomentumScrollEnd sẽ không bắn),
-        // nên xử lý luôn ở đây. Ngược lại, để yên cho đà cuộn tự chạy tiếp
-        // rồi onMomentumScrollEnd xử lý sau.
-        if (Math.abs(y - nearestSnapY) < 1) {
-          reportIndexFromOffset(y);
-        }
+        if (Math.abs(y - nearestSnapY) < 1) reportIndexFromOffset(y);
       }}
-      scrollEventThrottle={16}
     >
       {data.map((v, idx) => {
-        const isSelected = idx === selectedIndex;
+        const H = WHEEL_ITEM_HEIGHT;
+        const inputRange = [
+          (idx - 2) * H,
+          (idx - 1) * H,
+          idx * H,
+          (idx + 1) * H,
+          (idx + 2) * H,
+        ];
+        const opacity = scrollY.interpolate({
+          inputRange,
+          outputRange: [0.1, 0.35, 1, 0.35, 0.1],
+          extrapolate: "clamp",
+        });
+        const scale = scrollY.interpolate({
+          inputRange,
+          outputRange: [0.8, 0.9, 1, 0.9, 0.8],
+          extrapolate: "clamp",
+        });
+
         return (
           <View
             key={v}
             style={{
-              height: WHEEL_ITEM_HEIGHT,
+              height: H,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Text
+            <Animated.Text
               style={{
-                fontSize: isSelected ? 30 : 20,
-                fontWeight: isSelected ? "800" : "500",
-                color: isSelected ? COLORS.primary : COLORS.textMuted,
-                opacity: isSelected ? 1 : 0.45,
+                fontSize: 42,
+                fontWeight: "300",
+                color: COLORS.ink,
+                opacity,
+                transform: [{ scale }],
               }}
             >
               {formatItem(v)}
-            </Text>
+            </Animated.Text>
           </View>
         );
       })}
-    </ScrollView>
+    </Animated.ScrollView>
   );
 }
 
@@ -597,7 +569,7 @@ function TimeWheelPicker({
   maxHour,
   onChange,
 }: {
-  value: string; // "HH:MM"
+  value: string;
   minHour: number;
   maxHour: number;
   onChange: (v: string) => void;
@@ -606,7 +578,7 @@ function TimeWheelPicker({
     { length: maxHour - minHour + 1 },
     (_, i) => minHour + i,
   );
-  const minutes = Array.from({ length: 60 }, (_, i) => i); // 00 -> 59
+  const minutes = Array.from({ length: 60 }, (_, i) => i);
 
   const [hh, mm] = value.split(":");
   const parsedHour = Math.min(
@@ -625,35 +597,17 @@ function TimeWheelPicker({
   };
 
   return (
-    <View
-      style={{
-        borderRadius: 20,
-        backgroundColor: COLORS.background,
-        paddingVertical: 6,
-      }}
-    >
-      <View
-        style={{
-          height: WHEEL_HEIGHT,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <View
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            top: WHEEL_PADDING,
-            left: 16,
-            right: 16,
-            height: WHEEL_ITEM_HEIGHT,
-            borderRadius: 14,
-            backgroundColor: COLORS.primaryLight,
-            borderWidth: 1,
-            borderColor: COLORS.primaryBorder,
-          }}
-        />
+    <View>
+      <View className="flex-row mb-2">
+        <Text className="flex-1 text-center text-[15px] font-bold text-ink">
+          Giờ
+        </Text>
+        <Text className="flex-1 text-center text-[15px] font-bold text-ink">
+          Phút
+        </Text>
+      </View>
+
+      <View style={{ height: WHEEL_HEIGHT, flexDirection: "row" }}>
         <WheelColumn
           data={hours}
           selectedIndex={hourIndex === -1 ? 0 : hourIndex}
@@ -662,16 +616,6 @@ function TimeWheelPicker({
             commit(idx, minuteIndex === -1 ? 0 : minuteIndex)
           }
         />
-        <Text
-          style={{
-            fontSize: 26,
-            fontWeight: "800",
-            color: COLORS.text,
-            marginHorizontal: 6,
-          }}
-        >
-          :
-        </Text>
         <WheelColumn
           data={minutes}
           selectedIndex={minuteIndex === -1 ? 0 : minuteIndex}
@@ -684,8 +628,7 @@ function TimeWheelPicker({
 }
 
 // ============================================================
-// FIELD: TimeField — ô hiển thị giờ gọn, bấm vào mới bung Modal cuộn
-// Giờ giới hạn 8h-18h, phút 00-59
+// TimeField — ô giờ gọn, bấm mở BottomSheet cuộn
 // ============================================================
 export function TimeField({
   value,
@@ -718,123 +661,66 @@ export function TimeField({
     <>
       <TouchableOpacity
         onPress={open}
-        activeOpacity={0.8}
-        className="flex-row items-center justify-between rounded-2xl px-4 py-4"
-        style={{
-          backgroundColor: COLORS.white,
-          borderWidth: 1,
-          borderColor: COLORS.border,
-        }}
+        activeOpacity={0.85}
+        className="flex-row items-center rounded-2xl border border-line bg-surface p-4"
+        style={SHADOWS.card}
       >
-        <View className="flex-row items-center">
-          <View
-            className="w-9 h-9 rounded-full items-center justify-center mr-3"
-            style={{ backgroundColor: COLORS.primaryLight }}
-          >
-            <Feather name="clock" size={16} color={COLORS.primary} />
-          </View>
-          <Text
-            className="text-[14px] font-medium"
-            style={{ color: COLORS.textSecondary }}
-          >
-            Giờ bắt đầu
-          </Text>
+        <View className="w-11 h-11 rounded-full bg-primary-light items-center justify-center mr-3">
+          <Feather name="clock" size={19} color={COLORS.primaryDark} />
         </View>
-        <View className="flex-row items-center">
-          <Text
-            className="text-[20px] font-extrabold mr-1"
-            style={{ color: COLORS.text }}
-          >
+        <View className="flex-1">
+          <Text className="text-xs text-ink-muted">Giờ bắt đầu</Text>
+          <Text className="text-[22px] font-extrabold text-ink">
             {displayValue}
           </Text>
-          <Feather name="chevron-right" size={18} color={COLORS.textMuted} />
+        </View>
+        <View className="px-3 py-1.5 rounded-full bg-primary-light">
+          <Text className="text-xs font-bold text-primary-dark">Đổi</Text>
         </View>
       </TouchableOpacity>
 
-      <Modal
-        visible={visible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setVisible(false)}
-      >
-        <View style={{ flex: 1, backgroundColor: "rgba(17,24,39,0.45)" }}>
-          {/* Vùng backdrop để đóng - KHÔNG chứa nội dung sheet */}
-          <Pressable style={{ flex: 1 }} onPress={() => setVisible(false)} />
-
-          {/* Sheet là View thường, không nằm trong Touchable nào cả */}
-          <View
-            style={{
-              backgroundColor: COLORS.white,
-              borderTopLeftRadius: 28,
-              borderTopRightRadius: 28,
-              paddingBottom: 28,
-              shadowColor: "#000",
-              shadowOpacity: 0.15,
-              shadowOffset: { width: 0, height: -4 },
-              shadowRadius: 16,
-              elevation: 8,
-            }}
+      <BottomSheet visible={visible} onClose={() => setVisible(false)}>
+        <View className="flex-row items-center justify-between px-5 pt-3">
+          <TouchableOpacity
+            onPress={() => setVisible(false)}
+            hitSlop={10}
+            className="w-10 h-10 items-center justify-center"
           >
-            <View className="items-center pt-3 pb-1">
-              <View
-                style={{
-                  width: 40,
-                  height: 4,
-                  borderRadius: 2,
-                  backgroundColor: COLORS.border,
-                }}
-              />
-            </View>
+            <Feather name="x" size={26} color={COLORS.ink} />
+          </TouchableOpacity>
 
-            <View className="flex-row items-center justify-between px-5 pt-3 pb-2">
-              <TouchableOpacity onPress={() => setVisible(false)} hitSlop={8}>
-                <Text
-                  className="text-[15px] font-medium"
-                  style={{ color: COLORS.textMuted }}
-                >
-                  Huỷ
-                </Text>
-              </TouchableOpacity>
-              <Text
-                className="text-[16px] font-bold"
-                style={{ color: COLORS.text }}
-              >
-                Chọn giờ làm
-              </Text>
-              <TouchableOpacity onPress={confirm} hitSlop={8}>
-                <Text
-                  className="text-[15px] font-bold"
-                  style={{ color: COLORS.primary }}
-                >
-                  Xong
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <View className="px-5 pt-2">
-              <TimeWheelPicker
-                value={tempValue}
-                minHour={minHour}
-                maxHour={maxHour}
-                onChange={setTempValue}
-              />
-              <Text
-                className="text-[12px] text-center mt-3"
-                style={{ color: COLORS.textMuted }}
-              >
-                Nhận việc trong khung giờ {String(minHour).padStart(2, "0")}
-                :00 - {String(maxHour).padStart(2, "0")}:00
-              </Text>
-            </View>
+          <View className="items-center">
+            <Text className="text-lg font-bold text-ink">Chọn giờ làm</Text>
+            <Text className="text-xs text-ink-muted mt-0.5">
+              Khung giờ {String(minHour).padStart(2, "0")}:00 -{" "}
+              {String(maxHour).padStart(2, "0")}:00
+            </Text>
           </View>
+
+          <TouchableOpacity
+            onPress={confirm}
+            hitSlop={10}
+            className="w-10 h-10 items-center justify-center"
+          >
+            <Feather name="check" size={28} color={COLORS.primary} />
+          </TouchableOpacity>
         </View>
-      </Modal>
+
+        <View className="px-8 pt-8 pb-4">
+          <TimeWheelPicker
+            value={tempValue}
+            minHour={minHour}
+            maxHour={maxHour}
+            onChange={setTempValue}
+          />
+        </View>
+      </BottomSheet>
     </>
   );
 }
 
 // ============================================================
-// ATOM: DateStripField — dải ngày ngang, cuộn N ngày kể từ ngày mai
+// DateStripField — dải ngày ngang
 // ============================================================
 const VN_WEEKDAY_SHORT = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
@@ -863,7 +749,7 @@ export function DateStripField({
   rangeDays = 14,
   onChange,
 }: {
-  value: string | undefined; // "YYYY-MM-DD"
+  value: string | undefined;
   minDaysFromNow?: number;
   rangeDays?: number;
   onChange: (v: string) => void;
@@ -874,7 +760,8 @@ export function DateStripField({
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ paddingRight: 8 }}
+      style={{ flexGrow: 0 }}
+      contentContainerStyle={{ paddingRight: 8, paddingVertical: 6, gap: 10 }}
     >
       {dates.map((d) => {
         const key = toDateKey(d);
@@ -884,36 +771,34 @@ export function DateStripField({
             key={key}
             onPress={() => onChange(key)}
             activeOpacity={0.85}
-            style={{
-              width: 56,
-              height: 72,
-              borderRadius: 16,
-              marginRight: 10,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: selected ? COLORS.primary : COLORS.white,
-              borderWidth: 1,
-              borderColor: selected ? COLORS.primary : COLORS.border,
-            }}
+            className={`items-center justify-center border ${
+              selected ? "bg-primary border-primary" : "bg-surface border-line"
+            }`}
+            style={[
+              { width: 60, height: 80, borderRadius: 20 },
+              selected ? SHADOWS.float : undefined,
+            ]}
           >
             <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "600",
-                color: selected ? "#fff" : COLORS.textMuted,
-                marginBottom: 4,
-              }}
+              className={`text-xs font-semibold ${
+                selected ? "text-white/80" : "text-ink-muted"
+              }`}
             >
               {VN_WEEKDAY_SHORT[d.getDay()]}
             </Text>
             <Text
-              style={{
-                fontSize: 20,
-                fontWeight: "800",
-                color: selected ? "#fff" : COLORS.text,
-              }}
+              className={`text-[22px] font-extrabold my-0.5 ${
+                selected ? "text-white" : "text-ink"
+              }`}
             >
               {d.getDate()}
+            </Text>
+            <Text
+              className={`text-[10px] font-medium ${
+                selected ? "text-white/70" : "text-ink-muted"
+              }`}
+            >
+              Th{d.getMonth() + 1}
             </Text>
           </TouchableOpacity>
         );
@@ -923,8 +808,68 @@ export function DateStripField({
 }
 
 // ============================================================
-// DISPATCHER: FieldControl — chọn đúng atom theo field.type
-// Dùng cho mọi field KHÔNG PHẢI REPEATABLE_GROUP
+// GridOptionCard — thẻ chọn nhỏ 2 cột (VD: Thời hạn gói)
+// ============================================================
+export function GridOptionCard({
+  image,
+  label,
+  caption,
+  selected,
+  onPress,
+}: {
+  image?: string;
+  label: string;
+  caption?: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      style={{ width: "48%" }}
+      className="mb-3"
+    >
+      <View
+        className={`border-2 p-3.5 ${
+          selected ? "bg-primary-soft border-primary" : "bg-surface border-line"
+        }`}
+        style={[{ borderRadius: 20 }, selected ? SHADOWS.card : undefined]}
+      >
+        {!!image && (
+          <Image
+            source={{ uri: image }}
+            style={{
+              width: "100%",
+              aspectRatio: 1.8,
+              borderRadius: 12,
+              marginBottom: 10,
+            }}
+            resizeMode="cover"
+          />
+        )}
+        <View className="flex-row items-center justify-between">
+          <Text
+            className={`flex-1 mr-2 text-[15px] font-bold ${
+              selected ? "text-primary-dark" : "text-ink"
+            }`}
+          >
+            {label}
+          </Text>
+          <Radio selected={selected} size={22} />
+        </View>
+        {!!caption && (
+          <Text className="text-[13px] font-bold text-primary mt-1.5">
+            {caption}
+          </Text>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+// ============================================================
+// DISPATCHER: FieldControl
 // ============================================================
 export function FieldControl({
   field,
@@ -977,6 +922,11 @@ export function FieldControl({
 
     case "MULTI_SELECT": {
       const selected: string[] = Array.isArray(value) ? value : [];
+      const toggle = (v: string, isSelected: boolean) =>
+        onChange(
+          isSelected ? selected.filter((x) => x !== v) : [...selected, v],
+        );
+
       if (hasImages) {
         return (
           <View className="flex-row flex-wrap justify-between">
@@ -990,13 +940,7 @@ export function FieldControl({
                   description={opt.description}
                   caption={buildCaption(opt, true, pricingConfig)}
                   selected={isSelected}
-                  onPress={() =>
-                    onChange(
-                      isSelected
-                        ? selected.filter((v) => v !== opt.value)
-                        : [...selected, opt.value],
-                    )
-                  }
+                  onPress={() => toggle(opt.value, isSelected)}
                 />
               );
             })}
@@ -1013,13 +957,7 @@ export function FieldControl({
                 label={opt.label}
                 caption={buildCaption(opt, true, pricingConfig)}
                 selected={isSelected}
-                onPress={() =>
-                  onChange(
-                    isSelected
-                      ? selected.filter((v) => v !== opt.value)
-                      : [...selected, opt.value],
-                  )
-                }
+                onPress={() => toggle(opt.value, isSelected)}
               />
             );
           })}
@@ -1050,17 +988,13 @@ export function FieldControl({
     case "TEXTAREA":
       return (
         <TextInput
-          className="rounded-xl px-4 py-3 text-[15px]"
+          className="rounded-2xl border border-line bg-surface px-4 py-3.5 text-[15px] text-ink"
           style={{
-            backgroundColor: COLORS.background,
-            borderWidth: 1,
-            borderColor: COLORS.border,
-            color: COLORS.text,
-            minHeight: field.type === "TEXTAREA" ? 80 : undefined,
+            minHeight: field.type === "TEXTAREA" ? 96 : undefined,
             textAlignVertical: field.type === "TEXTAREA" ? "top" : "center",
           }}
           placeholder={field.placeholder}
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={COLORS.inkMuted}
           multiline={field.type === "TEXTAREA"}
           numberOfLines={field.type === "TEXTAREA" ? 3 : 1}
           value={value ?? ""}
@@ -1093,78 +1027,4 @@ export function FieldControl({
     default:
       return null;
   }
-}
-
-// ============================================================
-// ATOM: GridOptionCard — thẻ chọn nhỏ gọn, 2 cột
-// (dùng cho SINGLE_SELECT có field.display === "grid", VD: Thời hạn gói)
-// ============================================================
-export function GridOptionCard({
-  image,
-  label,
-  caption,
-  selected,
-  onPress,
-}: {
-  image?: string;
-  label: string;
-  caption?: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.8}
-      style={{ width: "48%" }}
-      className="rounded-2xl px-4 py-4 mb-3"
-    >
-      <View
-        style={{
-          borderWidth: selected ? 2 : 1,
-          borderColor: selected ? COLORS.primary : COLORS.border,
-          borderRadius: 16,
-          backgroundColor: selected ? COLORS.primaryLight : COLORS.white,
-          padding: 14,
-        }}
-      >
-        {!!image && (
-          <Image
-            source={{ uri: image }}
-            style={{ width: "100%", aspectRatio: 1.8, borderRadius: 10 }}
-            resizeMode="cover"
-          />
-        )}
-        <View className="flex-row items-center justify-between mb-1">
-          <Text
-            className="text-[15px] font-bold"
-            style={{ color: selected ? COLORS.primary : COLORS.text }}
-          >
-            {label}
-          </Text>
-          {selected ? (
-            <View
-              className="w-5 h-5 rounded-full items-center justify-center"
-              style={{ backgroundColor: COLORS.primary }}
-            >
-              <Feather name="check" size={11} color="#fff" />
-            </View>
-          ) : (
-            <View
-              className="w-5 h-5 rounded-full"
-              style={{ borderWidth: 2, borderColor: COLORS.border }}
-            />
-          )}
-        </View>
-        {!!caption && (
-          <Text
-            className="text-[12px] font-bold"
-            style={{ color: COLORS.primary }}
-          >
-            {caption}
-          </Text>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
 }

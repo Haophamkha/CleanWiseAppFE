@@ -1,16 +1,21 @@
+import { COLORS, OVERLAY, RADIUS } from "@/constants/theme";
 import type { UserVoucher, Voucher } from "@/types/Voucher";
 import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import {
   ActivityIndicator,
   Modal,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   formatVoucherDate,
   formatVoucherMoney,
+  getVoucherDaysLeft,
   voucherSourceLabel,
 } from "./VoucherCard";
 
@@ -44,24 +49,96 @@ const walletStatusLabel: Record<UserVoucher["status"], string> = {
   REVOKED: "Đã thu hồi",
 };
 
-function DetailRow({
+type IconName = keyof typeof Feather.glyphMap;
+
+function StatTile({
   icon,
   label,
   value,
 }: {
-  icon: keyof typeof Feather.glyphMap;
+  icon: IconName;
   label: string;
   value: string;
 }) {
   return (
-    <View className="flex-row items-start py-3 border-b border-gray-100">
-      <View className="w-9 h-9 rounded-full bg-emerald-50 items-center justify-center mr-3">
-        <Feather name={icon} size={16} color="#047857" />
+    <View
+      style={{
+        flex: 1,
+        padding: 12,
+        borderRadius: 16,
+        backgroundColor: COLORS.canvas,
+      }}
+    >
+      <View
+        style={{
+          width: 30,
+          height: 30,
+          borderRadius: 15,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: COLORS.primaryLight,
+        }}
+      >
+        <Feather name={icon} size={14} color={COLORS.primaryDark} />
       </View>
-      <View className="flex-1">
-        <Text className="text-gray-400 text-xs">{label}</Text>
-        <Text className="text-gray-800 text-sm font-semibold mt-1 leading-5">{value}</Text>
-      </View>
+      <Text style={{ marginTop: 8, fontSize: 11, color: COLORS.inkMuted }}>
+        {label}
+      </Text>
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.75}
+        style={{
+          marginTop: 2,
+          fontSize: 14,
+          fontWeight: "800",
+          color: COLORS.ink,
+        }}
+      >
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+function DetailRow({
+  icon,
+  label,
+  value,
+  last,
+}: {
+  icon: IconName;
+  label: string;
+  value: string;
+  last?: boolean;
+}) {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 12,
+        borderBottomWidth: last ? 0 : StyleSheet.hairlineWidth,
+        borderBottomColor: COLORS.line,
+      }}
+    >
+      <Feather name={icon} size={16} color={COLORS.inkMuted} />
+      <Text
+        style={{ flex: 1, marginLeft: 12, fontSize: 13, color: COLORS.inkSoft }}
+      >
+        {label}
+      </Text>
+      <Text
+        style={{
+          maxWidth: "55%",
+          textAlign: "right",
+          fontSize: 13.5,
+          fontWeight: "700",
+          color: COLORS.ink,
+        }}
+      >
+        {value}
+      </Text>
     </View>
   );
 }
@@ -74,141 +151,450 @@ export function VoucherDetailModal({
   onClose,
   onClaim,
 }: Props) {
+  const insets = useSafeAreaInsets();
   if (!voucher) return null;
 
   const isPercent = voucher.discount_type === "PERCENT";
-  const discountLabel = isPercent
-    ? `Giảm ${Number(voucher.discount_value)}%`
-    : `Giảm ${formatVoucherMoney(voucher.discount_value)}`;
+  const bigValue = isPercent
+    ? `${Number(voucher.discount_value)}%`
+    : formatVoucherMoney(voucher.discount_value);
+  const daysLeft = getVoucherDaysLeft(voucher.end_at);
+  const urgent = daysLeft >= 0 && daysLeft <= 3;
+
+  const rows: { icon: IconName; label: string; value: string }[] = [
+    {
+      icon: "calendar",
+      label: "Hiệu lực",
+      value: `${formatVoucherDate(voucher.start_at)} - ${formatVoucherDate(voucher.end_at)}`,
+    },
+    {
+      icon: "send",
+      label: "Hình thức phát hành",
+      value: distributionLabel[voucher.distribution_type],
+    },
+    {
+      icon: "activity",
+      label: "Trạng thái",
+      value: walletVoucher
+        ? walletStatusLabel[walletVoucher.status]
+        : lifecycleLabel[voucher.lifecycle_status],
+    },
+  ];
+  if (voucher.remaining_issuance != null && !walletVoucher) {
+    rows.push({
+      icon: "users",
+      label: "Số lượng còn lại",
+      value: `${voucher.remaining_issuance} voucher`,
+    });
+  }
+  if (walletVoucher) {
+    rows.push({
+      icon: "inbox",
+      label: "Nguồn nhận",
+      value: voucherSourceLabel[walletVoucher.source],
+    });
+  }
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 bg-black/40 justify-end">
-        <TouchableOpacity className="flex-1" activeOpacity={1} onPress={onClose} />
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: OVERLAY,
+          justifyContent: "flex-end",
+        }}
+      >
+        <TouchableOpacity
+          style={{ flex: 1 }}
+          activeOpacity={1}
+          onPress={onClose}
+        />
 
-        <View className="bg-white rounded-t-[32px] max-h-[88%] overflow-hidden">
-          <View className="items-center pt-3">
-            <View className="w-10 h-1 rounded-full bg-gray-300" />
+        <View
+          style={{
+            maxHeight: "90%",
+            backgroundColor: COLORS.surface,
+            borderTopLeftRadius: RADIUS.sheet,
+            borderTopRightRadius: RADIUS.sheet,
+            overflow: "hidden",
+          }}
+        >
+          <View style={{ alignItems: "center", paddingTop: 10 }}>
+            <View
+              style={{
+                width: 40,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: COLORS.line,
+              }}
+            />
           </View>
 
-          <View className="flex-row items-center justify-between px-5 pt-4 pb-3 border-b border-gray-100">
-            <View className="flex-1 pr-4">
-              <Text className="text-gray-900 text-lg font-extrabold">Chi tiết voucher</Text>
-              <Text className="text-gray-400 text-xs mt-1">Kiểm tra điều kiện trước khi sử dụng</Text>
-            </View>
-            <TouchableOpacity
-              className="w-9 h-9 rounded-full bg-gray-100 items-center justify-center"
-              onPress={onClose}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              paddingHorizontal: 20,
+              paddingTop: 12,
+              paddingBottom: 12,
+            }}
+          >
+            <Text
+              style={{
+                flex: 1,
+                fontSize: 19,
+                fontWeight: "800",
+                color: COLORS.ink,
+              }}
             >
-              <Feather name="x" size={19} color="#374151" />
+              Chi tiết voucher
+            </Text>
+            <TouchableOpacity
+              onPress={onClose}
+              hitSlop={8}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: COLORS.canvas,
+              }}
+            >
+              <Feather name="x" size={19} color={COLORS.ink} />
             </TouchableOpacity>
           </View>
 
-          <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 12 }}>
-            <View className="bg-emerald-700 rounded-3xl p-5 mb-4">
-              <View className="flex-row items-center">
-                <View className="w-12 h-12 rounded-full bg-white/20 items-center justify-center mr-4">
-                  <Feather name={isPercent ? "percent" : "gift"} size={23} color="#FFFFFF" />
+          <ScrollView
+            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 12 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Hero */}
+            <LinearGradient
+              colors={[COLORS.primary, COLORS.primaryDark]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                borderRadius: 24,
+                padding: 20,
+                marginBottom: 14,
+                overflow: "hidden",
+              }}
+            >
+              <View
+                pointerEvents="none"
+                style={{
+                  position: "absolute",
+                  right: -36,
+                  top: -44,
+                  width: 150,
+                  height: 150,
+                  borderRadius: 75,
+                  backgroundColor: "rgba(255,255,255,0.12)",
+                }}
+              />
+              <View
+                pointerEvents="none"
+                style={{
+                  position: "absolute",
+                  left: -30,
+                  bottom: -50,
+                  width: 120,
+                  height: 120,
+                  borderRadius: 60,
+                  backgroundColor: "rgba(255,255,255,0.08)",
+                }}
+              />
+
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    marginRight: 12,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "rgba(255,255,255,0.22)",
+                  }}
+                >
+                  <Feather
+                    name={isPercent ? "percent" : "gift"}
+                    size={21}
+                    color={COLORS.white}
+                  />
                 </View>
-                <View className="flex-1">
-                  <Text className="text-emerald-100 text-xs font-semibold">{discountLabel}</Text>
-                  <Text className="text-white text-xl font-extrabold mt-1">{voucher.name}</Text>
-                </View>
+                <Text
+                  numberOfLines={2}
+                  style={{
+                    flex: 1,
+                    fontSize: 15,
+                    fontWeight: "700",
+                    lineHeight: 20,
+                    color: "rgba(255,255,255,0.92)",
+                  }}
+                >
+                  {voucher.name}
+                </Text>
               </View>
 
-              <View className="flex-row items-center justify-between bg-white/15 rounded-2xl px-4 py-3 mt-4">
-                <Text className="text-emerald-100 text-xs">Mã voucher</Text>
-                <Text className="text-white font-extrabold tracking-widest">{voucher.code}</Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "baseline",
+                  marginTop: 16,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 40,
+                    fontWeight: "900",
+                    color: COLORS.white,
+                  }}
+                >
+                  {bigValue}
+                </Text>
+                <Text
+                  style={{
+                    marginLeft: 8,
+                    fontSize: 15,
+                    fontWeight: "800",
+                    letterSpacing: 2,
+                    color: "rgba(255,255,255,0.85)",
+                  }}
+                >
+                  GIẢM
+                </Text>
               </View>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginTop: 16,
+                  paddingHorizontal: 14,
+                  paddingVertical: 11,
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderStyle: "dashed",
+                  borderColor: "rgba(255,255,255,0.55)",
+                  backgroundColor: "rgba(255,255,255,0.14)",
+                }}
+              >
+                <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.85)" }}>
+                  Mã voucher
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "900",
+                    letterSpacing: 2.5,
+                    color: COLORS.white,
+                  }}
+                >
+                  {voucher.code}
+                </Text>
+              </View>
+            </LinearGradient>
+
+            {urgent && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: 12,
+                  marginBottom: 12,
+                  borderRadius: 14,
+                  backgroundColor: COLORS.accentLight,
+                }}
+              >
+                <Feather name="clock" size={15} color={COLORS.accentDark} />
+                <Text
+                  style={{
+                    marginLeft: 8,
+                    fontSize: 13,
+                    fontWeight: "700",
+                    color: COLORS.accentDark,
+                  }}
+                >
+                  {daysLeft === 0
+                    ? "Voucher hết hạn hôm nay"
+                    : `Voucher sắp hết hạn, còn ${daysLeft} ngày`}
+                </Text>
+              </View>
+            )}
+
+            {/* Điều kiện chính */}
+            <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
+              <StatTile
+                icon="shopping-bag"
+                label="Đơn tối thiểu"
+                value={formatVoucherMoney(voucher.min_order_amount)}
+              />
+              <StatTile
+                icon="trending-down"
+                label="Giảm tối đa"
+                value={
+                  isPercent && voucher.max_discount_amount
+                    ? formatVoucherMoney(voucher.max_discount_amount)
+                    : "Không giới hạn"
+                }
+              />
             </View>
 
             {!!voucher.description && (
-              <View className="bg-gray-50 rounded-2xl p-4 mb-2">
-                <Text className="text-gray-500 text-xs font-bold uppercase">Mô tả ưu đãi</Text>
-                <Text className="text-gray-700 text-sm leading-6 mt-2">{voucher.description}</Text>
+              <View
+                style={{
+                  padding: 14,
+                  marginBottom: 8,
+                  borderRadius: 16,
+                  backgroundColor: COLORS.canvas,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: "800",
+                    letterSpacing: 0.8,
+                    color: COLORS.inkSoft,
+                  }}
+                >
+                  MÔ TẢ ƯU ĐÃI
+                </Text>
+                <Text
+                  style={{
+                    marginTop: 6,
+                    fontSize: 14,
+                    lineHeight: 21,
+                    color: COLORS.ink,
+                  }}
+                >
+                  {voucher.description}
+                </Text>
               </View>
             )}
 
-            <DetailRow
-              icon="dollar-sign"
-              label="Giá trị ưu đãi"
-              value={discountLabel}
-            />
-            {isPercent && voucher.max_discount_amount && (
-              <DetailRow
-                icon="trending-down"
-                label="Mức giảm tối đa"
-                value={formatVoucherMoney(voucher.max_discount_amount)}
-              />
-            )}
-            <DetailRow
-              icon="shopping-bag"
-              label="Giá trị đơn tối thiểu"
-              value={formatVoucherMoney(voucher.min_order_amount)}
-            />
-            <DetailRow
-              icon="calendar"
-              label="Thời gian hiệu lực"
-              value={`${formatVoucherDate(voucher.start_at)} - ${formatVoucherDate(voucher.end_at)}`}
-            />
-            <DetailRow
-              icon="send"
-              label="Hình thức phát hành"
-              value={distributionLabel[voucher.distribution_type]}
-            />
-            <DetailRow
-              icon="activity"
-              label="Trạng thái"
-              value={
-                walletVoucher
-                  ? walletStatusLabel[walletVoucher.status]
-                  : lifecycleLabel[voucher.lifecycle_status]
-              }
-            />
-            {voucher.remaining_issuance != null && !walletVoucher && (
-              <DetailRow
-                icon="users"
-                label="Số lượng còn lại"
-                value={`${voucher.remaining_issuance} voucher`}
-              />
-            )}
-            {walletVoucher && (
-              <DetailRow
-                icon="inbox"
-                label="Nguồn nhận"
-                value={voucherSourceLabel[walletVoucher.source]}
-              />
-            )}
+            <View style={{ paddingHorizontal: 2 }}>
+              {rows.map((row, i) => (
+                <DetailRow
+                  key={row.label}
+                  {...row}
+                  last={i === rows.length - 1}
+                />
+              ))}
+            </View>
 
-            <View className="flex-row items-start bg-amber-50 rounded-2xl p-4 mt-4">
-              <Feather name="info" size={17} color="#B45309" />
-              <Text className="flex-1 text-amber-800 text-xs leading-5 ml-3">
-                Mỗi tài khoản chỉ nhận voucher này một lần. Voucher chỉ áp dụng khi đơn hàng đáp ứng đủ điều kiện.
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "flex-start",
+                marginTop: 12,
+                padding: 14,
+                borderRadius: 16,
+                backgroundColor: COLORS.accentLight,
+              }}
+            >
+              <Feather
+                name="info"
+                size={16}
+                color={COLORS.accentDark}
+                style={{ marginTop: 1 }}
+              />
+              <Text
+                style={{
+                  flex: 1,
+                  marginLeft: 10,
+                  fontSize: 12,
+                  lineHeight: 18,
+                  color: COLORS.accentDark,
+                }}
+              >
+                Mỗi tài khoản chỉ nhận voucher này một lần. Voucher chỉ áp dụng
+                khi đơn hàng đáp ứng đủ điều kiện.
               </Text>
             </View>
           </ScrollView>
 
-          <View className="px-5 pt-3 pb-8 border-t border-gray-100">
+          {/* Footer */}
+          <View
+            style={{
+              paddingHorizontal: 20,
+              paddingTop: 12,
+              paddingBottom: Math.max(insets.bottom, 16),
+              borderTopWidth: StyleSheet.hairlineWidth,
+              borderTopColor: COLORS.line,
+            }}
+          >
             {walletVoucher ? (
-              <View className={`rounded-2xl py-4 items-center ${walletVoucher.is_usable ? "bg-emerald-50" : "bg-gray-100"}`}>
-                <Text className={`font-bold ${walletVoucher.is_usable ? "text-emerald-700" : "text-gray-500"}`}>
-                  {walletVoucher.is_usable ? "Voucher có thể sử dụng" : "Voucher hiện không khả dụng"}
+              <View
+                style={{
+                  flexDirection: "row",
+                  paddingVertical: 15,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 16,
+                  backgroundColor: walletVoucher.is_usable
+                    ? COLORS.primaryLight
+                    : COLORS.canvas,
+                }}
+              >
+                <Feather
+                  name={walletVoucher.is_usable ? "check-circle" : "slash"}
+                  size={17}
+                  color={
+                    walletVoucher.is_usable
+                      ? COLORS.primaryDark
+                      : COLORS.inkSoft
+                  }
+                />
+                <Text
+                  style={{
+                    marginLeft: 8,
+                    fontWeight: "800",
+                    color: walletVoucher.is_usable
+                      ? COLORS.primaryDark
+                      : COLORS.inkSoft,
+                  }}
+                >
+                  {walletVoucher.is_usable
+                    ? "Voucher có thể sử dụng"
+                    : "Voucher hiện không khả dụng"}
                 </Text>
               </View>
             ) : (
               <TouchableOpacity
-                className="bg-emerald-700 rounded-2xl py-4 items-center"
                 onPress={async () => {
                   const claimed = await onClaim?.(voucher.code);
                   if (claimed) onClose();
                 }}
                 disabled={isClaiming}
-                activeOpacity={0.8}
+                activeOpacity={0.85}
+                style={{
+                  paddingVertical: 15,
+                  alignItems: "center",
+                  borderRadius: 16,
+                  backgroundColor: COLORS.primary,
+                  opacity: isClaiming ? 0.8 : 1,
+                }}
               >
                 {isClaiming ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <ActivityIndicator color={COLORS.white} />
                 ) : (
-                  <Text className="text-white font-bold text-base">Nhận voucher</Text>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "800",
+                      color: COLORS.white,
+                    }}
+                  >
+                    Nhận voucher
+                  </Text>
                 )}
               </TouchableOpacity>
             )}

@@ -1,3 +1,4 @@
+import { COLORS } from "@/constants/theme";
 import React from "react";
 import { KeyboardAvoidingView, Platform, ViewStyle } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context"; // Hoặc từ "react-native" nếu không dùng package ngoài
@@ -13,7 +14,7 @@ export default function ScreenContainer({
 }: ScreenContainerProps) {
   return (
     <SafeAreaView
-      style={[{ flex: 1, backgroundColor: "#fff" }, style]}
+      style={[{ flex: 1, backgroundColor: COLORS.canvas }, style]}
       edges={["top", "left", "right", "bottom"]}
     >
       <KeyboardAvoidingView

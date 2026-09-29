@@ -1,3 +1,4 @@
+import { SHADOWS } from "@/constants/theme";
 import { NotificationType } from "@/types/Notification";
 import { NOTIFICATION_FILTER_OPTIONS } from "@/utils/notificationMeta";
 import { ScrollView, Text, TouchableOpacity } from "react-native";
@@ -17,8 +18,13 @@ export default function NotificationFilterTabs({
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}
-      className="mb-4 flex-grow-0"
+      style={{ flexGrow: 0, flexShrink: 0 }}
+      contentContainerStyle={{
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        gap: 8,
+        alignItems: "center",
+      }}
     >
       {NOTIFICATION_FILTER_OPTIONS.map((option) => {
         const isActive = option.value === value;
@@ -27,15 +33,14 @@ export default function NotificationFilterTabs({
             key={option.value}
             onPress={() => onChange(option.value as NotificationFilter)}
             activeOpacity={0.8}
-            className={`px-4 py-2 rounded-full border ${
-              isActive
-                ? "bg-emerald-600 border-emerald-600"
-                : "bg-white border-gray-200"
+            className={`h-10 px-5 rounded-full border items-center justify-center ${
+              isActive ? "bg-primary border-primary" : "bg-surface border-line"
             }`}
+            style={isActive ? SHADOWS.float : undefined}
           >
             <Text
               className={`text-sm font-semibold ${
-                isActive ? "text-white" : "text-gray-600"
+                isActive ? "text-white" : "text-ink-soft"
               }`}
             >
               {option.label}

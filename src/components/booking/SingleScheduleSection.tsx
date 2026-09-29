@@ -1,5 +1,6 @@
 import { ReviewFeedbackButtons } from "@/components/booking/ReviewFeedbackButtons";
-import { COLORS } from "@/components/service/formFieldShared";
+import { Card } from "@/components/ui/Card";
+import { COLORS } from "@/constants/theme";
 import type { BookingScheduleDetail } from "@/types/Booking";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -14,71 +15,60 @@ import {
 } from "react-native";
 import { SectionTitle } from "./SectionTitle";
 
+type FeatherName = keyof typeof Feather.glyphMap;
+
 const STATUS_CONFIG: Record<
   string,
-  {
-    label: string;
-    bg: string;
-    text: string;
-    icon: keyof typeof Feather.glyphMap;
-  }
+  { label: string; bg: string; text: string; icon: FeatherName }
 > = {
   PENDING: {
     label: "Chờ thực hiện",
-    bg: "#FEF3C7",
-    text: "#92400E",
+    bg: COLORS.accentLight,
+    text: COLORS.accentDark,
     icon: "clock",
   },
-
   IN_PROGRESS: {
     label: "Đang thực hiện",
-    bg: "#DBEAFE",
-    text: "#1E40AF",
+    bg: COLORS.infoLight,
+    text: COLORS.infoDark,
     icon: "loader",
   },
-
   COMPLETED: {
     label: "Đã hoàn thành",
-    bg: "#D1FAE5",
-    text: "#065F46",
+    bg: COLORS.successLight,
+    text: COLORS.success,
     icon: "check-circle",
   },
-
   CANCELLED: {
     label: "Đã hủy",
-    bg: "#FEE2E2",
-    text: "#991B1B",
+    bg: COLORS.dangerLight,
+    text: COLORS.danger,
     icon: "x-circle",
   },
-
   MISSED: {
     label: "Bỏ lỡ",
-    bg: "#F3F4F6",
-    text: "#6B7280",
+    bg: COLORS.canvas,
+    text: COLORS.inkSoft,
     icon: "alert-triangle",
   },
 };
 
-const IMAGE_TYPE_ORDER: {
-  type: string;
-  label: string;
-  icon: keyof typeof Feather.glyphMap;
-}[] = [
+const IMAGE_TYPE_ORDER: { type: string; label: string; icon: FeatherName }[] = [
   { type: "BEFORE", label: "Trước khi làm", icon: "image" },
   { type: "AFTER", label: "Sau khi làm", icon: "image" },
   { type: "ISSUE", label: "Báo cáo sự cố", icon: "alert-triangle" },
 ];
 
-const IMAGE_TYPE_LABEL: Record<string, string> = {
-  OTHER: "Khác",
-};
+const IMAGE_TYPE_LABEL: Record<string, string> = { OTHER: "Khác" };
 
-function formatTime(iso: string | null) {
-  if (!iso) return null;
-  return new Date(iso).toLocaleTimeString("vi-VN", {
+const timeText = (iso: string) =>
+  new Date(iso).toLocaleTimeString("vi-VN", {
     hour: "2-digit",
     minute: "2-digit",
   });
+
+function formatTime(iso: string | null) {
+  return iso ? timeText(iso) : null;
 }
 
 function InfoRow({
@@ -88,7 +78,7 @@ function InfoRow({
   isLast,
   empty,
 }: {
-  icon: keyof typeof Feather.glyphMap;
+  icon: FeatherName;
   label: string;
   value: string;
   isLast?: boolean;
@@ -96,30 +86,84 @@ function InfoRow({
 }) {
   return (
     <View
-      className="flex-row items-center py-3"
-      style={
-        !isLast
-          ? { borderBottomWidth: 1, borderBottomColor: "#F3F4F6" }
-          : undefined
-      }
+      className={`flex-row items-center py-3 ${
+        isLast ? "" : "border-b border-line"
+      }`}
     >
       <View
-        className="w-9 h-9 rounded-full items-center justify-center"
-        style={{ backgroundColor: empty ? "#F9FAFB" : "#F0FDF4" }}
+        className={`w-9 h-9 rounded-full items-center justify-center ${
+          empty ? "bg-canvas" : "bg-primary-light"
+        }`}
       >
         <Feather
           name={icon}
           size={16}
-          color={empty ? "#D1D5DB" : COLORS.primary}
+          color={empty ? COLORS.inkMuted : COLORS.primaryDark}
         />
       </View>
-      <Text className="ml-3 text-[13.5px] text-gray-500 flex-1">{label}</Text>
+      <Text className="ml-3 text-[13.5px] text-ink-soft flex-1">{label}</Text>
       <Text
-        className="text-[14px] font-bold"
-        style={{ color: empty ? "#D1D5DB" : "#111827" }}
+        className={`text-[14px] font-bold ${
+          empty ? "text-ink-muted" : "text-ink"
+        }`}
       >
         {value}
       </Text>
+    </View>
+  );
+}
+
+function PhotoRow({
+  label,
+  icon,
+  images,
+  onOpen,
+  showEmpty = true,
+}: {
+  label: string;
+  icon: FeatherName;
+  images: { id: number; image: string }[];
+  onOpen: (uri: string) => void;
+  showEmpty?: boolean;
+}) {
+  if (images.length === 0 && !showEmpty) return null;
+  return (
+    <View className="mb-3">
+      <View className="flex-row items-center mb-1.5">
+        <Text className="text-[12px] font-semibold text-ink-soft">{label}</Text>
+        <View className="ml-1.5 px-1.5 rounded-full bg-canvas">
+          <Text className="text-[11px] font-bold text-ink-muted">
+            {images.length}
+          </Text>
+        </View>
+      </View>
+
+      {images.length > 0 ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View className="flex-row" style={{ gap: 8 }}>
+            {images.map((img) => (
+              <TouchableOpacity
+                key={img.id}
+                activeOpacity={0.85}
+                onPress={() => onOpen(img.image)}
+              >
+                <Image
+                  source={{ uri: img.image }}
+                  style={{ width: 88, height: 88, borderRadius: 16 }}
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      ) : (
+        <View
+          className="items-center justify-center rounded-2xl bg-canvas border border-dashed border-line"
+          style={{ height: 64 }}
+        >
+          <Feather name={icon} size={15} color={COLORS.inkMuted} />
+          <Text className="text-[11.5px] text-ink-muted mt-1">Chưa có ảnh</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -149,7 +193,7 @@ export function SingleScheduleSection({
   const actualEnd = formatTime(schedule.actual_end);
 
   const infoRows: {
-    icon: keyof typeof Feather.glyphMap;
+    icon: FeatherName;
     label: string;
     value: string;
     empty: boolean;
@@ -157,7 +201,7 @@ export function SingleScheduleSection({
     {
       icon: "calendar",
       label: "Khung giờ hẹn",
-      value: `${new Date(schedule.scheduled_start).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} - ${new Date(schedule.scheduled_end).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`,
+      value: `${timeText(schedule.scheduled_start)} - ${timeText(schedule.scheduled_end)}`,
       empty: false,
     },
     {
@@ -193,10 +237,10 @@ export function SingleScheduleSection({
 
   return (
     <View className="mb-5">
-      <View className="flex-row items-center justify-between mb-3">
+      <View className="flex-row items-center justify-between">
         <SectionTitle icon="user">Buổi làm việc</SectionTitle>
         <View
-          className="flex-row items-center px-2.5 py-1 rounded-full"
+          className="flex-row items-center px-3 py-1.5 rounded-full mb-3"
           style={{ backgroundColor: config.bg }}
         >
           <Feather name={config.icon} size={12} color={config.text} />
@@ -209,38 +253,21 @@ export function SingleScheduleSection({
         </View>
       </View>
 
-      <View
-        className="rounded-2xl p-4"
-        style={{
-          backgroundColor: "#FFFFFF",
-          borderWidth: 1,
-          borderColor: "#E5E7EB",
-        }}
-      >
-        {/* Field thời gian */}
-        <View
-          className="rounded-2xl px-3"
-          style={{ backgroundColor: "#FAFAFA" }}
-        >
+      <Card className="rounded-3xl">
+        <View className="rounded-2xl bg-canvas px-3">
           {infoRows.map((row, idx) => (
             <InfoRow
               key={row.label}
-              icon={row.icon}
-              label={row.label}
-              value={row.value}
-              empty={row.empty}
+              {...row}
               isLast={idx === infoRows.length - 1}
             />
           ))}
         </View>
 
         {!!schedule.note && (
-          <View
-            className="flex-row items-start mt-3 p-3.5 rounded-2xl"
-            style={{ backgroundColor: "#FAFAFA" }}
-          >
-            <Feather name="file-text" size={16} color="#9CA3AF" />
-            <Text className="ml-2.5 text-[13.5px] text-gray-600 flex-1 leading-5">
+          <View className="flex-row items-start mt-3 p-3.5 rounded-2xl bg-accent-light">
+            <Feather name="file-text" size={16} color={COLORS.accentDark} />
+            <Text className="ml-2.5 text-[13.5px] text-ink-soft flex-1 leading-5">
               {schedule.note}
             </Text>
           </View>
@@ -250,129 +277,70 @@ export function SingleScheduleSection({
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={goToWorker}
-            className="flex-row items-center mt-3 p-3.5 rounded-2xl"
-            style={{ backgroundColor: "#FAFAFA" }}
+            className="flex-row items-center mt-3 p-3 rounded-2xl bg-primary-soft border border-primary-border"
           >
             {worker.avatar ? (
               <Image
                 source={{ uri: worker.avatar }}
-                className="w-14 h-14 rounded-full"
+                className="w-14 h-14 rounded-full border-2 border-white"
               />
             ) : (
-              <View className="w-14 h-14 rounded-full bg-emerald-100 items-center justify-center">
-                <Feather name="user" size={22} color={COLORS.primary} />
+              <View className="w-14 h-14 rounded-full bg-primary-light items-center justify-center">
+                <Feather name="user" size={22} color={COLORS.primaryDark} />
               </View>
             )}
             <View className="ml-3 flex-1">
-              <Text className="font-bold text-[15px] text-gray-900">
-                {fullName}
-              </Text>
-              <Text className="text-[12.5px] text-gray-500 mt-0.5">
+              <Text className="font-bold text-[15px] text-ink">{fullName}</Text>
+              <Text className="text-[12.5px] text-ink-soft mt-0.5">
                 Nhân viên thực hiện
               </Text>
             </View>
-            <Feather name="chevron-right" size={18} color="#9CA3AF" />
+            <View className="w-8 h-8 rounded-full bg-surface items-center justify-center">
+              <Feather name="chevron-right" size={17} color={COLORS.primary} />
+            </View>
           </TouchableOpacity>
         ) : (
-          <View
-            className="flex-row items-center mt-3 p-3.5 rounded-2xl"
-            style={{ backgroundColor: "#FAFAFA" }}
-          >
-            <View className="w-14 h-14 rounded-full bg-gray-100 items-center justify-center">
-              <Feather name="user" size={22} color="#9CA3AF" />
+          <View className="flex-row items-center mt-3 p-3 rounded-2xl bg-canvas">
+            <View className="w-14 h-14 rounded-full bg-surface items-center justify-center">
+              <Feather name="user" size={22} color={COLORS.inkMuted} />
             </View>
             <View className="ml-3 flex-1">
-              <Text className="font-semibold text-[15px] text-gray-700">
+              <Text className="font-semibold text-[15px] text-ink-soft">
                 Chưa có nhân viên
               </Text>
-              <Text className="text-[12.5px] text-gray-500 mt-0.5">
+              <Text className="text-[12.5px] text-ink-muted mt-0.5">
                 Đang chờ nhân viên nhận việc
               </Text>
             </View>
           </View>
         )}
 
-        {/* Ảnh minh chứng — luôn 3 hàng */}
-        <View className="mt-4">
-          <Text className="text-[13.5px] font-bold text-gray-900 mb-2.5">
+        <View className="mt-5">
+          <Text className="text-[14px] font-bold text-ink mb-3">
             Ảnh minh chứng
           </Text>
 
-          {IMAGE_TYPE_ORDER.map(({ type, label, icon }) => {
-            const imgs = groupedImages[type] ?? [];
-            return (
-              <View key={type} className="mb-3">
-                <Text className="text-[12px] text-gray-500 mb-1.5">
-                  {label} ({imgs.length})
-                </Text>
-
-                {imgs.length > 0 ? (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    <View className="flex-row" style={{ gap: 8 }}>
-                      {imgs.map((img) => (
-                        <TouchableOpacity
-                          key={img.id}
-                          activeOpacity={0.85}
-                          onPress={() => setViewerImage(img.image)}
-                        >
-                          <Image
-                            source={{ uri: img.image }}
-                            style={{ width: 84, height: 84, borderRadius: 14 }}
-                          />
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </ScrollView>
-                ) : (
-                  <View
-                    className="items-center justify-center rounded-2xl"
-                    style={{
-                      height: 64,
-                      backgroundColor: "#FAFAFA",
-                      borderWidth: 1,
-                      borderColor: "#F3F4F6",
-                      borderStyle: "dashed",
-                    }}
-                  >
-                    <Feather name={icon} size={15} color="#D1D5DB" />
-                    <Text className="text-[11.5px] text-gray-300 mt-1">
-                      Chưa có ảnh
-                    </Text>
-                  </View>
-                )}
-              </View>
-            );
-          })}
-
-          {otherImages.length > 0 && (
-            <View>
-              <Text className="text-[12px] text-gray-500 mb-1.5">
-                {IMAGE_TYPE_LABEL.OTHER} ({otherImages.length})
-              </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View className="flex-row" style={{ gap: 8 }}>
-                  {otherImages.map((img) => (
-                    <TouchableOpacity
-                      key={img.id}
-                      activeOpacity={0.85}
-                      onPress={() => setViewerImage(img.image)}
-                    >
-                      <Image
-                        source={{ uri: img.image }}
-                        style={{ width: 84, height: 84, borderRadius: 14 }}
-                      />
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </ScrollView>
-            </View>
-          )}
+          {IMAGE_TYPE_ORDER.map(({ type, label, icon }) => (
+            <PhotoRow
+              key={type}
+              label={label}
+              icon={icon}
+              images={groupedImages[type] ?? []}
+              onOpen={setViewerImage}
+            />
+          ))}
+          <PhotoRow
+            label={IMAGE_TYPE_LABEL.OTHER}
+            icon="image"
+            images={otherImages}
+            onOpen={setViewerImage}
+            showEmpty={false}
+          />
         </View>
 
-        {canReview && <ReviewFeedbackButtons style={{ marginTop: 16 }} />}
-      </View>
+        {canReview && <ReviewFeedbackButtons style={{ marginTop: 12 }} />}
+      </Card>
 
-      {/* Xem ảnh full screen */}
       <Modal
         visible={!!viewerImage}
         transparent
@@ -404,7 +372,7 @@ export function SingleScheduleSection({
               zIndex: 10,
             }}
           >
-            <Feather name="x" size={22} color="#FFFFFF" />
+            <Feather name="x" size={22} color={COLORS.white} />
           </TouchableOpacity>
           {viewerImage && (
             <Image

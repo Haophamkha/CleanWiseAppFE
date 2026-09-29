@@ -1,3 +1,5 @@
+import { Badge } from "@/components/ui/Badge";
+import { COLORS, SHADOWS } from "@/constants/theme";
 import type { PaymentMethod } from "@/types/PaymentMethod";
 import { Feather } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -22,80 +24,98 @@ export default function PaymentMethodCard({
     : failed
       ? "Xác minh thất bại"
       : "Chưa xác minh";
-  const statusBackground = verified
-    ? "#ECFDF5"
+  const statusTone = verified ? "success" : failed ? "danger" : "accent";
+  const statusIcon = verified ? "check-circle" : failed ? "x-circle" : "clock";
+  const statusColor = verified
+    ? COLORS.success
     : failed
-      ? "#FEF2F2"
-      : "#FFFBEB";
-  const statusColor = verified ? "#047857" : failed ? "#DC2626" : "#B45309";
+      ? COLORS.danger
+      : COLORS.accentDark;
 
   return (
     <View
-      className="bg-white rounded-3xl border border-gray-100 p-5 mb-3"
-      style={{
-        shadowColor: "#0F172A",
-        shadowOpacity: 0.04,
-        shadowRadius: 10,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 2,
-      }}
+      className={`rounded-3xl border p-5 mb-3 ${
+        method.is_default
+          ? "bg-primary-soft border-primary-border"
+          : "bg-surface border-line"
+      }`}
+      style={SHADOWS.card}
     >
-      <View className="flex-row items-start">
-        <View className="w-12 h-12 rounded-2xl bg-emerald-50 items-center justify-center mr-3">
-          <Feather name="credit-card" size={21} color="#047857" />
+      <View className="flex-row items-center">
+        <View
+          className="items-center justify-center rounded-2xl mr-3"
+          style={{
+            width: 52,
+            height: 52,
+            backgroundColor: method.is_default
+              ? COLORS.primary
+              : COLORS.primaryLight,
+          }}
+        >
+          <Feather
+            name="credit-card"
+            size={24}
+            color={method.is_default ? COLORS.white : COLORS.primaryDark}
+          />
         </View>
+
         <View className="flex-1">
-          <View className="flex-row flex-wrap items-center">
-            <Text className="text-gray-900 text-base font-bold mr-2">
-              {method.display_name || method.bank_name}
-            </Text>
-            {method.is_default && (
-              <View className="bg-emerald-700 rounded-full px-2.5 py-1">
-                <Text className="text-white text-xs font-semibold">
-                  Mặc định
-                </Text>
-              </View>
-            )}
-          </View>
-          <Text className="text-gray-700 font-semibold tracking-wider mt-1">
-            {method.account_number_masked}
+          <Text className="text-ink text-base font-bold" numberOfLines={1}>
+            {method.display_name || method.bank_name}
           </Text>
-          <Text className="text-gray-500 text-sm mt-1" numberOfLines={1}>
+          <Text className="text-ink-muted text-xs mt-0.5" numberOfLines={1}>
             {method.account_holder_name}
           </Text>
-          <View className="flex-row mt-3">
-            <View
-              className="rounded-full px-2.5 py-1"
-              style={{ backgroundColor: statusBackground }}
-            >
-              <Text className="text-xs font-medium" style={{ color: statusColor }}>
-                {statusLabel}
-              </Text>
-            </View>
+        </View>
+
+        {method.is_default && (
+          <View className="flex-row items-center bg-primary rounded-full px-2.5 py-1 ml-2">
+            <Feather name="star" size={11} color={COLORS.white} />
+            <Text className="text-white text-[11px] font-bold ml-1">
+              Mặc định
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <View className="flex-row items-center justify-between mt-4 rounded-2xl bg-surface border border-line px-4 py-3">
+        <Text className="text-ink text-lg font-bold tracking-widest">
+          {method.account_number_masked}
+        </Text>
+        <View className="flex-row items-center">
+          <Feather name={statusIcon} size={14} color={statusColor} />
+          <View className="ml-1.5">
+            <Badge label={statusLabel} tone={statusTone} />
           </View>
         </View>
       </View>
 
-      <View className="flex-row border-t border-gray-100 mt-4 pt-3">
+      <View className="flex-row mt-4" style={{ gap: 10 }}>
         {!method.is_default && (
           <TouchableOpacity
-            className="flex-1 flex-row items-center justify-center py-1"
+            className="flex-1 flex-row items-center justify-center h-11 rounded-full bg-primary-light"
             onPress={() => onSetDefault(method)}
             disabled={disabled}
+            activeOpacity={0.8}
+            style={{ opacity: disabled ? 0.5 : 1 }}
           >
-            <Feather name="check-circle" size={16} color="#047857" />
-            <Text className="text-emerald-700 font-semibold ml-2">
+            <Feather name="check-circle" size={16} color={COLORS.primaryDark} />
+            <Text className="text-primary-dark font-bold ml-2">
               Đặt mặc định
             </Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity
-          className={`${method.is_default ? "flex-1" : "ml-3 pl-4 border-l border-gray-100"} flex-row items-center justify-center py-1`}
+          className={`${
+            method.is_default ? "flex-1" : "px-5"
+          } flex-row items-center justify-center h-11 rounded-full bg-danger-light`}
           onPress={() => onDelete(method)}
           disabled={disabled}
+          activeOpacity={0.8}
+          style={{ opacity: disabled ? 0.5 : 1 }}
         >
-          <Feather name="trash-2" size={16} color="#DC2626" />
-          <Text className="text-red-600 font-semibold ml-2">Xóa</Text>
+          <Feather name="trash-2" size={16} color={COLORS.danger} />
+          <Text className="text-danger font-bold ml-2">Xóa</Text>
         </TouchableOpacity>
       </View>
     </View>

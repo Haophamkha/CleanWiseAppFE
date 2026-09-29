@@ -1,73 +1,87 @@
-import { Feather } from "@expo/vector-icons";
-import { Text, TextInput, View } from "react-native";
+// components/address/AddressForm.tsx
+import { Input } from "@/components/ui";
+import type { ReactNode } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 
-export interface AddressFormValues {
+export type AddressFormValues = {
   label: string;
   receiver_name: string;
   receiver_phone: string;
   address_line: string;
-}
+};
 
-interface AddressFormProps {
+type Props = {
   values: AddressFormValues;
   onChange: (field: keyof AddressFormValues, value: string) => void;
+};
+
+const LABEL_PRESETS = ["Nhà", "Công ty", "Khác"];
+
+export function FormSectionTitle({ children }: { children: ReactNode }) {
+  return (
+    <Text className="text-xs font-semibold uppercase tracking-wide text-ink-muted mb-3 ml-1">
+      {children}
+    </Text>
+  );
 }
 
-const FIELDS: {
-  key: keyof AddressFormValues;
-  label: string;
-  icon: keyof typeof Feather.glyphMap;
-  placeholder: string;
-  keyboardType?: "default" | "phone-pad";
-}[] = [
-  {
-    key: "label",
-    label: "Tên gợi nhớ (Nhà riêng, Công ty...)",
-    icon: "tag",
-    placeholder: "Nhà riêng",
-  },
-  {
-    key: "receiver_name",
-    label: "Họ tên người nhận",
-    icon: "user",
-    placeholder: "Nhập họ tên",
-  },
-  {
-    key: "receiver_phone",
-    label: "Số điện thoại",
-    icon: "phone",
-    placeholder: "Nhập số điện thoại",
-    keyboardType: "phone-pad",
-  },
-  {
-    key: "address_line",
-    label: "Địa chỉ chi tiết",
-    icon: "map-pin",
-    placeholder: "Số nhà, tên đường",
-  },
-];
-
-export default function AddressForm({ values, onChange }: AddressFormProps) {
+export default function AddressForm({ values, onChange }: Props) {
   return (
     <View>
-      {FIELDS.map((field) => (
-        <View key={field.key}>
-          <Text className="text-gray-700 font-medium mb-1">{field.label}</Text>
+      <Text className="text-sm font-medium text-ink mb-2">Nhãn địa chỉ</Text>
+      <View className="flex-row mb-3" style={{ gap: 8 }}>
+        {LABEL_PRESETS.map((preset) => {
+          const active = values.label === preset;
+          return (
+            <TouchableOpacity
+              key={preset}
+              activeOpacity={0.8}
+              onPress={() => onChange("label", active ? "" : preset)}
+              className={`px-4 py-2 rounded-full border ${
+                active ? "bg-primary border-primary" : "bg-canvas border-line"
+              }`}
+            >
+              <Text
+                className={`text-sm font-medium ${
+                  active ? "text-white" : "text-ink-soft"
+                }`}
+              >
+                {preset}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+      <Input
+        icon="tag"
+        placeholder="Hoặc tự đặt tên, vd: Nhà bố mẹ"
+        value={values.label}
+        onChangeText={(v) => onChange("label", v)}
+      />
 
-          <View className="flex-row items-center border border-gray-200 bg-gray-50 rounded-xl px-4 py-3 mb-4">
-            <Feather name={field.icon} size={18} color="#9CA3AF" />
-
-            <TextInput
-              className="flex-1 ml-3 text-gray-900"
-              placeholder={field.placeholder}
-              placeholderTextColor="#9CA3AF"
-              keyboardType={field.keyboardType ?? "default"}
-              value={values[field.key]}
-              onChangeText={(text) => onChange(field.key, text)}
-            />
-          </View>
-        </View>
-      ))}
+      <Input
+        label="Tên người nhận"
+        icon="user"
+        placeholder="Nhập tên người nhận"
+        autoCapitalize="words"
+        value={values.receiver_name}
+        onChangeText={(v) => onChange("receiver_name", v)}
+      />
+      <Input
+        label="Số điện thoại"
+        icon="phone"
+        placeholder="Nhập số điện thoại"
+        keyboardType="phone-pad"
+        value={values.receiver_phone}
+        onChangeText={(v) => onChange("receiver_phone", v)}
+      />
+      <Input
+        label="Địa chỉ cụ thể"
+        icon="home"
+        placeholder="Số nhà, tên đường"
+        value={values.address_line}
+        onChangeText={(v) => onChange("address_line", v)}
+      />
     </View>
   );
 }

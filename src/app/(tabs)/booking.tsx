@@ -1,80 +1,53 @@
+import { BookingCard } from "@/components/booking/BookingCard";
+import { BookingStatusTabs } from "@/components/booking/BookingStatusTabs";
 import { NotificationBellButton } from "@/components/common/NotificationBellButton";
 import { RequireLoginNotice } from "@/components/common/RequireLoginNotice";
-import { useGetBookingsQuery } from "@/services/bookingApi";
-import { useAppSelector } from "@/store/hooks";
-import type { BookingListItem, BookingStatus } from "@/types/Booking";
-import {
-  BOOKING_STATUS_META,
-  BOOKING_STATUS_TABS,
-} from "@/utils/bookingStatus";
-import { formatVnd } from "@/utils/currency";
-import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { COLORS } from "@/constants/theme";
+import { useBookingList } from "@/features/booking/hooks/useBookingList";
 import {
   ActivityIndicator,
   FlatList,
-  ScrollView,
+  RefreshControl,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function BookingScreen() {
-  const user = useAppSelector((s) => s.auth.user);
-  const isAuthenticated = !!user;
-  const [activeTab, setActiveTab] = useState<BookingStatus | "ALL">("ALL");
-  const [page, setPage] = useState(1);
-  const [items, setItems] = useState<BookingListItem[]>([]);
-
-  const { data, isLoading, isFetching, isError, refetch } = useGetBookingsQuery(
-    {
-      ...(activeTab === "ALL" ? {} : { status: activeTab }),
-      page,
-    },
-    { skip: !isAuthenticated },
-  );
-
-  useEffect(() => {
-    if (!data) return;
-    setItems((prev) =>
-      page === 1 ? data.results : [...prev, ...data.results],
-    );
-  }, [data, page]);
-
-  const handleTabChange = (tab: BookingStatus | "ALL") => {
-    setActiveTab(tab);
-    setPage(1);
-    setItems([]);
-  };
-
-  const handleRefresh = () => {
-    setPage(1);
-    setItems([]);
-    refetch();
-  };
-
-  const handleLoadMore = () => {
-    if (data?.has_next && !isFetching) {
-      setPage((p) => p + 1);
-    }
-  };
+  const insets = useSafeAreaInsets();
+  const {
+    isAuthenticated,
+    activeTab,
+    items,
+    isError,
+    isInitialLoading,
+    isLoadingMore,
+    refreshing,
+    changeTab,
+    loadMore,
+    refresh,
+  } = useBookingList();
 
   return (
-    <View className="flex-1 bg-gray-50">
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-5 pt-14 pb-4 bg-white border-b border-gray-100">
-        <TouchableOpacity className="w-9 h-9 items-center justify-center rounded-full bg-gray-50">
-          <Feather name="menu" size={20} color="#111827" />
-        </TouchableOpacity>
-        <Text className="text-lg font-bold text-gray-900">
-          Đơn hàng của tôi
-        </Text>
+    <View className="flex-1 bg-canvas">
+      <View
+        className="flex-row items-center justify-between bg-surface px-5 pb-4"
+        style={{ paddingTop: insets.top + 12 }}
+      >
+        <View>
+          <Text className="text-[22px] font-extrabold text-ink">
+            Đơn hàng của tôi
+          </Text>
+          <Text className="text-xs text-ink-muted mt-0.5">
+            Theo dõi và quản lý các dịch vụ đã đặt
+          </Text>
+        </View>
         {isAuthenticated ? (
-          <NotificationBellButton />
-        ) : (
-          <View style={{ width: 36 }} />
-        )}
+          <View className="w-10 h-10 rounded-full bg-canvas items-center justify-center">
+            <NotificationBellButton />
+          </View>
+        ) : null}
       </View>
 
       {!isAuthenticated ? (
@@ -83,83 +56,54 @@ export default function BookingScreen() {
         </View>
       ) : (
         <View className="flex-1">
-          {/* Status Filter Tabs */}
-          <View className="bg-white pb-3 pt-2">
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
-            >
-              {BOOKING_STATUS_TABS.map((tab) => {
-                const selected = activeTab === tab.key;
-                return (
-                  <TouchableOpacity
-                    key={tab.key}
-                    onPress={() => handleTabChange(tab.key)}
-                    activeOpacity={0.7}
-                    className={`px-4 py-2 rounded-full flex-row items-center ${
-                      selected ? "bg-emerald-700" : "bg-gray-100"
-                    }`}
-                  >
-                    <Text
-                      className={`text-xs font-semibold ${
-                        selected ? "text-white" : "text-gray-600"
-                      }`}
-                    >
-                      {tab.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+          <View className="bg-surface border-b border-line">
+            <BookingStatusTabs value={activeTab} onChange={changeTab} />
           </View>
 
-          {/* Content List */}
-          {isLoading && page === 1 ? (
+          {isInitialLoading ? (
             <View className="flex-1 items-center justify-center">
-              <ActivityIndicator size="large" color="#047857" />
+              <ActivityIndicator size="large" color={COLORS.primary} />
             </View>
-          ) : isError ? (
-            <View className="flex-1 items-center justify-center px-6">
-              <Feather name="alert-triangle" size={36} color="#DC2626" />
-              <Text className="text-gray-800 font-medium mt-3 text-center">
-                Không tải được danh sách đơn hàng
-              </Text>
-              <TouchableOpacity
-                onPress={handleRefresh}
-                className="mt-4 px-4 py-2 bg-emerald-700 rounded-xl"
-              >
-                <Text className="text-white font-semibold text-xs">
-                  Thử lại
-                </Text>
-              </TouchableOpacity>
+          ) : isError && items.length === 0 ? (
+            <View className="flex-1 justify-center">
+              <EmptyState
+                icon="alert-triangle"
+                title="Không tải được danh sách đơn hàng"
+                actionLabel="Thử lại"
+                onAction={refresh}
+              />
             </View>
           ) : (
             <FlatList
               data={items}
               keyExtractor={(item) => String(item.id)}
-              contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-              refreshing={isFetching && page === 1}
-              onRefresh={handleRefresh}
-              onEndReached={handleLoadMore}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{
+                padding: 20,
+                paddingBottom: 100 + insets.bottom,
+              }}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={refresh}
+                  tintColor={COLORS.primary}
+                  colors={[COLORS.primary]}
+                />
+              }
+              onEndReached={loadMore}
               onEndReachedThreshold={0.3}
               renderItem={({ item }) => <BookingCard item={item} />}
               ListFooterComponent={
-                isFetching && page > 1 ? (
-                  <ActivityIndicator className="py-4" color="#047857" />
+                isLoadingMore ? (
+                  <ActivityIndicator className="py-4" color={COLORS.primary} />
                 ) : null
               }
               ListEmptyComponent={
-                <View className="items-center justify-center pt-24">
-                  <View className="w-16 h-16 rounded-full bg-emerald-50 items-center justify-center mb-3">
-                    <Feather name="clipboard" size={28} color="#047857" />
-                  </View>
-                  <Text className="text-gray-800 font-bold text-base">
-                    Chưa có đơn hàng nào
-                  </Text>
-                  <Text className="text-gray-400 text-xs mt-1 text-center px-10">
-                    Các đơn hàng dịch vụ bạn đặt sẽ hiển thị ở đây.
-                  </Text>
+                <View className="pt-16">
+                  <EmptyState
+                    icon="clipboard"
+                    title="Chưa có đơn hàng nào. Các đơn dịch vụ bạn đặt sẽ hiển thị ở đây."
+                  />
                 </View>
               }
             />
@@ -167,75 +111,5 @@ export default function BookingScreen() {
         </View>
       )}
     </View>
-  );
-}
-
-function BookingCard({ item }: { item: BookingListItem }) {
-  const meta = BOOKING_STATUS_META[item.status] ?? {
-    label: item.status,
-    color: "#374151",
-    bg: "#F3F4F6",
-  };
-
-  return (
-    <TouchableOpacity
-      className="bg-white rounded-2xl border border-gray-100 p-4 mb-3 shadow-sm shadow-gray-100"
-      activeOpacity={0.7}
-      onPress={() =>
-        router.push({
-          pathname: "/booking/[id]",
-          params: { id: String(item.id) },
-        })
-      }
-    >
-      {/* Top Info: Code & Status */}
-      <View className="flex-row items-center justify-between mb-2.5">
-        <View className="flex-row items-center">
-          <Feather name="hash" size={13} color="#9CA3AF" />
-          <Text className="text-gray-500 text-xs font-medium ml-0.5">
-            {item.booking_code}
-          </Text>
-        </View>
-        <View
-          className="px-3 py-1 rounded-full"
-          style={{ backgroundColor: meta.bg }}
-        >
-          <Text className="text-xs font-bold" style={{ color: meta.color }}>
-            {meta.label}
-          </Text>
-        </View>
-      </View>
-
-      {/* Service Name */}
-      <Text
-        className="text-gray-900 font-bold text-base mb-3"
-        numberOfLines={2}
-      >
-        {item.service_name}
-      </Text>
-
-      {/* Divider */}
-      <View className="h-[1px] bg-gray-50 mb-3" />
-
-      {/* Bottom Info: Date & Price */}
-      <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center">
-          <Feather
-            name="calendar"
-            size={13}
-            color="#9CA3AF"
-            style={{ marginRight: 4 }}
-          />
-          <Text className="text-gray-400 text-xs">
-            {new Date(item.created_at).toLocaleDateString("vi-VN")}
-          </Text>
-        </View>
-        <Text className="text-emerald-700 font-extrabold text-[15px]">
-          {item.total_amount
-            ? formatVnd(Number(item.total_amount))
-            : "Chờ báo giá"}
-        </Text>
-      </View>
-    </TouchableOpacity>
   );
 }

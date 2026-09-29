@@ -2,6 +2,7 @@ import { STORAGE_KEYS } from "@/config/constants";
 import { ENV } from "@/config/env";
 import { clearAuth } from "@/store/authSlice";
 import { storage } from "@/utils/storage";
+import { showErrorToast } from "@/utils/toast";
 import type { Dispatch, UnknownAction } from "@reduxjs/toolkit";
 import type { BaseQueryFn } from "@reduxjs/toolkit/query";
 import { createApi } from "@reduxjs/toolkit/query/react";
@@ -111,7 +112,7 @@ export const refreshAccessToken = (): Promise<string> =>
     refreshPromise = null;
   }));
 
-// Chỉ logout khi BE TỪ CHỐI refresh token. Mất mạng / timeout / 5xx thì giữ phiên.
+// Chỉ logout khi BE TỪ CHỐI refresh token. Mất mạng / timeout / 5xx / 429 thì giữ phiên.
 const shouldLogout = async (e: unknown): Promise<boolean> => {
   if (e instanceof Error && e.message === "NO_REFRESH_TOKEN") {
     // Khách chưa đăng nhập (không có access token) thì không đá ra login
@@ -165,6 +166,24 @@ export const performLogout = async (
 };
 
 /* =========================================================
+ * RATE LIMIT (429)
+ * ======================================================= */
+
+let lastRateLimitToastAt = 0;
+
+const showRateLimitToast = (retryAfter?: string) => {
+  const now = Date.now();
+  if (now - lastRateLimitToastAt < 3000) return; // tránh spam toast
+  lastRateLimitToastAt = now;
+  showErrorToast(
+    "Thao tác quá nhanh",
+    retryAfter
+      ? `Vui lòng thử lại sau ${retryAfter} giây.`
+      : "Vui lòng thử lại sau ít giây.",
+  );
+};
+
+/* =========================================================
  * RESPONSE INTERCEPTOR
  * ======================================================= */
 
@@ -195,6 +214,15 @@ axiosInstance.interceptors.response.use(
     }
 
     if (!originalRequest) return Promise.reject(error);
+
+    // Bị giới hạn tần suất: báo người dùng, không refresh, không retry
+    if (error.response?.status === 429) {
+      showRateLimitToast(
+        error.response.headers?.["retry-after"] as string | undefined,
+      );
+      return Promise.reject(error);
+    }
+
     if (error.response?.status !== 401) return Promise.reject(error);
 
     // Endpoint public: 401 là lỗi nghiệp vụ, không refresh, không logout
@@ -298,10 +326,13 @@ const axiosBaseQuery = (): BaseQueryFn<
           continue;
         }
 
+        const retryAfterRaw = err.response?.headers?.["retry-after"];
+
         return {
           error: {
             status: err.response?.status,
             data: err.response?.data || err.message,
+            retryAfter: Number(retryAfterRaw) || undefined,
           },
         };
       }

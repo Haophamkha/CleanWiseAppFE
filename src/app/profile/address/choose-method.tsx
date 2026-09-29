@@ -1,74 +1,68 @@
-import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+// app/profile/address/choose-method.tsx
+import ScreenContainer from "@/components/ScreenContainer";
+import { ScreenHeader } from "@/components/common/ScreenHeader";
+import { Card, type FeatherName } from "@/components/ui";
+import { COLORS } from "@/constants/theme";
+import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 
+function MethodCard({
+  icon,
+  title,
+  description,
+  onPress,
+}: {
+  icon: FeatherName;
+  title: string;
+  description: string;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity activeOpacity={0.85} onPress={onPress}>
+      <Card className="flex-row items-center">
+        <View className="w-12 h-12 rounded-full bg-primary-soft items-center justify-center mr-4">
+          <Feather name={icon} size={22} color={COLORS.primary} />
+        </View>
+        <View className="flex-1">
+          <Text className="text-base font-bold text-ink mb-0.5">{title}</Text>
+          <Text className="text-sm text-ink-soft">{description}</Text>
+        </View>
+        <Feather name="chevron-right" size={20} color={COLORS.inkMuted} />
+      </Card>
+    </TouchableOpacity>
+  );
+}
+
 export default function ChooseAddressMethodScreen() {
   const { pickerKey } = useLocalSearchParams<{ pickerKey?: string }>();
+  const params = pickerKey ? { pickerKey } : {};
 
   return (
-    <View className="flex-1 bg-white">
-      <View className="flex-row items-center px-5 pt-14 pb-4 border-b border-gray-100">
-        <TouchableOpacity onPress={() => router.back()} className="mr-4">
-          <Feather name="arrow-left" size={22} color="#111827" />
-        </TouchableOpacity>
-        <Text className="text-lg font-bold text-gray-900">
-          Chọn địa chỉ mới
-        </Text>
-      </View>
+    <ScreenContainer>
+      <ScreenHeader title="Chọn địa chỉ mới" />
 
-      <View className="flex-1 px-6 pt-8" style={{ gap: 16 }}>
-        <TouchableOpacity
-          className="flex-row items-center border border-gray-200 rounded-2xl p-5"
-          activeOpacity={0.8}
+      <View className="flex-1 px-5 pt-6" style={{ gap: 16 }}>
+        <MethodCard
+          icon="map-pin"
+          title="Chọn trên bản đồ"
+          description="Ghim vị trí, hệ thống tự điền địa chỉ giúp bạn"
           onPress={() =>
             router.push({
               pathname: "/profile/address/select-location",
-              params: pickerKey ? { pickerKey } : {},
+              params,
             })
           }
-        >
-          <View className="w-12 h-12 rounded-full bg-emerald-50 items-center justify-center mr-4">
-            <Feather name="map-pin" size={22} color="#047857" />
-          </View>
-          <View className="flex-1">
-            <Text className="text-gray-900 font-bold text-base mb-1">
-              Chọn trên bản đồ
-            </Text>
-            <Text className="text-gray-500 text-sm">
-              Ghim vị trí, hệ thống tự điền địa chỉ giúp bạn
-            </Text>
-          </View>
-          <Feather name="chevron-right" size={20} color="#9CA3AF" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          className="flex-row items-center border border-gray-200 rounded-2xl p-5"
-          activeOpacity={0.8}
+        />
+        <MethodCard
+          icon="edit-3"
+          title="Nhập thủ công"
+          description="Tự chọn tỉnh/thành, phường/xã và nhập địa chỉ"
           onPress={() =>
-            router.push({
-              pathname: "/profile/address/add",
-              params: pickerKey ? { pickerKey } : {},
-            })
+            router.push({ pathname: "/profile/address/add", params })
           }
-        >
-          <View className="w-12 h-12 rounded-full bg-emerald-50 items-center justify-center mr-4">
-            <MaterialCommunityIcons
-              name="pencil-outline"
-              size={22}
-              color="#047857"
-            />
-          </View>
-          <View className="flex-1">
-            <Text className="text-gray-900 font-bold text-base mb-1">
-              Nhập thủ công
-            </Text>
-            <Text className="text-gray-500 text-sm">
-              Tự chọn tỉnh/thành, phường/xã và nhập địa chỉ
-            </Text>
-          </View>
-          <Feather name="chevron-right" size={20} color="#9CA3AF" />
-        </TouchableOpacity>
+        />
       </View>
-    </View>
+    </ScreenContainer>
   );
 }

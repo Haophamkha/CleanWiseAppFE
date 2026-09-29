@@ -4,10 +4,9 @@ import { formatVnd } from "@/utils/currency";
 import { getItemTotalPrice } from "@/utils/servicePricing";
 import { Text, View } from "react-native";
 import {
-    buildCaption,
-    COLORS,
-    getSelectedOption,
-    resolveOptions,
+  buildCaption,
+  getSelectedOption,
+  resolveOptions,
 } from "../service/formFieldShared";
 
 export function ServiceOptionsSummary({
@@ -37,7 +36,7 @@ export function ServiceOptionsSummary({
           );
 
           return (
-            <View key={field.key} className="mb-1">
+            <View key={field.key}>
               <SectionLabel label={field.label} />
               {items.map((item, idx) => {
                 const catOpt = categoryOptions.find(
@@ -74,7 +73,7 @@ export function ServiceOptionsSummary({
           if (!opt) return null;
           const caption = buildCaption(opt, false, pricingConfig);
           return (
-            <View key={field.key} className="mb-1">
+            <View key={field.key}>
               <SectionLabel label={field.label} />
               <InfoRow
                 title={opt.label}
@@ -90,7 +89,7 @@ export function ServiceOptionsSummary({
           if (selected.length === 0) return null;
           const options = resolveOptions(field, values);
           return (
-            <View key={field.key} className="mb-1">
+            <View key={field.key}>
               <SectionLabel label={field.label} />
               {selected.map((v) => {
                 const opt = options.find((o) => o.value === v);
@@ -117,7 +116,7 @@ export function ServiceOptionsSummary({
             .map((v) => options.find((o) => o.value === v)?.label ?? v)
             .join(", ");
           return (
-            <View key={field.key} className="mb-1">
+            <View key={field.key}>
               <SectionLabel label={field.label} />
               <InfoRow title={labels} />
             </View>
@@ -127,7 +126,7 @@ export function ServiceOptionsSummary({
         if (field.type === "BOOLEAN") {
           if (!value) return null;
           return (
-            <View key={field.key} className="mb-1">
+            <View key={field.key}>
               <SectionLabel label={field.label} />
               <InfoRow title="Có" />
             </View>
@@ -136,7 +135,7 @@ export function ServiceOptionsSummary({
 
         // QUANTITY, TEXT, TEXTAREA, TIME
         return (
-          <View key={field.key} className="mb-1">
+          <View key={field.key}>
             <SectionLabel label={field.label} />
             <InfoRow title={String(value)} />
           </View>
@@ -148,12 +147,15 @@ export function ServiceOptionsSummary({
 
 function SectionLabel({ label }: { label: string }) {
   return (
-    <Text
-      className="text-[12px] font-bold uppercase mb-1.5 mt-3"
-      style={{ color: COLORS.textMuted, letterSpacing: 0.3 }}
-    >
-      {label}
-    </Text>
+    <View className="flex-row items-center mt-3 mb-2">
+      <View className="w-1 h-3.5 rounded-full bg-primary mr-2" />
+      <Text
+        className="text-[12px] font-bold uppercase text-ink-muted"
+        style={{ letterSpacing: 0.4 }}
+      >
+        {label}
+      </Text>
+    </View>
   );
 }
 
@@ -167,28 +169,15 @@ function InfoRow({
   trailing?: string;
 }) {
   return (
-    <View className="flex-row items-center justify-between mb-2">
+    <View className="flex-row items-center justify-between rounded-xl bg-canvas px-3 py-2.5 mb-2">
       <View className="flex-1 pr-2">
-        <Text
-          className="text-[14px] font-semibold"
-          style={{ color: COLORS.text }}
-        >
-          {title}
-        </Text>
+        <Text className="text-[14px] font-semibold text-ink">{title}</Text>
         {!!subtitle && (
-          <Text
-            className="text-[12px] mt-0.5"
-            style={{ color: COLORS.textMuted }}
-          >
-            {subtitle}
-          </Text>
+          <Text className="text-[12px] mt-0.5 text-ink-muted">{subtitle}</Text>
         )}
       </View>
       {!!trailing && (
-        <Text
-          className="text-[14px] font-bold"
-          style={{ color: COLORS.primary }}
-        >
+        <Text className="text-[14px] font-bold text-primary-dark">
           {trailing}
         </Text>
       )}

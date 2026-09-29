@@ -1,36 +1,50 @@
+import { COLORS } from "@/constants/theme";
+
 export type NotificationIconLibrary = "feather" | "material-community";
 
 interface NotificationTypeMeta {
   label: string;
   iconLibrary: NotificationIconLibrary;
   iconName: string;
+  iconBgColor: string;
+  iconColor: string;
 }
 
 const NOTIFICATION_TYPE_MAP: Record<string, NotificationTypeMeta> = {
   BOOKING: {
     label: "Đơn hàng",
     iconLibrary: "material-community",
-    iconName: "broom",
+    iconName: "calendar-check",
+    iconBgColor: COLORS.primaryLight,
+    iconColor: COLORS.primaryDark,
   },
   PAYMENT: {
     label: "Thanh toán",
-    iconLibrary: "feather",
-    iconName: "check-circle",
+    iconLibrary: "material-community",
+    iconName: "wallet",
+    iconBgColor: COLORS.successLight,
+    iconColor: COLORS.success,
   },
   ASSIGNMENT: {
     label: "Phân công",
-    iconLibrary: "feather",
-    iconName: "user-check",
+    iconLibrary: "material-community",
+    iconName: "account-check",
+    iconBgColor: COLORS.infoLight,
+    iconColor: COLORS.info,
   },
   COMPLAINT: {
     label: "Khiếu nại",
-    iconLibrary: "feather",
-    iconName: "alert-circle",
+    iconLibrary: "material-community",
+    iconName: "message-alert",
+    iconBgColor: COLORS.dangerLight,
+    iconColor: COLORS.danger,
   },
   SYSTEM: {
     label: "Hệ thống",
-    iconLibrary: "feather",
-    iconName: "bell",
+    iconLibrary: "material-community",
+    iconName: "bell-ring",
+    iconBgColor: COLORS.accentLight,
+    iconColor: COLORS.accentDark,
   },
 };
 

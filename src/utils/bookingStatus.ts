@@ -1,3 +1,4 @@
+import { COLORS } from "@/constants/theme";
 import type { BookingStatus } from "@/types/Booking";
 
 export const BOOKING_STATUS_META: Record<
@@ -6,38 +7,33 @@ export const BOOKING_STATUS_META: Record<
 > = {
   PENDING: {
     label: "Chờ nhận việc",
-    color: "#B45309",
-    bg: "#FEF3C7",
+    color: COLORS.accentDark,
+    bg: COLORS.accentLight,
   },
-
   ASSIGNED: {
     label: "Đã nhận",
-    color: "#1D4ED8",
-    bg: "#DBEAFE",
+    color: COLORS.infoDark,
+    bg: COLORS.infoLight,
   },
-
   IN_PROGRESS: {
     label: "Đang thực hiện",
-    color: "#2563EB",
-    bg: "#EFF6FF",
+    color: COLORS.primaryDark,
+    bg: COLORS.primaryLight,
   },
-
   COMPLETED: {
     label: "Hoàn thành",
-    color: "#047857",
-    bg: "#D1FAE5",
+    color: COLORS.success,
+    bg: COLORS.successLight,
   },
-
   CANCELLED: {
     label: "Đã hủy",
-    color: "#DC2626",
-    bg: "#FEE2E2",
+    color: COLORS.danger,
+    bg: COLORS.dangerLight,
   },
-
   FAILED: {
     label: "Hết hạn nhận đơn",
-    color: "#C2410C",
-    bg: "#FFEDD5",
+    color: COLORS.inkSoft,
+    bg: COLORS.line,
   },
 };
 
@@ -50,6 +46,6 @@ export const BOOKING_STATUS_TABS: {
   { key: "ASSIGNED", label: "Đã nhận đơn" },
   { key: "IN_PROGRESS", label: "Đang làm" },
   { key: "COMPLETED", label: "Hoàn thành" },
-  { key: "CANCELLED", label: "Đã  hủy" },
+  { key: "CANCELLED", label: "Đã hủy" },
   { key: "FAILED", label: "Hết hạn nhận đơn" },
 ];

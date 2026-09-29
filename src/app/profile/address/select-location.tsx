@@ -1,334 +1,82 @@
+// app/profile/address/select-location.tsx
 import ScreenContainer from "@/components/ScreenContainer";
 import LocationMapView from "@/components/address/LocationMapView";
-import type { LocationMapViewHandle } from "@/components/address/LocationMapView.types";
-import type { Region } from "@/types/Region";
+import { ScreenHeader } from "@/components/common/ScreenHeader";
+import { Button } from "@/components/ui";
+import { COLORS } from "@/constants/theme";
+import { useSelectLocation } from "@/features/address/hooks/useSelectLocation";
 import { Feather } from "@expo/vector-icons";
-import * as Location from "expo-location";
-import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useRef, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
-
-const DEFAULT_REGION: Region = {
-  latitude: 10.7769,
-  longitude: 106.7009,
-  latitudeDelta: 0.01,
-  longitudeDelta: 0.01,
-};
-
-type DetectedParts = {
-  addressLine: string;
-  ward: string;
-  province: string;
-};
-
-const reverseGeocodeFallback = async (
-  lat: number,
-  lng: number,
-): Promise<DetectedParts | null> => {
-  try {
-    const results = await Location.reverseGeocodeAsync({
-      latitude: lat,
-      longitude: lng,
-    });
-
-    const place = results[0];
-    if (!place) return null;
-
-    const addressLine = [place.streetNumber, place.street || place.name]
-      .filter(Boolean)
-      .join(" ");
-    const province = place.city || place.region || "";
-
-    return {
-      addressLine,
-      ward: "",
-      province,
-    };
-  } catch {
-    return null;
-  }
-};
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 
 export default function SelectLocationScreen() {
-  const params = useLocalSearchParams<{
-    editId?: string;
-    latitude?: string;
-    longitude?: string;
-    pickerKey?: string;
-  }>();
-
-  const mapRef = useRef<LocationMapViewHandle>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const requestIdRef = useRef(0);
-
-  const initialRegion: Region =
-    params.latitude && params.longitude
-      ? {
-          latitude: Number(params.latitude),
-          longitude: Number(params.longitude),
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        }
-      : DEFAULT_REGION;
-
-  const [region, setRegion] = useState<Region>(initialRegion);
-  const [previewAddress, setPreviewAddress] = useState(
-    "Đang xác định vị trí...",
-  );
-  const [detectedParts, setDetectedParts] = useState<DetectedParts | null>(
-    null,
-  );
-  const [loadingAddress, setLoadingAddress] = useState(false);
-  const [loadingGps, setLoadingGps] = useState(false);
-
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
-  }, []);
-
-  const applyResult = (parts: DetectedParts | null, requestId: number) => {
-    if (requestId !== requestIdRef.current) {
-      return;
-    }
-
-    if (parts) {
-      setPreviewAddress(
-        [parts.addressLine, parts.ward, parts.province]
-          .filter(Boolean)
-          .join(", ") || "Không xác định được địa chỉ",
-      );
-
-      setDetectedParts(parts);
-    } else {
-      setPreviewAddress("Không xác định được địa chỉ");
-      setDetectedParts(null);
-    }
-  };
-
-  const doReverseGeocode = async (lat: number, lng: number) => {
-    const requestId = ++requestIdRef.current;
-    setLoadingAddress(true);
-
-    try {
-      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1&zoom=18&accept-language=vi`;
-
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) CleanWiseApp/1.0",
-          Accept: "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Nominatim status ${response.status}`);
-      }
-
-      const data = await response.json();
-      const addr = data?.address;
-      const displayName: string = data?.display_name || "";
-
-      let streetPart = "";
-      let ward = "";
-      let province = "";
-
-      if (addr) {
-        streetPart = [
-          addr.house_number,
-          addr.road || addr.pedestrian || addr.footway,
-        ]
-          .filter(Boolean)
-          .join(" ");
-
-        province =
-          addr.city || addr.state || addr.province || addr.region || "";
-      }
-
-      if (displayName) {
-        const partsArray = displayName.split(",").map((s) => s.trim());
-
-        const foundWard = partsArray.find(
-          (item) =>
-            item.toLowerCase().startsWith("phường") ||
-            item.toLowerCase().startsWith("xã") ||
-            item.toLowerCase().startsWith("thị trấn"),
-        );
-
-        if (foundWard) {
-          ward = foundWard;
-        }
-
-        if (!province && partsArray.length > 0) {
-          province = partsArray[partsArray.length - 2];
-        }
-      }
-
-      let parts: DetectedParts | null = {
-        addressLine: streetPart,
-        ward,
-        province,
-      };
-
-      if (!parts.addressLine || !parts.province) {
-        const fallback = await reverseGeocodeFallback(lat, lng);
-        if (fallback) {
-          parts = {
-            addressLine: parts.addressLine || fallback.addressLine,
-            ward: parts.ward,
-            province: parts.province || fallback.province,
-          };
-        }
-      }
-
-      applyResult(parts, requestId);
-    } catch (err) {
-      console.log("[reverseGeocode error - fallback to device]:", err);
-      const fallback = await reverseGeocodeFallback(lat, lng);
-      applyResult(fallback, requestId);
-    } finally {
-      if (requestId === requestIdRef.current) {
-        setLoadingAddress(false);
-      }
-    }
-  };
-
-  const reverseGeocode = (lat: number, lng: number) => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    debounceRef.current = setTimeout(() => {
-      doReverseGeocode(lat, lng);
-    }, 500);
-  };
-
-  const handleRegionChangeComplete = (newRegion: Region) => {
-    setRegion(newRegion);
-    reverseGeocode(newRegion.latitude, newRegion.longitude);
-  };
-
-  const handleUseCurrentLocation = async () => {
-    try {
-      setLoadingGps(true);
-      const { status } = await Location.requestForegroundPermissionsAsync();
-
-      if (status !== "granted") {
-        setPreviewAddress("Bạn cần cấp quyền vị trí để dùng tính năng này");
-        return;
-      }
-
-      const current = await Location.getCurrentPositionAsync({});
-
-      const newRegion: Region = {
-        latitude: current.coords.latitude,
-        longitude: current.coords.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      };
-
-      mapRef.current?.animateToRegion(newRegion);
-      setRegion(newRegion);
-      reverseGeocode(newRegion.latitude, newRegion.longitude);
-    } catch {
-      setPreviewAddress(
-        "Không thể lấy vị trí hiện tại. Vui lòng bật GPS và thử lại",
-      );
-    } finally {
-      setLoadingGps(false);
-    }
-  };
-
-  const handleConfirm = () => {
-    const selectedParams = {
-      latitude: String(region.latitude),
-      longitude: String(region.longitude),
-      addressLine: detectedParts?.addressLine ?? "",
-      ward: detectedParts?.ward ?? "",
-      province: detectedParts?.province ?? "",
-    };
-
-    if (params.editId) {
-      router.replace({
-        pathname: "/profile/address/[id]",
-        params: {
-          id: params.editId,
-          ...selectedParams,
-        },
-      });
-      return;
-    }
-
-    router.replace({
-      pathname: "/profile/address/add",
-      params: {
-        ...selectedParams,
-        pickerKey: params.pickerKey ?? "",
-      },
-    });
-  };
+  const s = useSelectLocation();
 
   return (
     <ScreenContainer>
-      <View className="flex-1 bg-white">
-        <View className="flex-row items-center px-5 pt-4 pb-4 border-b border-gray-100 bg-white z-10">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <Feather name="arrow-left" size={22} color="#111827" />
-          </TouchableOpacity>
-          <Text className="text-lg font-bold text-gray-900">Chọn vị trí</Text>
+      <ScreenHeader title="Chọn vị trí" />
+
+      <View className="flex-1">
+        <LocationMapView
+          ref={s.mapRef}
+          initialRegion={s.initialRegion}
+          onRegionChangeComplete={s.onRegionChangeComplete}
+        />
+
+        {/* Ghim cố định giữa bản đồ */}
+        <View
+          pointerEvents="none"
+          className="absolute inset-0 items-center justify-center"
+          style={{ marginBottom: 18 }}
+        >
+          <Feather name="map-pin" size={38} color={COLORS.primary} />
         </View>
 
-        <View className="flex-1">
-          <LocationMapView
-            ref={mapRef}
-            initialRegion={initialRegion}
-            onRegionChangeComplete={handleRegionChangeComplete}
-          />
+        <TouchableOpacity
+          onPress={s.locateMe}
+          disabled={s.isLoadingGps}
+          activeOpacity={0.8}
+          className="absolute right-4 bottom-4 w-12 h-12 rounded-full bg-surface items-center justify-center"
+          style={{
+            shadowColor: COLORS.ink,
+            shadowOpacity: 0.15,
+            shadowOffset: { width: 0, height: 4 },
+            shadowRadius: 10,
+            elevation: 4,
+          }}
+        >
+          {s.isLoadingGps ? (
+            <ActivityIndicator size="small" color={COLORS.primary} />
+          ) : (
+            <Feather name="navigation" size={20} color={COLORS.primary} />
+          )}
+        </TouchableOpacity>
+      </View>
 
-          <View
-            pointerEvents="none"
-            className="absolute inset-0 items-center justify-center"
-            style={{ marginBottom: 18 }}
-          >
-            <Feather name="map-pin" size={36} color="#047857" />
+      <View className="px-5 pt-4 pb-4 bg-surface border-t border-line">
+        <View className="flex-row items-start mb-4">
+          <View className="w-10 h-10 rounded-full bg-primary-soft items-center justify-center mr-3">
+            <Feather name="map-pin" size={17} color={COLORS.primary} />
           </View>
-
-          <TouchableOpacity
-            onPress={handleUseCurrentLocation}
-            disabled={loadingGps}
-            className="absolute right-4 bottom-4 w-12 h-12 rounded-full bg-white items-center justify-center shadow"
-            activeOpacity={0.8}
-          >
-            <Feather name="navigation" size={20} color="#047857" />
-          </TouchableOpacity>
-        </View>
-
-        <View className="px-6 pb-8 pt-4 border-t border-gray-100">
-          <View className="flex-row items-start mb-4">
-            <Feather
-              name="map-pin"
-              size={16}
-              color="#6B7280"
-              style={{ marginTop: 2 }}
-            />
-            <Text className="text-gray-700 text-sm ml-2 flex-1">
-              {loadingAddress ? "Đang xác định địa chỉ..." : previewAddress}
+          <View className="flex-1">
+            <Text className="text-xs font-semibold uppercase tracking-wide text-ink-muted mb-0.5">
+              Vị trí đã chọn
             </Text>
+            {s.isLocating ? (
+              <View className="flex-row items-center">
+                <ActivityIndicator size="small" color={COLORS.primary} />
+                <Text className="text-sm text-ink-soft ml-2">
+                  Đang xác định địa chỉ...
+                </Text>
+              </View>
+            ) : (
+              <Text className="text-sm text-ink" numberOfLines={3}>
+                {s.previewAddress}
+              </Text>
+            )}
           </View>
-
-          <TouchableOpacity
-            className="bg-emerald-700 rounded-xl py-4 items-center"
-            onPress={handleConfirm}
-            activeOpacity={0.8}
-          >
-            <Text className="text-white font-bold text-base">
-              Chọn vị trí này
-            </Text>
-          </TouchableOpacity>
         </View>
+
+        <Button title="Chọn vị trí này" onPress={s.confirmLocation} />
       </View>
     </ScreenContainer>
   );

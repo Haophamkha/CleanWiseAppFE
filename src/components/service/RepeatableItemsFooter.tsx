@@ -1,4 +1,6 @@
 // src/components/service/RepeatableItemsFooter.tsx
+import { Button } from "@/components/ui/Button";
+import { COLORS, OVERLAY, RADIUS } from "@/constants/theme";
 import { useAppSelector } from "@/store/hooks";
 import type { FormField } from "@/types/Service";
 import { formatVnd } from "@/utils/currency";
@@ -13,7 +15,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { COLORS, getSelectedOption } from "./formFieldShared";
+import { getSelectedOption } from "./formFieldShared";
 
 type Values = Record<string, any>;
 
@@ -58,6 +60,8 @@ export function RepeatableItemsFooter({
     0,
   );
 
+  const hasItems = items.length > 0;
+
   return (
     <>
       {/* Nền mờ khi mở rộng */}
@@ -70,72 +74,89 @@ export function RepeatableItemsFooter({
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: "rgba(17,24,39,0.45)",
+            backgroundColor: OVERLAY,
           }}
         />
       )}
 
       {/* Footer */}
       <View
+        className="bg-surface border-t border-line"
         style={{
           position: "absolute",
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: COLORS.white,
-          borderTopLeftRadius: items.length > 0 ? 24 : 0,
-          borderTopRightRadius: items.length > 0 ? 24 : 0,
-          borderTopWidth: 1,
-          borderColor: COLORS.border,
+          width: "100%",
+          borderTopLeftRadius: hasItems ? RADIUS.sheet - 8 : 0,
+          borderTopRightRadius: hasItems ? RADIUS.sheet - 8 : 0,
+          shadowColor: COLORS.ink,
+          shadowOpacity: 0.1,
+          shadowOffset: { width: 0, height: -6 },
+          shadowRadius: 16,
+          elevation: 12,
         }}
       >
-        {/* Header */}
-        {items.length > 0 && (
+        {/* Header thu gọn / mở rộng */}
+        {hasItems && (
           <TouchableOpacity
             onPress={() => setExpanded((v) => !v)}
             activeOpacity={0.7}
-            className="flex-row items-center px-5 pt-4 pb-3"
+            className="px-5 pt-2.5 pb-3"
           >
-            <Text
-              className="flex-1 text-[16px] font-bold"
-              style={{ color: COLORS.text }}
-            >
-              Thiết bị đã chọn
-            </Text>
-
-            <View
-              className="w-6 h-6 rounded-full items-center justify-center mr-2"
-              style={{ backgroundColor: COLORS.danger }}
-            >
-              <Text className="text-white text-[12px] font-bold">
-                {totalQuantity}
-              </Text>
+            <View className="items-center mb-2.5">
+              <View className="w-10 h-1 rounded-full bg-line" />
             </View>
 
-            <Feather
-              name={expanded ? "chevron-up" : "chevron-down"}
-              size={20}
-              color={COLORS.textMuted}
-            />
+            <View className="flex-row items-center">
+              <View className="w-10 h-10 rounded-2xl bg-primary-light items-center justify-center mr-3">
+                <Feather
+                  name="shopping-bag"
+                  size={18}
+                  color={COLORS.primaryDark}
+                />
+              </View>
+
+              <View className="flex-1">
+                <Text className="text-base font-bold text-ink">
+                  Thiết bị đã chọn
+                </Text>
+                <Text className="text-xs text-ink-muted mt-0.5">
+                  {expanded ? "Chạm để thu gọn" : "Chạm để xem chi tiết"}
+                </Text>
+              </View>
+
+              <View className="min-w-[26px] h-[26px] px-2 rounded-full bg-primary items-center justify-center mr-2">
+                <Text className="text-white text-[12px] font-bold">
+                  {totalQuantity}
+                </Text>
+              </View>
+
+              <View className="w-8 h-8 rounded-full bg-canvas items-center justify-center">
+                <Feather
+                  name={expanded ? "chevron-down" : "chevron-up"}
+                  size={18}
+                  color={COLORS.inkSoft}
+                />
+              </View>
+            </View>
           </TouchableOpacity>
         )}
 
-        {/* List */}
+        {/* Danh sách */}
         {expanded && (
           <ScrollView
             style={{ maxHeight: 320 }}
-            contentContainerStyle={{ paddingHorizontal: 20 }}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 4 }}
             showsVerticalScrollIndicator={false}
           >
             {items.map((item, index) => {
               const catOpt = categoryOptions.find(
                 (o) => o.value === item[categoryField?.key ?? ""],
               );
-
               const opt = optionField
                 ? getSelectedOption(optionField, item)
                 : undefined;
-
               const itemPrice = getItemTotalPrice(
                 pricingConfig,
                 itemFields,
@@ -145,90 +166,72 @@ export function RepeatableItemsFooter({
               return (
                 <View
                   key={index}
-                  className="rounded-2xl mb-3 p-4"
-                  style={{
-                    backgroundColor: COLORS.background,
-                    borderWidth: 1,
-                    borderColor: COLORS.border,
-                  }}
+                  className="flex-row items-center rounded-2xl bg-canvas border border-line p-3 mb-2.5"
                 >
-                  <View className="flex-row items-start justify-between mb-1">
+                  <View className="min-w-[44px] h-11 px-2 rounded-xl bg-primary-light items-center justify-center mr-3">
+                    <Text className="text-[14px] font-extrabold text-primary-dark">
+                      x{item.quantity ?? 1}
+                    </Text>
+                  </View>
+
+                  <View className="flex-1 mr-2">
                     <Text
-                      className="font-bold text-[15px]"
-                      style={{ color: COLORS.primary }}
+                      className="font-bold text-[15px] text-ink"
+                      numberOfLines={1}
                     >
                       {catOpt?.label}
                     </Text>
-
-                    <TouchableOpacity
-                      onPress={() => onRemove(index)}
-                      hitSlop={{
-                        top: 8,
-                        bottom: 8,
-                        left: 8,
-                        right: 8,
-                      }}
-                    >
-                      <Feather name="trash-2" size={16} color={COLORS.danger} />
-                    </TouchableOpacity>
-                  </View>
-
-                  {!!opt && (
-                    <Text
-                      className="text-[13px] mb-0.5"
-                      style={{ color: COLORS.textMuted }}
-                    >
-                      {opt.label}
-                    </Text>
-                  )}
-
-                  <View className="flex-row items-center justify-between mt-1">
-                    <Text
-                      className="text-[13px]"
-                      style={{ color: COLORS.textMuted }}
-                    >
-                      Số lượng: {item.quantity ?? 1}
-                    </Text>
-
-                    {itemPrice != null && (
+                    {!!opt && (
                       <Text
-                        className="text-[14px] font-bold"
-                        style={{ color: COLORS.text }}
+                        className="text-[12px] text-ink-muted mt-0.5"
+                        numberOfLines={1}
                       >
+                        {opt.label}
+                      </Text>
+                    )}
+                    {itemPrice != null && (
+                      <Text className="text-[13px] font-bold text-primary mt-1">
                         {formatVnd(itemPrice)}
                       </Text>
                     )}
                   </View>
+
+                  <TouchableOpacity
+                    onPress={() => onRemove(index)}
+                    hitSlop={8}
+                    activeOpacity={0.7}
+                    className="w-9 h-9 rounded-full bg-danger-light items-center justify-center"
+                  >
+                    <Feather name="trash-2" size={16} color={COLORS.danger} />
+                  </TouchableOpacity>
                 </View>
               );
             })}
           </ScrollView>
         )}
 
-        {/* Bottom */}
+        {/* Tổng tiền + nút */}
         <View
-          className="px-6 pt-4 border-t border-gray-100"
+          className={`px-5 pt-3 ${hasItems ? "border-t border-line" : ""}`}
           style={{ paddingBottom: insets.bottom + 12 }}
         >
           <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-gray-500 text-sm">Tổng tiền</Text>
-
-            <Text className="text-emerald-700 font-bold text-lg">
-              {items.length > 0 ? formatVnd(totalPrice) : "Chưa đủ thông tin"}
+            <Text className="text-ink-soft text-sm">Tổng tiền</Text>
+            <Text
+              className={`font-extrabold ${
+                hasItems ? "text-primary text-xl" : "text-ink-muted text-sm"
+              }`}
+            >
+              {hasItems ? formatVnd(totalPrice) : "Chưa đủ thông tin"}
             </Text>
           </View>
 
-          <TouchableOpacity
-            className="bg-emerald-700 rounded-xl py-4 items-center"
-            style={{ opacity: submitDisabled ? 0.6 : 1 }}
-            activeOpacity={0.8}
+          <Button
+            title={displayedSubmitLabel}
             onPress={onSubmit}
             disabled={submitDisabled}
-          >
-            <Text className="text-white font-bold text-base">
-              {displayedSubmitLabel}
-            </Text>
-          </TouchableOpacity>
+            className="w-full py-4"
+          />
         </View>
       </View>
     </>

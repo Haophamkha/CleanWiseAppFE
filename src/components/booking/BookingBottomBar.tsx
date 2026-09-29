@@ -1,4 +1,5 @@
-import { COLORS } from "@/components/service/formFieldShared";
+import { COLORS } from "@/constants/theme";
+import { Feather } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -7,23 +8,16 @@ export function BookingBottomBar({ onCancel }: { onCancel?: () => void }) {
 
   return (
     <View
-      className="px-5 pt-3"
-      style={{
-        borderTopWidth: 1,
-        borderColor: COLORS.border,
-        backgroundColor: "#FFFFFF",
-        paddingBottom: Math.max(insets.bottom, 12) + 8,
-      }}
+      className="bg-surface border-t border-line px-5 pt-3"
+      style={{ paddingBottom: Math.max(insets.bottom, 12) + 4 }}
     >
       <TouchableOpacity
         activeOpacity={0.8}
-        className="rounded-xl py-3.5 items-center"
-        style={{ borderWidth: 1.5, borderColor: "#FCA5A5" }}
-        onPress={() => {
-          onCancel?.();
-        }}
+        className="flex-row items-center justify-center h-12 rounded-2xl bg-danger-light"
+        onPress={() => onCancel?.()}
       >
-        <Text className="font-bold text-[14px]" style={{ color: "#DC2626" }}>
+        <Feather name="x-circle" size={17} color={COLORS.danger} />
+        <Text className="font-bold text-[14px] text-danger ml-2">
           Hủy đơn hàng
         </Text>
       </TouchableOpacity>

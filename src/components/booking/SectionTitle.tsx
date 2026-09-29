@@ -1,4 +1,4 @@
-import { COLORS } from "@/components/service/formFieldShared";
+import { COLORS } from "@/constants/theme";
 import { Feather } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 
@@ -12,13 +12,11 @@ export function SectionTitle({
   return (
     <View className="flex-row items-center mb-3">
       {icon && (
-        <View className="w-6 h-6 rounded-full bg-emerald-50 items-center justify-center mr-2">
-          <Feather name={icon} size={13} color={COLORS.primary} />
+        <View className="w-8 h-8 rounded-full bg-primary-light items-center justify-center mr-2.5">
+          <Feather name={icon} size={15} color={COLORS.primaryDark} />
         </View>
       )}
-      <Text className="font-bold text-[16px]" style={{ color: COLORS.text }}>
-        {children}
-      </Text>
+      <Text className="font-bold text-base text-ink">{children}</Text>
     </View>
   );
 }
