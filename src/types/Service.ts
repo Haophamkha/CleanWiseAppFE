@@ -45,9 +45,6 @@ export type FormSchema = {
   schedule_type?: "ONCE" | "RECURRING_WEEKLY";
   addresses?: { key: string; label: string; required: boolean }[];
   task_checklist?: string;
-  // ĐỔI: "ONCE" (mặc định) hoặc "RECURRING_WEEKLY" — quyết định
-  // schedule_builder.py bên BE build lịch kiểu gì.
-  schedule_type?: "ONCE" | "RECURRING_WEEKLY";
   fields: FormField[];
 };
 

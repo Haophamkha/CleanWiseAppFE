@@ -61,7 +61,6 @@ export default function ProfileScreen() {
           name={p.displayName}
           subtitle={p.subtitle}
           avatar={p.avatar}
-          onEdit={() => router.push(ROUTES.EDIT_PROFILE as any)}
         />
 
         <View className="px-5 pt-5">
