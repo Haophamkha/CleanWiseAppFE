@@ -1,8 +1,9 @@
+import { useSuccessSheet } from "@/components/common/SuccessSheet";
 import { ROUTES } from "@/config/constants";
 import {
-    saveTokens,
-    useLoginMutation,
-    useLoginWithGoogleMutation,
+  saveTokens,
+  useLoginMutation,
+  useLoginWithGoogleMutation,
 } from "@/features/auth/api/authApi";
 import { useGoogleAuth } from "@/features/auth/hooks/useGoogleAuth";
 import type { AuthResponse } from "@/features/auth/types/authResponse";
@@ -10,7 +11,7 @@ import { setUser } from "@/store/authSlice";
 import { baseApi } from "@/store/baseApi";
 import { useAppDispatch } from "@/store/hooks";
 import { getApiErrorMessage } from "@/utils/apiError";
-import { showErrorToast, showSuccessToast } from "@/utils/toast";
+import { showErrorToast } from "@/utils/toast";
 import { loginSchema } from "@/utils/validators";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -23,6 +24,7 @@ export function useLogin() {
   const [loginWithGoogle, { isLoading: isGoogleLoading }] =
     useLoginWithGoogleMutation();
   const dispatch = useAppDispatch();
+  const { show } = useSuccessSheet();
 
   // Dùng chung cho đăng nhập thường và Google
   const finishLogin = async (res: AuthResponse) => {
@@ -34,12 +36,19 @@ export function useLogin() {
     }
     await saveTokens(res.access, res.refresh); // đợi ghi xong rồi mới đi tiếp
     dispatch(baseApi.util.resetApiState()); // xóa cache của người trước
-    dispatch(setUser(res.user));
-    showSuccessToast(
-      "Đăng nhập thành công",
-      `Chào mừng trở lại, ${res.user.first_name || ""}`,
-    );
-    router.replace(ROUTES.HOME);
+
+    // setUser + chuyển trang sau khi popup tự đóng (3s), tránh layout redirect đè lên popup
+    const name = [res.user.first_name, res.user.last_name]
+      .filter(Boolean)
+      .join(" ");
+    show({
+      title: "Đăng nhập thành công!",
+      message: name ? `Chào mừng trở lại, ${name}.` : "Chào mừng bạn trở lại.",
+      onClose: () => {
+        dispatch(setUser(res.user));
+        router.replace(ROUTES.HOME);
+      },
+    });
   };
 
   const submit = async () => {

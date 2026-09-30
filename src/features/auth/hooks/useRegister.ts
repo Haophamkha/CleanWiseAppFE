@@ -1,10 +1,11 @@
+import { useSuccessSheet } from "@/components/common/SuccessSheet";
 import { ROUTES } from "@/config/constants";
 import { saveTokens, useRegisterMutation } from "@/features/auth/api/authApi";
 import { setUser } from "@/store/authSlice";
 import { baseApi } from "@/store/baseApi";
 import { useAppDispatch } from "@/store/hooks";
 import { getApiErrorMessage } from "@/utils/apiError";
-import { showErrorToast, showSuccessToast } from "@/utils/toast";
+import { showErrorToast } from "@/utils/toast";
 import { registerSchema } from "@/utils/validators";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -27,6 +28,7 @@ export function useRegister() {
   const [error, setError] = useState("");
   const [register, { isLoading }] = useRegisterMutation();
   const dispatch = useAppDispatch();
+  const { show } = useSuccessSheet();
 
   const update = (key: RegisterFormKey, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -46,12 +48,21 @@ export function useRegister() {
       const res = await register(form).unwrap();
       await saveTokens(res.access, res.refresh);
       dispatch(baseApi.util.resetApiState());
-      dispatch(setUser(res.user));
-      showSuccessToast(
-        "Tạo tài khoản thành công",
-        `Chào mừng ${res.user.first_name || ""} đến với CleanWise`,
-      );
-      router.replace(ROUTES.HOME);
+
+      // setUser + chuyển trang sau khi popup tự đóng (3s)
+      const name = [res.user.first_name, res.user.last_name]
+        .filter(Boolean)
+        .join(" ");
+      show({
+        title: "Tạo tài khoản thành công!",
+        message: name
+          ? `Chào mừng ${name} đến với CleanWise.`
+          : "Chào mừng bạn đến với CleanWise.",
+        onClose: () => {
+          dispatch(setUser(res.user));
+          router.replace(ROUTES.HOME);
+        },
+      });
     } catch (e) {
       const message = getApiErrorMessage(
         e,
