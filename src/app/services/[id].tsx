@@ -1,22 +1,22 @@
-import { AddressPickerField } from "@/components/service/AddressPickerField";
-import { FormSchemaRenderer } from "@/components/service/FormSchemaRenderer";
-import { RepeatableItemsFooter } from "@/components/service/RepeatableItemsFooter";
-import { useGetServiceDetailQuery } from "@/services/serviceApi";
-import { clearPickedAddress } from "@/store/addressPickerSlice";
-import { setBookingDraft } from "@/store/bookingDraftSlice";
+import { clearPickedAddress } from "@/features/address/stores/addressPickerSlice";
+import { setBookingDraft } from "@/features/booking/stores/bookingDraftSlice";
+import { useGetServiceDetailQuery } from "@/features/service/api/serviceApi";
+import { AddressPickerField } from "@/features/service/components/AddressPickerField";
+import { FormSchemaRenderer } from "@/features/service/components/FormSchemaRenderer";
+import { RepeatableItemsFooter } from "@/features/service/components/RepeatableItemsFooter";
+import { calculateEstimatedPrice } from "@/features/service/utils/servicePricing";
+import { getServiceVisual } from "@/features/service/utils/serviceVisuals";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { formatVnd } from "@/utils/currency";
-import { calculateEstimatedPrice } from "@/utils/servicePricing";
-import { getServiceVisual } from "@/utils/serviceVisuals";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -141,9 +141,7 @@ export default function ServiceDetailScreen() {
     values,
   );
 
-  const groupField = serviceFields.find(
-    (f) => f.type === "REPEATABLE_GROUP",
-  );
+  const groupField = serviceFields.find((f) => f.type === "REPEATABLE_GROUP");
   const groupItems: Record<string, any>[] = groupField
     ? (values[groupField.key] ?? [])
     : [];

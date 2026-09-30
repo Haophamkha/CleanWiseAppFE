@@ -1,4 +1,4 @@
-import { COLORS } from "@/components/service/formFieldShared";
+import { COLORS } from "@/features/service/components/formFieldShared";
 import { Feather } from "@expo/vector-icons";
 import {
     ActivityIndicator,

@@ -1,333 +1,286 @@
+// app/profile/address/select-location.tsx
+import { ScreenHeader } from "@/components/common/ScreenHeader";
 import ScreenContainer from "@/components/ScreenContainer";
-import LocationMapView from "@/components/address/LocationMapView";
-import type { LocationMapViewHandle } from "@/components/address/LocationMapView.types";
-import type { Region } from "@/types/Region";
+import { COLORS } from "@/constants/theme";
+import LocationMapView from "@/features/address/components/LocationMapView";
+import { useSelectLocation } from "@/features/address/hooks/useSelectLocation";
 import { Feather } from "@expo/vector-icons";
-import * as Location from "expo-location";
-import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useRef, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useRef } from "react";
+import {
+  ActivityIndicator,
+  Animated,
+  Easing,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-const DEFAULT_REGION: Region = {
-  latitude: 10.7769,
-  longitude: 106.7009,
-  latitudeDelta: 0.01,
-  longitudeDelta: 0.01,
-};
+const PIN_SIZE = 44;
+const PIN_HEIGHT = 52; // vòng tròn + mũi nhọn
 
-type DetectedParts = {
-  addressLine: string;
-  ward: string;
-  province: string;
-};
+const softShadow = {
+  shadowColor: COLORS.ink,
+  shadowOpacity: 0.18,
+  shadowOffset: { width: 0, height: 6 },
+  shadowRadius: 16,
+  elevation: 8,
+} as const;
 
-const reverseGeocodeFallback = async (
-  lat: number,
-  lng: number,
-): Promise<DetectedParts | null> => {
-  try {
-    const results = await Location.reverseGeocodeAsync({
-      latitude: lat,
-      longitude: lng,
-    });
-
-    const place = results[0];
-    if (!place) return null;
-
-    const addressLine = [place.streetNumber, place.street || place.name]
-      .filter(Boolean)
-      .join(" ");
-    const province = place.city || place.region || "";
-
-    return {
-      addressLine,
-      ward: "",
-      province,
-    };
-  } catch {
-    return null;
-  }
-};
-
-export default function SelectLocationScreen() {
-  const params = useLocalSearchParams<{
-    editId?: string;
-    latitude?: string;
-    longitude?: string;
-    pickerKey?: string;
-  }>();
-
-  const mapRef = useRef<LocationMapViewHandle>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const requestIdRef = useRef(0);
-
-  const initialRegion: Region =
-    params.latitude && params.longitude
-      ? {
-          latitude: Number(params.latitude),
-          longitude: Number(params.longitude),
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        }
-      : DEFAULT_REGION;
-
-  const [region, setRegion] = useState<Region>(initialRegion);
-  const [previewAddress, setPreviewAddress] = useState(
-    "Đang xác định vị trí...",
-  );
-  const [detectedParts, setDetectedParts] = useState<DetectedParts | null>(
-    null,
-  );
-  const [loadingAddress, setLoadingAddress] = useState(false);
-  const [loadingGps, setLoadingGps] = useState(false);
+/** Thanh xám nhấp nháy khi đang xác định địa chỉ */
+function Skeleton({ width, height = 14 }: { width: string; height?: number }) {
+  const opacity = useRef(new Animated.Value(0.4)).current;
 
   useEffect(() => {
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
-  }, []);
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 700,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0.4,
+          duration: 700,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [opacity]);
 
-  const applyResult = (parts: DetectedParts | null, requestId: number) => {
-    if (requestId !== requestIdRef.current) {
-      return;
-    }
+  return (
+    <Animated.View
+      className="bg-line rounded-full"
+      style={{ width: width as any, height, opacity }}
+    />
+  );
+}
 
-    if (parts) {
-      setPreviewAddress(
-        [parts.addressLine, parts.ward, parts.province]
-          .filter(Boolean)
-          .join(", ") || "Không xác định được địa chỉ",
-      );
+/** Ghim giữa bản đồ: nhấc lên khi đang tìm địa chỉ, rơi xuống khi xong */
+function CenterPin({ locating }: { locating: boolean }) {
+  const lift = useRef(new Animated.Value(0)).current;
 
-      setDetectedParts(parts);
+  useEffect(() => {
+    if (locating) {
+      Animated.timing(lift, {
+        toValue: -14,
+        duration: 180,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }).start();
     } else {
-      setPreviewAddress("Không xác định được địa chỉ");
-      setDetectedParts(null);
+      Animated.spring(lift, {
+        toValue: 0,
+        friction: 4,
+        tension: 140,
+        useNativeDriver: true,
+      }).start();
     }
-  };
+  }, [locating, lift]);
 
-  const doReverseGeocode = async (lat: number, lng: number) => {
-    const requestId = ++requestIdRef.current;
-    setLoadingAddress(true);
+  // Bóng dưới chân ghim co lại khi ghim nhấc lên
+  const shadowScale = lift.interpolate({
+    inputRange: [-14, 0],
+    outputRange: [0.6, 1],
+  });
+  const shadowOpacity = lift.interpolate({
+    inputRange: [-14, 0],
+    outputRange: [0.15, 0.35],
+  });
 
-    try {
-      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1&zoom=18&accept-language=vi`;
+  return (
+    <View
+      pointerEvents="none"
+      style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+    >
+      {/* Bóng: tâm đúng ở giữa bản đồ */}
+      <Animated.View
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: "50%",
+          width: 16,
+          height: 6,
+          marginLeft: -8,
+          marginTop: -3,
+          borderRadius: 8,
+          backgroundColor: COLORS.ink,
+          opacity: shadowOpacity,
+          transform: [{ scale: shadowScale }],
+        }}
+      />
 
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) CleanWiseApp/1.0",
-          Accept: "application/json",
-        },
-      });
+      {/* Ghim: mũi nhọn chạm đúng tâm bản đồ */}
+      <Animated.View
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: "50%",
+          width: PIN_SIZE,
+          height: PIN_HEIGHT,
+          marginLeft: -PIN_SIZE / 2,
+          marginTop: -PIN_HEIGHT,
+          transform: [{ translateY: lift }],
+        }}
+      >
+        {/* Mũi nhọn */}
+        <View
+          style={{
+            position: "absolute",
+            bottom: 2,
+            left: (PIN_SIZE - 12) / 2,
+            width: 12,
+            height: 12,
+            backgroundColor: COLORS.primary,
+            transform: [{ rotate: "45deg" }],
+            borderRadius: 2,
+          }}
+        />
+        {/* Vòng tròn */}
+        <View
+          className="bg-primary items-center justify-center"
+          style={{
+            width: PIN_SIZE,
+            height: PIN_SIZE,
+            borderRadius: PIN_SIZE / 2,
+            borderWidth: 3,
+            borderColor: "#FFFFFF",
+            ...softShadow,
+          }}
+        >
+          <Feather name="home" size={20} color="#FFFFFF" />
+        </View>
+      </Animated.View>
+    </View>
+  );
+}
 
-      if (!response.ok) {
-        throw new Error(`Nominatim status ${response.status}`);
-      }
+export default function SelectLocationScreen() {
+  const s = useSelectLocation();
 
-      const data = await response.json();
-      const addr = data?.address;
-      const displayName: string = data?.display_name || "";
-
-      let streetPart = "";
-      let ward = "";
-      let province = "";
-
-      if (addr) {
-        streetPart = [
-          addr.house_number,
-          addr.road || addr.pedestrian || addr.footway,
-        ]
-          .filter(Boolean)
-          .join(" ");
-
-        province =
-          addr.city || addr.state || addr.province || addr.region || "";
-      }
-
-      if (displayName) {
-        const partsArray = displayName.split(",").map((s) => s.trim());
-
-        const foundWard = partsArray.find(
-          (item) =>
-            item.toLowerCase().startsWith("phường") ||
-            item.toLowerCase().startsWith("xã") ||
-            item.toLowerCase().startsWith("thị trấn"),
-        );
-
-        if (foundWard) {
-          ward = foundWard;
-        }
-
-        if (!province && partsArray.length > 0) {
-          province = partsArray[partsArray.length - 2];
-        }
-      }
-
-      let parts: DetectedParts | null = {
-        addressLine: streetPart,
-        ward,
-        province,
-      };
-
-      if (!parts.addressLine || !parts.province) {
-        const fallback = await reverseGeocodeFallback(lat, lng);
-        if (fallback) {
-          parts = {
-            addressLine: parts.addressLine || fallback.addressLine,
-            ward: parts.ward,
-            province: parts.province || fallback.province,
-          };
-        }
-      }
-
-      applyResult(parts, requestId);
-    } catch (err) {
-      console.log("[reverseGeocode error - fallback to device]:", err);
-      const fallback = await reverseGeocodeFallback(lat, lng);
-      applyResult(fallback, requestId);
-    } finally {
-      if (requestId === requestIdRef.current) {
-        setLoadingAddress(false);
-      }
-    }
-  };
-
-  const reverseGeocode = (lat: number, lng: number) => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    debounceRef.current = setTimeout(() => {
-      doReverseGeocode(lat, lng);
-    }, 500);
-  };
-
-  const handleRegionChangeComplete = (newRegion: Region) => {
-    setRegion(newRegion);
-    reverseGeocode(newRegion.latitude, newRegion.longitude);
-  };
-
-  const handleUseCurrentLocation = async () => {
-    try {
-      setLoadingGps(true);
-      const { status } = await Location.requestForegroundPermissionsAsync();
-
-      if (status !== "granted") {
-        setPreviewAddress("Bạn cần cấp quyền vị trí để dùng tính năng này");
-        return;
-      }
-
-      const current = await Location.getCurrentPositionAsync({});
-
-      const newRegion: Region = {
-        latitude: current.coords.latitude,
-        longitude: current.coords.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      };
-
-      mapRef.current?.animateToRegion(newRegion);
-      setRegion(newRegion);
-      reverseGeocode(newRegion.latitude, newRegion.longitude);
-    } catch {
-      setPreviewAddress(
-        "Không thể lấy vị trí hiện tại. Vui lòng bật GPS và thử lại",
-      );
-    } finally {
-      setLoadingGps(false);
-    }
-  };
-
-  const handleConfirm = () => {
-    const selectedParams = {
-      latitude: String(region.latitude),
-      longitude: String(region.longitude),
-      addressLine: detectedParts?.addressLine ?? "",
-      ward: detectedParts?.ward ?? "",
-      province: detectedParts?.province ?? "",
-    };
-
-    if (params.editId) {
-      router.replace({
-        pathname: "/profile/address/[id]",
-        params: {
-          id: params.editId,
-          ...selectedParams,
-        },
-      });
-      return;
-    }
-
-    router.replace({
-      pathname: "/profile/address/add",
-      params: {
-        ...selectedParams,
-        pickerKey: params.pickerKey ?? "",
-      },
-    });
-  };
+  // Tách "86 Lê Thánh Tôn, Phường Sài Gòn, Thành phố Hồ Chí Minh"
+  // thành dòng chính + dòng phụ cho dễ đọc
+  const [title, ...rest] = s.previewAddress.split(", ");
+  const subtitle = rest.join(", ");
 
   return (
     <ScreenContainer>
-      <View className="flex-1 bg-white">
-        <View className="flex-row items-center px-5 pt-4 pb-4 border-b border-gray-100 bg-white z-10">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <Feather name="arrow-left" size={22} color="#111827" />
-          </TouchableOpacity>
-          <Text className="text-lg font-bold text-gray-900">Chọn vị trí</Text>
-        </View>
+      <ScreenHeader title="Chọn vị trí" />
 
-        <View className="flex-1">
-          <LocationMapView
-            ref={mapRef}
-            initialRegion={initialRegion}
-            onRegionChangeComplete={handleRegionChangeComplete}
-          />
+      <View className="flex-1">
+        <LocationMapView
+          ref={s.mapRef}
+          initialRegion={s.initialRegion}
+          onRegionChangeComplete={s.onRegionChangeComplete}
+        />
 
+        <CenterPin locating={s.isLocating} />
+
+        {/* Gợi ý phía trên */}
+        <View
+          pointerEvents="none"
+          className="absolute top-3 left-0 right-0 items-center"
+        >
           <View
-            pointerEvents="none"
-            className="absolute inset-0 items-center justify-center"
-            style={{ marginBottom: 18 }}
+            className="flex-row items-center rounded-full px-4 py-2"
+            style={{
+              backgroundColor: "rgba(255,255,255,0.95)",
+              ...softShadow,
+              shadowOpacity: 0.1,
+              elevation: 3,
+            }}
           >
-            <Feather name="map-pin" size={36} color="#047857" />
+            <Feather name="move" size={14} color={COLORS.primary} />
+            <Text className="text-xs font-medium text-ink ml-2">
+              Kéo bản đồ để chọn vị trí chính xác
+            </Text>
           </View>
-
-          <TouchableOpacity
-            onPress={handleUseCurrentLocation}
-            disabled={loadingGps}
-            className="absolute right-4 bottom-4 w-12 h-12 rounded-full bg-white items-center justify-center shadow"
-            activeOpacity={0.8}
-          >
-            <Feather name="navigation" size={20} color="#047857" />
-          </TouchableOpacity>
         </View>
 
-        <View className="px-6 pb-8 pt-4 border-t border-gray-100">
-          <View className="flex-row items-start mb-4">
-            <Feather
-              name="map-pin"
-              size={16}
-              color="#6B7280"
-              style={{ marginTop: 2 }}
-            />
-            <Text className="text-gray-700 text-sm ml-2 flex-1">
-              {loadingAddress ? "Đang xác định địa chỉ..." : previewAddress}
-            </Text>
+        {/* Cụm nổi phía dưới: nút định vị + thẻ địa chỉ */}
+        <View className="absolute left-0 right-0 bottom-0 px-4 pb-4">
+          <View className="items-end mb-3">
+            <TouchableOpacity
+              onPress={s.locateMe}
+              disabled={s.isLoadingGps}
+              activeOpacity={0.85}
+              className="w-12 h-12 rounded-full bg-surface items-center justify-center"
+              style={softShadow}
+            >
+              {s.isLoadingGps ? (
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              ) : (
+                <Feather name="crosshair" size={22} color={COLORS.primary} />
+              )}
+            </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            className="bg-emerald-700 rounded-xl py-4 items-center"
-            onPress={handleConfirm}
-            activeOpacity={0.8}
-          >
-            <Text className="text-white font-bold text-base">
-              Chọn vị trí này
-            </Text>
-          </TouchableOpacity>
+          <View className="bg-surface rounded-3xl p-5" style={softShadow}>
+            <View className="flex-row items-center mb-3">
+              <View className="w-2 h-2 rounded-full bg-primary mr-2" />
+              <Text className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                Vị trí đã chọn
+              </Text>
+            </View>
+
+            <View className="flex-row items-start mb-5">
+              <View className="w-11 h-11 rounded-2xl bg-primary-soft items-center justify-center mr-3">
+                <Feather name="map-pin" size={20} color={COLORS.primary} />
+              </View>
+
+              <View className="flex-1 justify-center" style={{ minHeight: 44 }}>
+                {s.isLocating ? (
+                  <View>
+                    <Skeleton width="75%" height={16} />
+                    <View style={{ height: 8 }} />
+                    <Skeleton width="55%" height={12} />
+                  </View>
+                ) : (
+                  <View>
+                    <Text
+                      className="text-base font-bold text-ink"
+                      numberOfLines={2}
+                    >
+                      {title}
+                    </Text>
+                    {!!subtitle && (
+                      <Text
+                        className="text-sm text-ink-soft mt-0.5"
+                        numberOfLines={2}
+                      >
+                        {subtitle}
+                      </Text>
+                    )}
+                  </View>
+                )}
+              </View>
+            </View>
+
+            <TouchableOpacity
+              onPress={s.confirmLocation}
+              disabled={s.isConfirming}
+              activeOpacity={0.85}
+              className="bg-primary rounded-2xl flex-row items-center justify-center"
+              style={{ height: 52, opacity: s.isConfirming ? 0.7 : 1 }}
+            >
+              {s.isConfirming ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <>
+                  <Feather name="check-circle" size={18} color="#FFFFFF" />
+                  <Text
+                    className="text-base font-semibold ml-2"
+                    style={{ color: "#FFFFFF" }}
+                  >
+                    Xác nhận vị trí này
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </ScreenContainer>

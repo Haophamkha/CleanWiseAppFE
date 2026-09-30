@@ -1,193 +1,48 @@
+// app/profile/address/add.tsx
+import { ScreenHeader } from "@/components/common/ScreenHeader";
 import ScreenContainer from "@/components/ScreenContainer";
+import { Button, ErrorText } from "@/components/ui";
 import AddressForm, {
-  AddressFormValues,
-} from "@/components/address/AddressForm";
-import ProvinceWardPicker from "@/components/address/ProvinceWardPicker";
-import { useCreateAddressMutation } from "@/services/addressApi";
-import { setPickedAddress } from "@/store/addressPickerSlice";
-import { useAppDispatch } from "@/store/hooks";
-import { Feather } from "@expo/vector-icons";
-import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+    FormSectionTitle,
+} from "@/features/address/components/AddressForm";
+import { MapPickButton } from "@/features/address/components/MapPickButton";
+import ProvinceWardPicker from "@/features/address/components/ProvinceWardPicker";
+import { useAddAddress } from "@/features/address/hooks/useAddAddress";
+import { ScrollView, View } from "react-native";
 
 export default function AddAddressScreen() {
-  const params = useLocalSearchParams<{
-    latitude?: string;
-    longitude?: string;
-    addressLine?: string;
-    ward?: string;
-    province?: string;
-    pickerKey?: string;
-  }>();
-
-  const dispatch = useAppDispatch();
-
-  const [values, setValues] = useState<AddressFormValues>({
-    label: "",
-    receiver_name: "",
-    receiver_phone: "",
-    address_line: "",
-  });
-  const [city, setCity] = useState("");
-  const [ward, setWard] = useState("");
-  const [latitude, setLatitude] = useState<string | undefined>(undefined);
-  const [longitude, setLongitude] = useState<string | undefined>(undefined);
-  const [error, setError] = useState("");
-  const [isNavigating, setIsNavigating] = useState(false);
-
-  const [createAddress, { isLoading }] = useCreateAddressMutation();
-
-  useFocusEffect(
-    useCallback(() => {
-      setIsNavigating(false);
-    }, []),
-  );
-
-  useEffect(() => {
-    if (!params.latitude || !params.longitude) return;
-    setLatitude(params.latitude);
-    setLongitude(params.longitude);
-    if (params.province) setCity(params.province);
-    if (params.ward) setWard(params.ward);
-    if (params.addressLine) {
-      setValues((prev) => ({ ...prev, address_line: params.addressLine! }));
-    }
-  }, [
-    params.latitude,
-    params.longitude,
-    params.province,
-    params.ward,
-    params.addressLine,
-  ]);
-
-  const handleChange = (field: keyof AddressFormValues, value: string) => {
-    setValues((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handlePickProvinceWard = (province: string, selectedWard: string) => {
-    setCity(province);
-    setWard(selectedWard);
-  };
-
-  const handleGoToMap = () => {
-    if (isNavigating) return;
-    setIsNavigating(true);
-    router.push({
-      pathname: "/profile/address/select-location",
-      params: {
-        latitude,
-        longitude,
-        ...(params.pickerKey ? { pickerKey: params.pickerKey } : {}),
-      },
-    });
-  };
-
-  const handleConfirm = async () => {
-    if (
-      !values.receiver_name.trim() ||
-      !values.receiver_phone.trim() ||
-      !values.address_line.trim() ||
-      !city.trim() ||
-      !ward.trim()
-    ) {
-      setError("Vui lòng nhập đầy đủ thông tin");
-      return;
-    }
-
-    setError("");
-
-    try {
-      const created = await createAddress({
-        label: values.label.trim() || undefined,
-        receiver_name: values.receiver_name.trim(),
-        receiver_phone: values.receiver_phone.trim(),
-        address_line: values.address_line.trim(),
-        ward: ward.trim(),
-        city: city.trim(),
-        latitude,
-        longitude,
-      }).unwrap();
-
-      if (params.pickerKey) {
-        // Đang ở luồng chọn địa chỉ cho dịch vụ — chọn luôn địa chỉ vừa tạo
-        // rồi nhảy thẳng về màn dịch vụ (bỏ qua choose-method + list).
-        dispatch(setPickedAddress({ key: params.pickerKey, address: created }));
-        router.dismiss(3);
-      } else {
-        router.dismissAll();
-      }
-    } catch (e: any) {
-      const backendErrors = e?.data?.errors;
-      if (backendErrors) {
-        const firstError = Object.values(backendErrors).flat().find(Boolean);
-        setError(
-          typeof firstError === "string"
-            ? firstError
-            : "Dữ liệu địa chỉ không hợp lệ",
-        );
-      } else {
-        setError(e?.data?.message || "Thêm địa chỉ thất bại, vui lòng thử lại");
-      }
-    }
-  };
+  const a = useAddAddress();
 
   return (
     <ScreenContainer>
-      <View className="flex-1 bg-white">
-        <View className="flex-row items-center px-5 pt-4 pb-4 border-b border-gray-100">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <Feather name="arrow-left" size={22} color="#111827" />
-          </TouchableOpacity>
-          <Text className="text-lg font-bold text-gray-900">Thêm địa chỉ</Text>
-        </View>
+      <ScreenHeader title="Thêm địa chỉ" />
 
-        <ScrollView
-          className="flex-1 px-6 pt-6"
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <ProvinceWardPicker
-            initialProvince={city}
-            initialWard={ward}
-            onSelect={handlePickProvinceWard}
-          />
+      <ScrollView
+        className="flex-1 bg-surface"
+        contentContainerStyle={{ padding: 20 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <FormSectionTitle>Khu vực</FormSectionTitle>
+        <ProvinceWardPicker
+          initialProvince={a.city}
+          initialWard={a.ward}
+          onSelect={a.pickProvinceWard}
+        />
+        <MapPickButton
+          label="Hoặc chọn trên bản đồ"
+          onPress={a.goToMap}
+          disabled={a.isNavigating}
+        />
 
-          <TouchableOpacity
-            className="flex-row items-center justify-center border border-emerald-700 rounded-xl py-3 mb-5"
-            onPress={handleGoToMap}
-            disabled={isNavigating}
-          >
-            <Feather
-              name="map-pin"
-              size={16}
-              color="#047857"
-              style={{ marginRight: 8 }}
-            />
-            <Text className="text-emerald-700 font-semibold">
-              Hoặc chọn trên bản đồ
-            </Text>
-          </TouchableOpacity>
+        <FormSectionTitle>Thông tin người nhận</FormSectionTitle>
+        <AddressForm values={a.values} onChange={a.change} />
 
-          <AddressForm values={values} onChange={handleChange} />
+        <ErrorText message={a.error} />
+      </ScrollView>
 
-          {!!error && (
-            <Text className="text-red-500 text-sm mb-3">{error}</Text>
-          )}
-        </ScrollView>
-
-        <View className="px-6 pb-8 pt-4 border-t border-gray-100">
-          <TouchableOpacity
-            className="bg-emerald-700 rounded-xl py-4 items-center"
-            onPress={handleConfirm}
-            disabled={isLoading}
-            activeOpacity={0.8}
-          >
-            <Text className="text-white font-bold text-base">
-              {isLoading ? "Đang lưu..." : "Thêm địa chỉ"}
-            </Text>
-          </TouchableOpacity>
-        </View>
+      <View className="px-5 pt-3 pb-4 bg-surface border-t border-line">
+        <Button title="Thêm địa chỉ" onPress={a.submit} loading={a.isLoading} />
       </View>
     </ScreenContainer>
   );

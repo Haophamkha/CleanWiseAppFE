@@ -1,7 +1,12 @@
-import type { FormField } from "@/types/Service";
+import type { FormField } from "@/features/service/types/Service";
 import { z } from "zod";
 
 const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+const passwordRule = z
+  .string()
+  .min(8, "Mật khẩu tối thiểu 8 ký tự")
+  .regex(/[A-Z]/, "Mật khẩu cần ít nhất 1 chữ hoa")
+  .regex(/[0-9]/, "Mật khẩu cần ít nhất 1 chữ số");
 
 export const loginSchema = z.object({
   phone: z
@@ -21,11 +26,7 @@ export const registerSchema = z
     first_name: z.string().min(1, "Vui lòng nhập họ"),
     last_name: z.string().min(1, "Vui lòng nhập tên"),
     phone_number: z.string().regex(phoneRegex, "Số điện thoại không hợp lệ"),
-    password: z
-      .string()
-      .min(8, "Mật khẩu tối thiểu 8 ký tự")
-      .regex(/[A-Z]/, "Mật khẩu cần ít nhất 1 chữ hoa")
-      .regex(/[0-9]/, "Mật khẩu cần ít nhất 1 chữ số"),
+    password: passwordRule,
     password_confirm: z.string().min(1, "Vui lòng xác nhận mật khẩu"),
   })
   .refine((data) => data.password === data.password_confirm, {
@@ -34,13 +35,12 @@ export const registerSchema = z
   });
 
 export const forgotPasswordSchema = z.object({
-  contact: z.string().min(1, "Vui lòng nhập số điện thoại hoặc email"),
+  email: z.string().min(1, "Vui lòng nhập email").email("Email không hợp lệ"),
 });
 
-// Thêm schema này để validate bước nhập mật khẩu mới ở trang ForgotPassword
 export const resetPasswordSchema = z
   .object({
-    new_password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
+    new_password: passwordRule,
     new_password_confirm: z.string().min(1, "Vui lòng xác nhận mật khẩu mới"),
   })
   .refine((data) => data.new_password === data.new_password_confirm, {

@@ -1,28 +1,28 @@
-import BankPickerModal from "@/components/payment/BankPickerModal";
 import {
-  useCreateBankPaymentMethodMutation,
-  useGetBankCatalogQuery,
-  useGetPaymentMethodOptionsQuery,
-} from "@/services/paymentMethodApi";
+    useCreateBankPaymentMethodMutation,
+    useGetBankCatalogQuery,
+    useGetPaymentMethodOptionsQuery,
+} from "@/features/payment/api/paymentMethodApi";
+import BankPickerModal from "@/features/payment/components/BankPickerModal";
 import type {
-  BankCatalogItem,
-  PaymentMethodOption,
-} from "@/types/PaymentMethod";
+    BankCatalogItem,
+    PaymentMethodOption,
+} from "@/features/payment/types/PaymentMethod";
 import { showSuccessToast } from "@/utils/toast";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Switch,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    Switch,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -49,7 +49,9 @@ const getFirstError = (error: any) => {
 
 export default function AddCustomerPaymentMethodScreen() {
   const [step, setStep] = useState<Step>("options");
-  const [selectedBank, setSelectedBank] = useState<BankCatalogItem | null>(null);
+  const [selectedBank, setSelectedBank] = useState<BankCatalogItem | null>(
+    null,
+  );
   const [accountNumber, setAccountNumber] = useState("");
   const [showAccountNumber, setShowAccountNumber] = useState(false);
   const [accountHolderName, setAccountHolderName] = useState("");
@@ -123,9 +125,7 @@ export default function AddCustomerPaymentMethodScreen() {
         bank_code: selectedBank.code,
         bank_name: selectedBank.short_name || selectedBank.name,
         account_number: normalizedAccount,
-        account_holder_name: accountHolderName
-          .trim()
-          .toLocaleUpperCase("vi"),
+        account_holder_name: accountHolderName.trim().toLocaleUpperCase("vi"),
         display_name: displayName.trim() || undefined,
         is_default: isDefault,
       }).unwrap();
@@ -221,7 +221,8 @@ export default function AddCustomerPaymentMethodScreen() {
               <View className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 mb-6 flex-row">
                 <Feather name="shield" size={19} color={PRIMARY} />
                 <Text className="flex-1 text-emerald-800 text-sm leading-5 ml-3">
-                  Tài khoản được lưu ở trạng thái chưa xác minh. CleanWise không yêu cầu mật khẩu hoặc OTP ngân hàng.
+                  Tài khoản được lưu ở trạng thái chưa xác minh. CleanWise không
+                  yêu cầu mật khẩu hoặc OTP ngân hàng.
                 </Text>
               </View>
 
@@ -242,14 +243,19 @@ export default function AddCustomerPaymentMethodScreen() {
                 <Feather name="chevron-down" size={18} color="#9CA3AF" />
               </TouchableOpacity>
               {isBankError && (
-                <TouchableOpacity onPress={() => refetchBanks()} className="mb-4">
+                <TouchableOpacity
+                  onPress={() => refetchBanks()}
+                  className="mb-4"
+                >
                   <Text className="text-red-600 text-sm">
                     Không tải được ngân hàng. Nhấn để thử lại.
                   </Text>
                 </TouchableOpacity>
               )}
 
-              <Text className="text-gray-700 font-medium mb-1">Số tài khoản</Text>
+              <Text className="text-gray-700 font-medium mb-1">
+                Số tài khoản
+              </Text>
               <View className="flex-row items-center border border-gray-200 bg-gray-50 rounded-2xl px-4 mb-4">
                 <Feather name="hash" size={18} color="#9CA3AF" />
                 <TextInput

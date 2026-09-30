@@ -1,17 +1,17 @@
 import ScreenContainer from "@/components/ScreenContainer";
-import AddressCard from "@/components/address/AddressCard";
-import { useGetAddressesQuery } from "@/services/addressApi";
-import { setPickedAddress } from "@/store/addressPickerSlice";
+import { useGetAddressesQuery } from "@/features/address/api/addressApi";
+import AddressCard from "@/features/address/components/AddressCard";
+import { setPickedAddress } from "@/features/address/stores/addressPickerSlice";
+import type { Address } from "@/features/address/types/Address";
 import { useAppDispatch } from "@/store/hooks";
-import type { Address } from "@/types/Address";
 import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import {
-  ActivityIndicator,
-  FlatList,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 export default function AddressListScreen() {

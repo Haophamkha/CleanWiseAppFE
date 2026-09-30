@@ -1,77 +1,108 @@
-import { AuthGreeting } from "@/components/common/AuthGreeting";
-import { NotificationBellButton } from "@/components/common/NotificationBellButton";
-import { ServiceGridItem } from "@/components/service/ServiceGridItem";
-import { useGetServicesQuery } from "@/services/serviceApi";
-import { useAppSelector } from "@/store/hooks";
-import { Feather } from "@expo/vector-icons";
+import { EmptyState } from "@/components/ui";
+import { COLORS } from "@/constants/theme";
+import { BannerCarousel } from "@/features/home/components/BannerCarousel";
+import { GuestBanner } from "@/features/home/components/GuestBanner";
+import { HomeHeader } from "@/features/home/components/HomeHeader";
+import { HomeVoucherCard } from "@/features/home/components/HomeVoucherCard";
+import { SectionHeader } from "@/features/home/components/SectionHeader";
+import { ServiceCard } from "@/features/home/components/ServiceCard";
+import { useHome } from "@/features/home/hooks/useHome";
 import { router } from "expo-router";
 import {
   ActivityIndicator,
+  RefreshControl,
   ScrollView,
-  Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 
 export default function HomeScreen() {
-  const user = useAppSelector((s) => s.auth.user);
-  const isAuthenticated = !!user;
-
-  const { data: services, isLoading, isError } = useGetServicesQuery();
+  const h = useHome();
 
   return (
-    <View className="flex-1 bg-gray-50">
-      {/* Header trang chủ */}
-      <View className="flex-row items-center justify-between px-5 pt-14 pb-4 bg-gray-50">
-        <TouchableOpacity>
-          <Feather name="menu" size={22} color="#111827" />
-        </TouchableOpacity>
-        <Text className="text-xl font-bold text-emerald-700">Trang chủ</Text>
-        {isAuthenticated ? (
-          <NotificationBellButton />
-        ) : (
-          <View style={{ width: 22 }} />
-        )}
-      </View>
-
+    <View className="flex-1 bg-canvas">
       <ScrollView
-        className="flex-1 px-5 pt-2"
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 32 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={h.refreshing}
+            onRefresh={h.onRefresh}
+            tintColor={COLORS.primary}
+            colors={[COLORS.primary]}
+          />
+        }
       >
-        {/* Component lời chào tích hợp sẵn */}
-        <AuthGreeting />
+        <HomeHeader
+          isAuthenticated={h.isAuthenticated}
+          name={h.displayName}
+          query={h.query}
+          onChangeQuery={h.setQuery}
+        />
 
-        {/* Danh sách dịch vụ */}
-        <View className="mt-4 mb-2 flex-row items-center justify-between">
-          <Text className="text-lg font-bold text-gray-900">Dịch vụ</Text>
+        <View className="px-5 pt-5">
+          {!h.isAuthenticated && <GuestBanner />}
+
+          <SectionHeader title="Dịch vụ" />
+          {h.servicesLoading ? (
+            <View className="items-center py-10">
+              <ActivityIndicator color={COLORS.primary} />
+            </View>
+          ) : h.servicesError ? (
+            <EmptyState
+              icon="wifi-off"
+              title="Không tải được danh sách dịch vụ"
+              actionLabel="Thử lại"
+              onAction={h.retryServices}
+            />
+          ) : h.services.length === 0 ? (
+            <EmptyState
+              icon="search"
+              title={
+                h.isSearching
+                  ? "Không tìm thấy dịch vụ phù hợp"
+                  : "Chưa có dịch vụ nào"
+              }
+            />
+          ) : (
+            <View className="flex-row flex-wrap">
+              {h.services.map((item) => (
+                <ServiceCard
+                  key={item.id}
+                  code={item.code}
+                  sectionCode={item.section_code}
+                  name={item.name}
+                  description={item.description}
+                  onPress={() => router.push(`/services/${item.id}` as any)}
+                />
+              ))}
+            </View>
+          )}
         </View>
 
-        {isLoading ? (
-          <View className="items-center justify-center py-10">
-            <ActivityIndicator color="#047857" />
-          </View>
-        ) : isError ? (
-          <View className="items-center justify-center py-10">
-            <Text className="text-red-500">
-              Không tải được danh sách dịch vụ
-            </Text>
-          </View>
-        ) : !services || services.length === 0 ? (
-          <View className="items-center justify-center py-10">
-            <Feather name="grid" size={40} color="#D1D5DB" />
-            <Text className="text-gray-400 mt-3">Chưa có dịch vụ nào</Text>
-          </View>
-        ) : (
-          <View className="flex-row flex-wrap pb-6">
-            {services.map((item) => (
-              <ServiceGridItem
-                key={item.id}
-                code={item.code}
-                sectionCode={item.section_code}
-                name={item.name}
-                onPress={() => router.push(`/services/${item.id}`)}
+        {!h.isSearching && <BannerCarousel />}
+
+        {h.vouchers.length > 0 && !h.isSearching && (
+          <View className="mt-5">
+            <View className="px-5">
+              <SectionHeader
+                title="Ưu đãi cho bạn"
+                onSeeAll={() => router.push("/vouchers" as any)}
               />
-            ))}
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 20 }}
+            >
+              {h.vouchers.map((v) => (
+                <HomeVoucherCard
+                  key={v.id}
+                  voucher={v}
+                  onPress={() => router.push("/vouchers" as any)}
+                />
+              ))}
+            </ScrollView>
           </View>
         )}
       </ScrollView>

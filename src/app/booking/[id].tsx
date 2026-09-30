@@ -1,128 +1,110 @@
-import { BookingBottomBar } from "@/components/booking/BookingBottomBar";
-import { BookingHeader } from "@/components/booking/BookingHeader";
-import { BookingProgressBar } from "@/components/booking/BookingProgressBar";
-import { CancelBookingModal } from "@/components/booking/CancelBookingModal";
-import { PackageScheduleSection } from "@/components/booking/PackageScheduleSection";
-import { ReceiptCard } from "@/components/booking/ReceiptCard";
-import { ReviewFeedbackButtons } from "@/components/booking/ReviewFeedbackButtons";
-import { ScheduleCard } from "@/components/booking/ScheduleCard";
-import { SectionTitle } from "@/components/booking/SectionTitle";
-import { ServiceOptionsSummary } from "@/components/booking/ServiceOptionsSummary";
-import { SingleScheduleSection } from "@/components/booking/SingleScheduleSection";
-import { COLORS } from "@/components/service/formFieldShared";
-import {
-  useCancelBookingMutation,
-  useGetBookingDetailQuery,
-} from "@/services/bookingApi";
+import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { COLORS } from "@/constants/theme";
+import { BookingBottomBar } from "@/features/booking/components/BookingBottomBar";
+import { BookingCodeCard } from "@/features/booking/components/BookingCodeCard";
+import { BookingHeader } from "@/features/booking/components/BookingHeader";
+import { BookingProgressBar } from "@/features/booking/components/BookingProgressBar";
+import { CancelBookingModal } from "@/features/booking/components/CancelBookingModal";
+import { PackageScheduleSection } from "@/features/booking/components/PackageScheduleSection";
+import { ReceiptCard } from "@/features/booking/components/ReceiptCard";
+import { ScheduleCard } from "@/features/booking/components/ScheduleCard";
+import { SectionTitle } from "@/features/booking/components/SectionTitle";
+import { ServiceOptionsSummary } from "@/features/booking/components/ServiceOptionsSummary";
+import { SingleScheduleSection } from "@/features/booking/components/SingleScheduleSection";
+import { useBookingDetail } from "@/features/booking/hooks/useBookingDetail";
 import { Feather } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { router } from "expo-router";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const CANCELLABLE_STATUSES = ["PENDING", "ASSIGNED"];
+type BookingData = NonNullable<ReturnType<typeof useBookingDetail>["booking"]>;
+
+function AddressBlock({
+  title,
+  address,
+  fallbackLabel,
+}: {
+  title: string;
+  address: BookingData["address"];
+  fallbackLabel: string;
+}) {
+  return (
+    <Card className="mb-4">
+      <SectionTitle icon="map-pin">{title}</SectionTitle>
+      <Text className="text-ink font-bold text-[15px] mb-1">
+        {address.label || fallbackLabel}
+      </Text>
+      <Text className="text-ink-soft text-[13px] leading-5 mb-3">
+        {address.address_line}
+        {address.ward ? `, ${address.ward}` : ""}
+        {`, ${address.city}`}
+      </Text>
+      <View className="flex-row items-center rounded-xl bg-canvas px-3 py-2.5">
+        <Feather name="user" size={14} color={COLORS.inkMuted} />
+        <Text className="text-ink-soft text-[13px] ml-2 flex-1">
+          {address.receiver_name} · {address.receiver_phone}
+        </Text>
+      </View>
+    </Card>
+  );
+}
 
 export default function BookingDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const bookingId = Number(id);
   const insets = useSafeAreaInsets();
-
-  const [cancelVisible, setCancelVisible] = useState(false);
-
   const {
-    data: booking,
+    booking,
     isLoading,
     isError,
-  } = useGetBookingDetailQuery(bookingId, {
-    skip: !Number.isFinite(bookingId),
-  });
-
-  const [cancelBooking, { isLoading: isCancelling }] =
-    useCancelBookingMutation();
+    isPackage,
+    singleSchedule,
+    isCancellable,
+    isPaidOnline,
+    cancelVisible,
+    setCancelVisible,
+    isCancelling,
+    confirmCancel,
+  } = useBookingDetail();
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator color="#047857" />
+      <View className="flex-1 items-center justify-center bg-canvas">
+        <ActivityIndicator color={COLORS.primary} />
       </View>
     );
   }
 
   if (isError || !booking) {
     return (
-      <View className="flex-1 items-center justify-center bg-white px-6">
-        <Feather name="alert-circle" size={36} color="#DC2626" />
-
-        <Text className="text-gray-900 font-semibold mt-4">
-          Không tải được đơn hàng
-        </Text>
-
-        <TouchableOpacity
-          className="mt-5 bg-emerald-700 rounded-xl px-6 py-3"
-          onPress={() => router.back()}
-        >
-          <Text className="text-white font-bold">Quay lại</Text>
-        </TouchableOpacity>
+      <View className="flex-1 justify-center bg-canvas">
+        <EmptyState
+          icon="alert-circle"
+          title="Không tải được đơn hàng"
+          actionLabel="Quay lại"
+          onAction={() => router.back()}
+        />
       </View>
     );
   }
 
-  const isPackage = booking.schedules.length > 1;
-  const singleSchedule = booking.schedules[0];
-
-  const hasInProgressSchedule = booking.schedules.some(
-    (s) => s.status === "IN_PROGRESS",
-  );
-
-  const isCancellable =
-    CANCELLABLE_STATUSES.includes(booking.status) && !hasInProgressSchedule;
-
-  const isPaidOnline =
-    booking.payment?.method === "BANK_TRANSFER" &&
-    booking.payment_status === "PAID";
-
-  const handleConfirmCancel = async (reason: string) => {
-    try {
-      await cancelBooking({ id: booking.id, reason }).unwrap();
-      setCancelVisible(false);
-      Alert.alert(
-        "Đã hủy đơn",
-        isPaidOnline
-          ? "Đơn hàng đã được hủy. Số tiền đã được hoàn vào ví của bạn."
-          : "Đơn hàng đã được hủy thành công.",
-      );
-    } catch (err: any) {
-      const message =
-        err?.data?.booking ||
-        err?.data?.reason?.[0] ||
-        err?.data?.message ||
-        "Không thể hủy đơn hàng, vui lòng thử lại.";
-      Alert.alert("Không thể hủy đơn", String(message));
-    }
-  };
-
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-canvas">
       <BookingHeader
         serviceName={booking.service_name}
-        bookingCode={booking.booking_code}
         status={booking.status}
       />
 
       <ScrollView
-        className="flex-1 px-5 pt-5"
+        className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: 20,
           paddingBottom: isCancellable ? 24 : 24 + insets.bottom,
         }}
       >
+        <BookingCodeCard code={booking.booking_code} large />
+
         <BookingProgressBar status={booking.status} />
 
         {isPackage ? (
@@ -142,84 +124,41 @@ export default function BookingDetailScreen() {
             {singleSchedule && (
               <SingleScheduleSection schedule={singleSchedule} />
             )}
-            {singleSchedule?.status === "COMPLETED" && (
-              <View className="mb-5">
-                <ReviewFeedbackButtons />
-              </View>
-            )}
           </>
         )}
-        <View className="mb-5 bg-white rounded-2xl border border-gray-100 p-4">
-          <SectionTitle icon="map-pin">
-            {booking.delivery_address ? "Địa chỉ chuyển đi" : "Địa chỉ"}
-          </SectionTitle>
 
-          <Text className="text-gray-900 font-semibold text-[15px] mb-1">
-            {booking.address.label || "Địa chỉ thực hiện dịch vụ"}
-          </Text>
-          <Text className="text-gray-500 text-[13px] mb-3">
-            {booking.address.address_line}
-            {booking.address.ward ? `, ${booking.address.ward}` : ""}
-            {`, ${booking.address.city}`}
-          </Text>
-
-          <View className="flex-row items-center">
-            <Feather name="user" size={14} color="#9CA3AF" />
-            <Text className="text-gray-700 text-[13px] ml-2">
-              {booking.address.receiver_name} · {booking.address.receiver_phone}
-            </Text>
-          </View>
-        </View>
+        <AddressBlock
+          title={booking.delivery_address ? "Địa chỉ chuyển đi" : "Địa chỉ"}
+          address={booking.address}
+          fallbackLabel="Địa chỉ thực hiện dịch vụ"
+        />
 
         {booking.delivery_address && (
-          <View className="mb-5 bg-white rounded-2xl border border-gray-100 p-4">
-            <SectionTitle icon="map-pin">Địa chỉ chuyển đến</SectionTitle>
-
-            <Text className="text-gray-900 font-semibold text-[15px] mb-1">
-              {booking.delivery_address.label || "Địa chỉ chuyển đến"}
-            </Text>
-            <Text className="text-gray-500 text-[13px] mb-3">
-              {booking.delivery_address.address_line}
-              {booking.delivery_address.ward
-                ? `, ${booking.delivery_address.ward}`
-                : ""}
-              {`, ${booking.delivery_address.city}`}
-            </Text>
-
-            <View className="flex-row items-center">
-              <Feather name="user" size={14} color="#9CA3AF" />
-              <Text className="text-gray-700 text-[13px] ml-2">
-                {booking.delivery_address.receiver_name} ·{" "}
-                {booking.delivery_address.receiver_phone}
-              </Text>
-            </View>
-          </View>
+          <AddressBlock
+            title="Địa chỉ chuyển đến"
+            address={booking.delivery_address}
+            fallbackLabel="Địa chỉ chuyển đến"
+          />
         )}
 
-        <View className="mb-5">
-          <SectionTitle icon="clipboard">Thanh toán</SectionTitle>
-
+        <Card className="mb-4">
+          <SectionTitle icon="clipboard">Chi tiết dịch vụ</SectionTitle>
           <ServiceOptionsSummary
             fields={booking.form_schema?.fields ?? []}
             values={booking.service_data}
             pricingConfig={booking.pricing_config}
           />
-        </View>
+        </Card>
 
-        {/* Thanh toán */}
         <ReceiptCard booking={booking} />
 
         {!!booking.note && (
-          <View className="mb-2">
+          <Card className="mt-4">
             <SectionTitle icon="file-text">Ghi chú</SectionTitle>
-
-            <Text
-              className="text-[14px]"
-              style={{ color: COLORS.textSecondary }}
-            >
+            <Text className="text-[14px] leading-5 text-ink-soft">
               {booking.note}
             </Text>
-          </View>
+          </Card>
         )}
       </ScrollView>
 
@@ -232,7 +171,7 @@ export default function BookingDetailScreen() {
         loading={isCancelling}
         isPaidOnline={isPaidOnline}
         onClose={() => setCancelVisible(false)}
-        onConfirm={handleConfirmCancel}
+        onConfirm={confirmCancel}
       />
     </View>
   );

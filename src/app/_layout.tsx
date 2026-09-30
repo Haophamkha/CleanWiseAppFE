@@ -1,8 +1,10 @@
 import { ConfirmProvider } from "@/components/common/ConfirmProvider";
 import { STORAGE_KEYS } from "@/config/constants";
 import { toastConfig } from "@/config/toastConfig";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { useGetProfileQuery } from "@/services/authApi";
+import { useGetProfileQuery } from "@/features/auth/api/authApi";
+import { usePushNotifications } from "@/features/notification/hooks/usePushNotifications";
+import { useUnreadCountRealtime } from "@/features/notification/hooks/useUnreadCountRealtime";
+
 import { registerAuthDispatch } from "@/store/baseApi";
 import { useAppSelector } from "@/store/hooks";
 import { store } from "@/store/store";
@@ -35,6 +37,7 @@ function AuthInit() {
 
   useGetProfileQuery(undefined, { skip: !needBootstrap });
   usePushNotifications(!!user);
+  useUnreadCountRealtime(!!user);
 
   return null;
 }

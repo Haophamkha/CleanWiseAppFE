@@ -1,877 +1,329 @@
-import { AddressSummaryCard } from "@/components/booking/AddressSummaryCard";
-import { ServiceOptionsSummary } from "@/components/booking/ServiceOptionsSummary";
-import { COLORS } from "@/components/service/formFieldShared";
-import { BookingVoucherModal } from "@/components/voucher/BookingVoucherModal";
-import { useCreateBookingMutation } from "@/services/bookingApi";
-import { clearBookingDraft } from "@/store/bookingDraftSlice";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import type {
-  UserVoucher,
-  ValidateVoucherResponse,
-} from "@/types/Voucher";
-import { formatVnd } from "@/utils/currency";
+import { ScreenHeader } from "@/components/common/ScreenHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { COLORS, RADIUS, SHADOWS } from "@/constants/theme";
+import { AddressSummaryCard } from "@/features/booking/components/AddressSummaryCard";
+import { IconRow } from "@/features/booking/components/IconRow";
+import { PaymentMethodSheet } from "@/features/booking/components/PaymentMethodSheet";
+import { ServiceOptionsSummary } from "@/features/booking/components/ServiceOptionsSummary";
 import {
-  calculateEstimatedPrice,
-  calculateRecurringPrice,
-} from "@/utils/servicePricing";
+    PAYMENT_METHODS,
+    useBookingConfirm,
+} from "@/features/booking/hooks/useBookingConfirm";
+import { BookingVoucherModal } from "@/features/voucher/components/BookingVoucherModal";
+import { formatVnd } from "@/utils/currency";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import {
-  Alert,
-  Modal,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-type PaymentMethod = "CASH" | "BANK_TRANSFER";
+const Heading = ({ children }: { children: string }) => (
+  <Text className="font-bold text-base text-ink mb-3">{children}</Text>
+);
 
-const PAYMENT_METHODS: {
-  value: PaymentMethod;
+const Dashed = () => (
+  <View
+    className="border-line"
+    style={{ borderTopWidth: 1, borderStyle: "dashed" }}
+  />
+);
+
+const PriceRow = ({
+  label,
+  value,
+  accent,
+}: {
   label: string;
-  icon: string;
-}[] = [
-  { value: "CASH", label: "Tiền mặt", icon: "cash" },
-  { value: "BANK_TRANSFER", label: "Chuyển khoản", icon: "bank" },
-];
-
-const WEEKDAY_LABELS: Record<string, string> = {
-  MON: "T2",
-  TUE: "T3",
-  WED: "T4",
-  THU: "T5",
-  FRI: "T6",
-  SAT: "T7",
-  SUN: "CN",
-};
-
-const PACKAGE_LABELS: Record<string, string> = {
-  "1_MONTH": "1 tháng",
-  "2_MONTHS": "2 tháng",
-  "3_MONTHS": "3 tháng",
-  "6_MONTHS": "6 tháng",
-};
-
-function extractDurationHours(
-  fields: { key: string; type: string }[],
-  values: Record<string, any>,
-): number {
-  const durationField = fields.find(
-    (f) => f.key === "duration" && f.type === "SINGLE_SELECT",
-  );
-  const raw = durationField ? values[durationField.key] : undefined;
-  if (typeof raw === "string") {
-    const match = raw.match(/^(\d+)_HOURS?$/i);
-    if (match) return parseInt(match[1], 10);
-  }
-  return 2;
-}
-
-function capitalizeFirst(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-function formatWeekdays(weekdays: string[] | undefined): string {
-  if (!weekdays || weekdays.length === 0) return "—";
-  return weekdays.map((d) => WEEKDAY_LABELS[d] ?? d).join(", ");
-}
+  value: string;
+  accent?: boolean;
+}) => (
+  <View className="flex-row items-center justify-between mb-2.5">
+    <Text className="text-ink-soft">{label}</Text>
+    <Text className={`font-bold ${accent ? "text-primary" : "text-ink"}`}>
+      {value}
+    </Text>
+  </View>
+);
 
 export default function BookingConfirmScreen() {
-  const dispatch = useAppDispatch();
-  const draft = useAppSelector((s) => s.bookingDraft);
-  const [createBooking, { isLoading }] = useCreateBookingMutation();
-
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CASH");
-  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
-  const [voucherModalVisible, setVoucherModalVisible] = useState(false);
-  const [selectedVoucher, setSelectedVoucher] = useState<UserVoucher | null>(
-    null,
-  );
-  const [voucherValidation, setVoucherValidation] =
-    useState<ValidateVoucherResponse | null>(null);
-
-  const { service, values, addresses } = draft;
-  const serviceFields = service?.form_schema?.fields ?? [];
-
-
-  const isMovingService = service?.form_schema?.address_count === 2;
-  const pickupAddress =
-    addresses?.pickup_address ?? Object.values(addresses ?? {})[0];
-  const deliveryAddress = addresses?.delivery_address;
-
-
-  const scheduleType: string = service?.form_schema?.schedule_type ?? "ONCE";
-
-  const recurringPrice = useMemo(() => {
-    if (!service) return null;
-    return calculateRecurringPrice(
-      service.form_schema.fields,
-      service.pricing_config,
-      values,
-    );
-  }, [service, values]);
-
-  const estimatedPrice = useMemo(() => {
-    if (!service) return null;
-    return calculateEstimatedPrice(
-      serviceFields,
-      service.pricing_config,
-      values,
-    );
-  }, [service, values]);
-
-  // Giá trước khi giảm — dịch vụ định kỳ lấy grossSubtotal, dịch vụ 1 lần
-  // (không có discount gói) thì bằng chính estimatedPrice.
-  const grossPrice = recurringPrice
-    ? recurringPrice.grossSubtotal
-    : estimatedPrice;
-
-  // ĐỔI: discountAmount hiển thị giờ gồm 2 phần cộng dồn — giảm giá gói định
-  // kỳ (packageDiscount, nếu có) và giảm giá voucher (voucherDiscount, nếu đã
-  // áp dụng). estimatedPrice vốn đã là giá SAU giảm giá gói (calculateEstimatedPrice
-  // trả thẳng recurringPrice.subtotal cho dịch vụ PER_SESSION — dùng làm
-  // subtotalAmount khi validate voucher bên dưới), nên totalAmount không cộng
-  // packageDiscount lần nữa — chỉ trừ voucher như cũ.
-  const packageDiscount = recurringPrice
-    ? recurringPrice.grossSubtotal - recurringPrice.subtotal
-    : 0;
-  const voucherDiscount = voucherValidation
-    ? Number(voucherValidation.discount_amount)
-    : 0;
-  const discountAmount = packageDiscount + voucherDiscount;
-
-  const totalAmount = voucherValidation
-    ? Number(voucherValidation.total_amount)
-    : estimatedPrice;
-
-  const clearSelectedVoucher = () => {
-    setSelectedVoucher(null);
-    setVoucherValidation(null);
-  };
-
-  useEffect(() => {
-    setSelectedVoucher(null);
-    setVoucherValidation(null);
-  }, [estimatedPrice]);
-
-  // ĐỔI: scheduledStart chỉ có ý nghĩa với lịch ONCE, dùng để hiển thị,
-  // không còn dùng để build payload gửi lên (BE tự tính).
-  const scheduledStart = useMemo(() => {
-    if (scheduleType !== "ONCE") return null;
-    const date = values.date; // "YYYY-MM-DD"
-    const time = values.start_time; // "HH:MM"
-    if (!date || !time) return null;
-    const parsed = new Date(`${date}T${time}:00`);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
-  }, [scheduleType, values]);
-
-  const durationHours = useMemo(() => {
-    if (!service) return 2;
-    return extractDurationHours(serviceFields, values);
-  }, [service, values]);
-
-  const scheduledEnd = useMemo(() => {
-    if (!scheduledStart) return null;
-    return new Date(scheduledStart.getTime() + durationHours * 60 * 60 * 1000);
-  }, [scheduledStart, durationHours]);
+  const insets = useSafeAreaInsets();
+  const {
+    service,
+    values,
+    isLoading,
+    isMovingService,
+    pickupAddress,
+    deliveryAddress,
+    scheduleRows,
+    summaryFields,
+    recurringPrice,
+    estimatedPrice,
+    grossPrice,
+    discountAmount,
+    voucherDiscount,
+    totalAmount,
+    selectedVoucher,
+    voucherValidation,
+    voucherModalVisible,
+    setVoucherModalVisible,
+    applyVoucher,
+    clearSelectedVoucher,
+    paymentMethod,
+    setPaymentMethod,
+    selectedPaymentMethod,
+    paymentModalVisible,
+    setPaymentModalVisible,
+    confirm,
+  } = useBookingConfirm();
 
   if (!service) {
     return (
-      <View className="flex-1 items-center justify-center bg-white px-6">
-        <Feather name="alert-circle" size={36} color="#DC2626" />
-        <Text className="text-gray-900 font-semibold mt-4">
-          Không có thông tin đặt lịch
-        </Text>
-        <TouchableOpacity
-          className="mt-5 bg-emerald-700 rounded-xl px-6 py-3"
-          onPress={() => router.back()}
-        >
-          <Text className="text-white font-bold">Quay lại</Text>
-        </TouchableOpacity>
+      <View className="flex-1 justify-center bg-canvas">
+        <EmptyState
+          icon="alert-circle"
+          title="Không có thông tin đặt lịch"
+          actionLabel="Quay lại"
+          onAction={() => router.back()}
+        />
       </View>
     );
   }
 
-  const buildServiceData = () => {
-    const allowedKeys = new Set(serviceFields.map((f) => f.key));
-    return Object.fromEntries(
-      Object.entries(values).filter(([k]) => allowedKeys.has(k)),
-    );
-  };
-
-  const handleConfirm = async () => {
-    if (!pickupAddress) {
-      Alert.alert(
-        "Thiếu địa chỉ",
-        "Vui lòng quay lại chọn địa chỉ thực hiện dịch vụ.",
-      );
-      return;
-    }
-
-    // ĐỔI: validate thêm địa chỉ chuyển đến cho dịch vụ chuyển nhà.
-    if (isMovingService && !deliveryAddress) {
-      Alert.alert(
-        "Thiếu địa chỉ",
-        "Vui lòng quay lại chọn địa chỉ chuyển đến.",
-      );
-      return;
-    }
-
-    // ĐỔI: validate lịch tách theo loại — ONCE cần date/start_time cụ thể,
-    // RECURRING_WEEKLY cần weekdays/start_time/package_duration.
-    if (scheduleType === "ONCE") {
-      if (!scheduledStart || !scheduledEnd) {
-        Alert.alert(
-          "Thiếu thông tin",
-          "Vui lòng quay lại chọn ngày và giờ làm việc.",
-        );
-        return;
-      }
-      if (scheduledStart.getTime() <= Date.now()) {
-        Alert.alert("Thời gian không hợp lệ", "Giờ bắt đầu phải ở tương lai.");
-        return;
-      }
-    }
-
-    if (scheduleType === "RECURRING_WEEKLY") {
-      if (
-        !values.weekdays?.length ||
-        !values.start_time ||
-        !values.package_duration
-      ) {
-        Alert.alert(
-          "Thiếu thông tin",
-          "Vui lòng quay lại chọn lịch làm việc định kỳ.",
-        );
-        return;
-      }
-    }
-
-    try {
-      const serviceData = buildServiceData();
-
-      const missingFields = serviceFields
-        .filter((field) => {
-          const value = serviceData[field.key];
-
-          return (
-            field.required === true &&
-            (value === undefined || value === null || value === "")
-          );
-        })
-        .map((field) => ({
-          key: field.key,
-          label: field.label,
-          type: field.type,
-        }));
-
-      if (missingFields.length > 0) {
-        Alert.alert(
-          "Thiếu thông tin",
-          `Các trường bắt buộc chưa có dữ liệu:\n\n${missingFields
-            .map((field) => `• ${field.label} (${field.key})`)
-            .join("\n")}`,
-        );
-        return;
-      }
-
-
-      const payload = {
-        service_id: service.id,
-        address_id: pickupAddress.id,
-        delivery_address_id: isMovingService ? deliveryAddress?.id : undefined,
-        service_data: serviceData,
-        payment_method: paymentMethod,
-        voucher_code: selectedVoucher?.voucher.code,
-        note:
-          typeof values.note === "string" && values.note.trim()
-            ? values.note.trim()
-            : undefined,
-      };
-
-      const result = await createBooking(payload as any).unwrap();
-
-      if (paymentMethod === "BANK_TRANSFER") {
-        router.replace({
-            pathname: "/booking/qr" as any,
-          params: {
-            bookingId: String(result.id),
-            code: result.booking_code,
-          },
-        });
-      } else {
-        dispatch(clearBookingDraft());
-
-        router.replace({
-          pathname: "/booking/success",
-          params: { code: result.booking_code },
-        });
-      }
-    } catch (err: any) {
-      const voucherError = err?.data?.errors?.voucher_code;
-      const message =
-        voucherError ||
-        err?.data?.errors?.service_data ||
-        err?.data?.service_data?.__extra__ ||
-        err?.data?.message ||
-        (typeof err?.data === "string" ? err.data : null) ||
-        "Đặt lịch thất bại, vui lòng thử lại.";
-
-      if (voucherError) clearSelectedVoucher();
-      Alert.alert(
-        voucherError ? "Voucher không còn hợp lệ" : "Không thể đặt lịch",
-        Array.isArray(message) ? message.join("\n") : String(message),
-      );
-    }
-  };
-
-  const summaryFields = serviceFields.filter(
-    (f) =>
-      f.key !== "date" &&
-      f.key !== "start_time" &&
-      f.key !== "weekdays" &&
-      f.key !== "package_duration",
-  );
-
-  const selectedPaymentMethod = PAYMENT_METHODS.find(
-    (m) => m.value === paymentMethod,
-  )!;
-
   return (
-    <View className="flex-1 bg-white">
-      <View className="flex-row items-center px-5 pt-14 pb-4 border-b border-gray-100">
-        <TouchableOpacity onPress={() => router.back()} className="mr-4">
-          <Feather name="arrow-left" size={22} color="#111827" />
-        </TouchableOpacity>
-        <Text className="text-lg font-bold text-gray-900 flex-1">
-          Xác nhận và thanh toán
-        </Text>
+    <View className="flex-1 bg-canvas">
+      <View className="bg-surface" style={{ paddingTop: insets.top }}>
+        <ScreenHeader title="Xác nhận và thanh toán" />
       </View>
 
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 32 }}
       >
-        <View className="px-5 pt-5">
-          {/* Card kiểu hoá đơn: Thời gian làm việc + Chi tiết công việc + Chi tiết thanh toán */}
-          <View
-            style={{
-              borderRadius: 24,
-              backgroundColor: COLORS.white,
-              borderWidth: 1,
-              borderColor: COLORS.border,
-              shadowColor: "#000",
-              shadowOpacity: 0.05,
-              shadowOffset: { width: 0, height: 4 },
-              shadowRadius: 12,
-              elevation: 2,
-              overflow: "hidden",
-            }}
-          >
-            <View className="px-5 pt-5 pb-4">
-              <Text
-                className="font-bold text-[16px] mb-3"
-                style={{ color: COLORS.text }}
-              >
-                Thời gian làm việc
-              </Text>
-
-              {/* ĐỔI: tách hiển thị theo scheduleType */}
-              {scheduleType === "ONCE" ? (
-                <>
-                  <View className="flex-row items-center mb-3">
-                    <View
-                      className="w-9 h-9 rounded-full items-center justify-center mr-3"
-                      style={{ backgroundColor: COLORS.primaryLight }}
-                    >
-                      <Feather
-                        name="calendar"
-                        size={16}
-                        color={COLORS.primary}
-                      />
-                    </View>
-                    {scheduledStart ? (
-                      <Text
-                        className="text-[15px]"
-                        style={{ color: COLORS.text }}
-                      >
-                        {capitalizeFirst(
-                          scheduledStart.toLocaleDateString("vi-VN", {
-                            weekday: "long",
-                          }),
-                        )}
-                        {", "}
-                        {scheduledStart.toLocaleTimeString("vi-VN", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                        {" - "}
-                        {scheduledStart.toLocaleDateString("vi-VN", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                        })}
-                      </Text>
-                    ) : (
-                      <Text style={{ color: COLORS.danger }}>
-                        Chưa chọn ngày/giờ ở trang dịch vụ
-                      </Text>
-                    )}
-                  </View>
-
-                  {scheduledStart && scheduledEnd && (
-                    <View className="flex-row items-center">
-                      <View
-                        className="w-9 h-9 rounded-full items-center justify-center mr-3"
-                        style={{ backgroundColor: COLORS.primaryLight }}
-                      >
-                        <Feather
-                          name="clock"
-                          size={16}
-                          color={COLORS.primary}
-                        />
-                      </View>
-                      <Text
-                        className="text-[15px]"
-                        style={{ color: COLORS.text }}
-                      >
-                        {durationHours} giờ,{" "}
-                        {scheduledStart.toLocaleTimeString("vi-VN", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}{" "}
-                        đến{" "}
-                        {scheduledEnd.toLocaleTimeString("vi-VN", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </Text>
-                    </View>
-                  )}
-                </>
-              ) : (
-                <>
-                  <View className="flex-row items-center mb-3">
-                    <View
-                      className="w-9 h-9 rounded-full items-center justify-center mr-3"
-                      style={{ backgroundColor: COLORS.primaryLight }}
-                    >
-                      <Feather name="repeat" size={16} color={COLORS.primary} />
-                    </View>
-                    {values.weekdays?.length && values.start_time ? (
-                      <Text
-                        className="text-[15px]"
-                        style={{ color: COLORS.text }}
-                      >
-                        {formatWeekdays(values.weekdays)}, {values.start_time}
-                      </Text>
-                    ) : (
-                      <Text style={{ color: COLORS.danger }}>
-                        Chưa chọn lịch định kỳ ở trang dịch vụ
-                      </Text>
-                    )}
-                  </View>
-                  {values.package_duration && (
-                    <View className="flex-row items-center">
-                      <View
-                        className="w-9 h-9 rounded-full items-center justify-center mr-3"
-                        style={{ backgroundColor: COLORS.primaryLight }}
-                      >
-                        <Feather
-                          name="clock"
-                          size={16}
-                          color={COLORS.primary}
-                        />
-                      </View>
-                      <Text
-                        className="text-[15px]"
-                        style={{ color: COLORS.text }}
-                      >
-                        Gói{" "}
-                        {PACKAGE_LABELS[values.package_duration] ??
-                          values.package_duration}
-                        , bắt đầu từ ngày mai
-                      </Text>
-                    </View>
-                  )}
-                </>
-              )}
-            </View>
-
-            <View
-              style={{
-                borderTopWidth: 1,
-                borderStyle: "dashed",
-                borderColor: COLORS.border,
-              }}
-            />
-
-            <View className="px-5 pt-4 pb-4">
-              <Text
-                className="font-bold text-[16px] mb-3"
-                style={{ color: COLORS.text }}
-              >
-                Chi tiết công việc
-              </Text>
-              <ServiceOptionsSummary
-                fields={summaryFields}
-                values={values}
-                pricingConfig={service.pricing_config}
+        {/* Hóa đơn */}
+        <View
+          className="bg-surface border border-line overflow-hidden"
+          style={[{ borderRadius: RADIUS.card + 4 }, SHADOWS.card]}
+        >
+          <View className="px-5 pt-5 pb-4">
+            <Heading>Thời gian làm việc</Heading>
+            {scheduleRows.map((row, i) => (
+              <IconRow
+                key={i}
+                icon={row.icon}
+                text={row.text}
+                error={row.error}
+                isLast={i === scheduleRows.length - 1}
               />
-            </View>
-
-            <View
-              style={{
-                borderTopWidth: 1,
-                borderStyle: "dashed",
-                borderColor: COLORS.border,
-              }}
-            />
-
-            <View className="px-5 pt-4 pb-5">
-              <Text
-                className="font-bold text-[16px] mb-3"
-                style={{ color: COLORS.text }}
-              >
-                Chi tiết thanh toán
-              </Text>
-
-              <View className="flex-row items-center justify-between mb-2">
-                <Text style={{ color: COLORS.textMuted }}>
-                  Giá dịch vụ
-                  {recurringPrice
-                    ? ` (${recurringPrice.sessionsCount} buổi)`
-                    : ""}
-                </Text>
-                <Text className="font-bold" style={{ color: COLORS.text }}>
-                  {grossPrice != null ? formatVnd(grossPrice) : "—"}
-                </Text>
-              </View>
-              <View className="flex-row items-center justify-between mb-3">
-                <Text style={{ color: COLORS.textMuted }}>
-                  Giảm giá
-                  {recurringPrice && recurringPrice.discountPercent > 0
-                    ? ` (${recurringPrice.discountPercent}%)`
-                    : ""}
-                </Text>
-                <Text
-                  className="font-bold"
-                  style={{
-                    color: discountAmount > 0 ? COLORS.primary : COLORS.text,
-                  }}
-                >
-                  {discountAmount > 0 ? `-${formatVnd(discountAmount)}` : "0đ"}
-                </Text>
-              </View>
-
-              <View
-                style={{ borderTopWidth: 1, borderColor: COLORS.border }}
-                className="pt-3 mb-4"
-              >
-                <View className="flex-row items-center justify-between">
-                  <Text
-                    className="font-bold"
-                    style={{ color: COLORS.textMuted }}
-                  >
-                    Tổng thanh toán
-                  </Text>
-                  <Text
-                    className="font-extrabold text-[17px]"
-                    style={{ color: COLORS.primary }}
-                  >
-                    {totalAmount != null ? formatVnd(totalAmount) : "—"}
-                  </Text>
-                </View>
-              </View>
-
-              {selectedVoucher && voucherValidation ? (
-                <View
-                  className="rounded-2xl px-4 py-3.5"
-                  style={{ backgroundColor: COLORS.primary }}
-                >
-                  <View className="flex-row items-start">
-                    <View className="w-9 h-9 rounded-xl bg-white/20 items-center justify-center mr-3">
-                      <Feather name="tag" size={17} color="#FFFFFF" />
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-white font-extrabold text-sm" numberOfLines={1}>
-                        {selectedVoucher.voucher.code}
-                      </Text>
-                      <Text className="text-emerald-100 text-xs mt-1" numberOfLines={1}>
-                        {selectedVoucher.voucher.name} · Giảm {formatVnd(voucherDiscount)}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View className="flex-row mt-3 pt-3 border-t border-white/20">
-                    <TouchableOpacity
-                      className="flex-1 items-center py-1"
-                      onPress={() => setVoucherModalVisible(true)}
-                    >
-                      <Text className="text-white font-bold text-xs">Đổi voucher</Text>
-                    </TouchableOpacity>
-                    <View className="w-px bg-white/20" />
-                    <TouchableOpacity
-                      className="flex-1 items-center py-1"
-                      onPress={clearSelectedVoucher}
-                    >
-                      <Text className="text-white font-bold text-xs">Bỏ voucher</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ) : (
-                <TouchableOpacity
-                  onPress={() => setVoucherModalVisible(true)}
-                  disabled={estimatedPrice == null}
-                  activeOpacity={0.8}
-                  className="flex-row items-center justify-between rounded-2xl px-4 py-3.5"
-                  style={{
-                    backgroundColor: COLORS.primaryLight,
-                    borderWidth: 1,
-                    borderColor: COLORS.primaryBorder,
-                    opacity: estimatedPrice == null ? 0.55 : 1,
-                  }}
-                >
-                  <View className="flex-1 pr-3">
-                    <Text
-                      className="font-bold text-[14px]"
-                      style={{ color: COLORS.primary }}
-                    >
-                      Thêm Voucher
-                    </Text>
-                    {estimatedPrice == null && (
-                      <Text className="text-gray-400 text-[11px] mt-1">
-                        Voucher khả dụng sau khi dịch vụ có giá
-                      </Text>
-                    )}
-                  </View>
-                  <View
-                    className="w-6 h-6 rounded-full items-center justify-center"
-                    style={{ backgroundColor: COLORS.primary }}
-                  >
-                    <Feather name="plus" size={14} color="#fff" />
-                  </View>
-                </TouchableOpacity>
-              )}
-            </View>
+            ))}
           </View>
 
-          {/* Địa chỉ — ĐỔI: dùng AddressSummaryCard dùng chung, thêm nhánh chuyển nhà */}
-          <View className="mt-6">
-            <Text
-              className="font-bold text-[16px] mb-2"
-              style={{ color: COLORS.text }}
-            >
-              {isMovingService ? "Địa chỉ chuyển đi" : "Địa chỉ"}
-            </Text>
-            {pickupAddress ? (
-              <AddressSummaryCard address={pickupAddress} />
+          <Dashed />
+
+          <View className="px-5 pt-4 pb-4">
+            <Heading>Chi tiết công việc</Heading>
+            <ServiceOptionsSummary
+              fields={summaryFields}
+              values={values}
+              pricingConfig={service.pricing_config}
+            />
+          </View>
+
+          <Dashed />
+
+          <View className="px-5 pt-4 pb-5">
+            <Heading>Chi tiết thanh toán</Heading>
+
+            <PriceRow
+              label={`Giá dịch vụ${
+                recurringPrice ? ` (${recurringPrice.sessionsCount} buổi)` : ""
+              }`}
+              value={grossPrice != null ? formatVnd(grossPrice) : "—"}
+            />
+            <PriceRow
+              label={`Giảm giá${
+                recurringPrice && recurringPrice.discountPercent > 0
+                  ? ` (${recurringPrice.discountPercent}%)`
+                  : ""
+              }`}
+              value={
+                discountAmount > 0 ? `-${formatVnd(discountAmount)}` : "0đ"
+              }
+              accent={discountAmount > 0}
+            />
+
+            <View className="flex-row items-center justify-between border-t border-line pt-3 mt-1 mb-4">
+              <Text className="font-bold text-ink-soft">Tổng thanh toán</Text>
+              <Text className="font-extrabold text-xl text-primary">
+                {totalAmount != null ? formatVnd(totalAmount) : "—"}
+              </Text>
+            </View>
+
+            {selectedVoucher && voucherValidation ? (
+              <View className="rounded-2xl bg-primary px-4 py-3.5">
+                <View className="flex-row items-center">
+                  <View className="w-10 h-10 rounded-xl bg-white/20 items-center justify-center mr-3">
+                    <Feather name="tag" size={18} color={COLORS.white} />
+                  </View>
+                  <View className="flex-1">
+                    <Text
+                      className="text-white font-extrabold text-sm"
+                      numberOfLines={1}
+                    >
+                      {selectedVoucher.voucher.code}
+                    </Text>
+                    <Text
+                      className="text-white/80 text-xs mt-0.5"
+                      numberOfLines={1}
+                    >
+                      {selectedVoucher.voucher.name} · Giảm{" "}
+                      {formatVnd(voucherDiscount)}
+                    </Text>
+                  </View>
+                </View>
+                <View className="flex-row mt-3 pt-3 border-t border-white/20">
+                  <TouchableOpacity
+                    className="flex-1 items-center py-1"
+                    onPress={() => setVoucherModalVisible(true)}
+                  >
+                    <Text className="text-white font-bold text-xs">
+                      Đổi voucher
+                    </Text>
+                  </TouchableOpacity>
+                  <View className="w-px bg-white/20" />
+                  <TouchableOpacity
+                    className="flex-1 items-center py-1"
+                    onPress={clearSelectedVoucher}
+                  >
+                    <Text className="text-white font-bold text-xs">
+                      Bỏ voucher
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             ) : (
-              <Text style={{ color: COLORS.danger }}>Chưa chọn địa chỉ</Text>
+              <TouchableOpacity
+                onPress={() => setVoucherModalVisible(true)}
+                disabled={estimatedPrice == null}
+                activeOpacity={0.8}
+                className="flex-row items-center rounded-2xl border border-dashed border-primary-border bg-primary-soft px-4 py-3.5"
+                style={{ opacity: estimatedPrice == null ? 0.55 : 1 }}
+              >
+                <View className="w-10 h-10 rounded-xl bg-primary-light items-center justify-center mr-3">
+                  <Feather name="tag" size={18} color={COLORS.primaryDark} />
+                </View>
+                <View className="flex-1">
+                  <Text className="font-bold text-[14px] text-primary-dark">
+                    Thêm voucher
+                  </Text>
+                  <Text className="text-ink-muted text-[11px] mt-0.5">
+                    {estimatedPrice == null
+                      ? "Khả dụng sau khi dịch vụ có giá"
+                      : "Chọn mã giảm giá của bạn"}
+                  </Text>
+                </View>
+                <View className="w-7 h-7 rounded-full bg-primary items-center justify-center">
+                  <Feather name="plus" size={15} color={COLORS.white} />
+                </View>
+              </TouchableOpacity>
             )}
           </View>
+        </View>
 
-          {isMovingService && (
-            <View className="mt-6">
-              <Text
-                className="font-bold text-[16px] mb-2"
-                style={{ color: COLORS.text }}
-              >
-                Địa chỉ chuyển đến
-              </Text>
-              {deliveryAddress ? (
-                <AddressSummaryCard address={deliveryAddress} />
-              ) : (
-                <Text style={{ color: COLORS.danger }}>Chưa chọn địa chỉ</Text>
-              )}
-            </View>
+        {/* Địa chỉ */}
+        <View className="mt-6">
+          <Text className="font-bold text-base text-ink mb-2">
+            {isMovingService ? "Địa chỉ chuyển đi" : "Địa chỉ"}
+          </Text>
+          {pickupAddress ? (
+            <AddressSummaryCard address={pickupAddress} />
+          ) : (
+            <Text className="text-danger">Chưa chọn địa chỉ</Text>
           )}
+        </View>
 
-          {/* Phương thức thanh toán */}
+        {isMovingService && (
           <View className="mt-6">
-            <Text
-              className="font-bold text-[16px] mb-2"
-              style={{ color: COLORS.text }}
-            >
-              Phương thức thanh toán
+            <Text className="font-bold text-base text-ink mb-2">
+              Địa chỉ chuyển đến
             </Text>
-            <TouchableOpacity
-              onPress={() => setPaymentModalVisible(true)}
-              activeOpacity={0.8}
-              className="flex-row items-center justify-between rounded-2xl px-4 py-4"
-              style={{
-                backgroundColor: COLORS.white,
-                borderWidth: 1,
-                borderColor: COLORS.border,
-              }}
-            >
-              <View className="flex-row items-center">
-                <View
-                  className="w-9 h-9 rounded-full items-center justify-center mr-3"
-                  style={{ backgroundColor: COLORS.primaryLight }}
-                >
-                  <MaterialCommunityIcons
-                    name={selectedPaymentMethod.icon as any}
-                    size={18}
-                    color={COLORS.primary}
-                  />
-                </View>
-                <Text
-                  className="text-[15px] font-medium"
-                  style={{ color: COLORS.text }}
-                >
-                  {selectedPaymentMethod.label}
-                </Text>
-              </View>
-              <Feather
-                name="chevron-right"
-                size={18}
-                color={COLORS.textMuted}
-              />
-            </TouchableOpacity>
+            {deliveryAddress ? (
+              <AddressSummaryCard address={deliveryAddress} />
+            ) : (
+              <Text className="text-danger">Chưa chọn địa chỉ</Text>
+            )}
           </View>
+        )}
+
+        {/* Phương thức thanh toán */}
+        <View className="mt-6">
+          <Text className="font-bold text-base text-ink mb-2">
+            Phương thức thanh toán
+          </Text>
+          <TouchableOpacity
+            onPress={() => setPaymentModalVisible(true)}
+            activeOpacity={0.8}
+            className="flex-row items-center rounded-2xl border border-line bg-surface p-4"
+            style={SHADOWS.card}
+          >
+            <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center mr-3">
+              <MaterialCommunityIcons
+                name={selectedPaymentMethod.icon as any}
+                size={20}
+                color={COLORS.primaryDark}
+              />
+            </View>
+            <Text className="flex-1 text-[15px] font-semibold text-ink">
+              {selectedPaymentMethod.label}
+            </Text>
+            <Text className="text-xs font-semibold text-primary mr-1">Đổi</Text>
+            <Feather name="chevron-right" size={18} color={COLORS.inkMuted} />
+          </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Thanh dưới */}
+      <View
+        className="bg-surface border-t border-line px-5 pt-4"
+        style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+      >
+        <View className="flex-row items-center justify-between mb-3">
+          <Text className="text-ink-soft text-sm">Tổng tiền</Text>
+          <Text className="text-primary font-extrabold text-xl">
+            {totalAmount != null ? formatVnd(totalAmount) : "Chờ báo giá"}
+          </Text>
+        </View>
+        <TouchableOpacity
+          className="bg-primary rounded-2xl h-14 items-center justify-center"
+          style={[SHADOWS.float, { opacity: isLoading ? 0.6 : 1 }]}
+          disabled={isLoading}
+          activeOpacity={0.85}
+          onPress={confirm}
+        >
+          <Text className="text-white font-bold text-base">
+            {isLoading ? "Đang đăng việc..." : "Đăng việc"}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       <BookingVoucherModal
         visible={voucherModalVisible}
         subtotalAmount={estimatedPrice ?? 0}
         selectedVoucherId={selectedVoucher?.id}
         onClose={() => setVoucherModalVisible(false)}
-        onApplied={(userVoucher, validation) => {
-          setSelectedVoucher(userVoucher);
-          setVoucherValidation(validation);
-        }}
+        onApplied={applyVoucher}
         onClear={clearSelectedVoucher}
       />
 
-      {/* Modal chọn phương thức thanh toán */}
-      <Modal
+      <PaymentMethodSheet
         visible={paymentModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setPaymentModalVisible(false)}
-      >
-        <TouchableOpacity
-          style={{ flex: 1, backgroundColor: "rgba(17,24,39,0.45)" }}
-          activeOpacity={1}
-          onPress={() => setPaymentModalVisible(false)}
-        >
-          <View style={{ flex: 1 }} />
-          <TouchableOpacity
-            activeOpacity={1}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <View
-              style={{
-                backgroundColor: COLORS.white,
-                borderTopLeftRadius: 28,
-                borderTopRightRadius: 28,
-                paddingBottom: 28,
-              }}
-            >
-              <View className="items-center pt-3 pb-1">
-                <View
-                  style={{
-                    width: 40,
-                    height: 4,
-                    borderRadius: 2,
-                    backgroundColor: COLORS.border,
-                  }}
-                />
-              </View>
-              <Text
-                className="text-[16px] font-bold text-center py-3"
-                style={{ color: COLORS.text }}
-              >
-                Phương thức thanh toán
-              </Text>
-
-              <View className="px-5">
-                {PAYMENT_METHODS.map((m) => {
-                  const selected = m.value === paymentMethod;
-                  return (
-                    <TouchableOpacity
-                      key={m.value}
-                      onPress={() => {
-                        setPaymentMethod(m.value);
-                        setPaymentModalVisible(false);
-                      }}
-                      activeOpacity={0.8}
-                      className="flex-row items-center justify-between rounded-2xl px-4 py-4 mb-3"
-                      style={{
-                        backgroundColor: selected
-                          ? COLORS.primaryLight
-                          : COLORS.background,
-                        borderWidth: selected ? 1 : 0,
-                        borderColor: COLORS.primaryBorder,
-                      }}
-                    >
-                      <View className="flex-row items-center">
-                        <MaterialCommunityIcons
-                          name={m.icon as any}
-                          size={20}
-                          color={
-                            selected ? COLORS.primary : COLORS.textSecondary
-                          }
-                        />
-                        <Text
-                          className="ml-3 text-[15px] font-medium"
-                          style={{
-                            color: selected ? COLORS.primary : COLORS.text,
-                          }}
-                        >
-                          {m.label}
-                        </Text>
-                      </View>
-                      {selected && (
-                        <Feather
-                          name="check"
-                          size={18}
-                          color={COLORS.primary}
-                        />
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
-
-      <SafeAreaView
-        edges={["bottom"]}
-        className="border-t border-gray-100 bg-white"
-      >
-        <View className="px-6 pt-4 pb-2">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-gray-500 text-sm">Tổng tiền</Text>
-
-            <Text className="text-emerald-700 font-bold text-lg">
-              {totalAmount != null
-                ? formatVnd(totalAmount)
-                : "Chờ báo giá"}
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            className="bg-emerald-700 rounded-xl py-4 items-center"
-            style={{ opacity: isLoading ? 0.6 : 1 }}
-            disabled={isLoading}
-            activeOpacity={0.8}
-            onPress={handleConfirm}
-          >
-            <Text className="text-white font-bold text-base">
-              {isLoading ? "Đang đăng việc..." : "Đăng việc"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+        value={paymentMethod}
+        options={PAYMENT_METHODS}
+        onSelect={(v) => {
+          setPaymentMethod(v);
+          setPaymentModalVisible(false);
+        }}
+        onClose={() => setPaymentModalVisible(false)}
+      />
     </View>
   );
 }

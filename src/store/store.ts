@@ -1,12 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import { AppState, AppStateStatus } from "react-native";
-import { provinceApi } from "../services/provinceApi";
-import addressPickerReducer from "./addressPickerSlice";
+import { provinceApi } from "../features/address/api/provinceApi";
+import addressPickerReducer from "../features/address/stores/addressPickerSlice";
+import bookingDraftReducer from "../features/booking/stores/bookingDraftSlice";
+import notificationReducer from "../features/notification/stores/notificationSlice";
 import authReducer from "./authSlice";
 import { baseApi } from "./baseApi";
-import bookingDraftReducer from "./bookingDraftSlice";
-import notificationReducer from "./notificationSlice";
 
 export const store = configureStore({
   reducer: {
