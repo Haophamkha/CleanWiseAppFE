@@ -48,8 +48,7 @@ function PasswordRules({ password }: { password: string }) {
   if (!password) return null;
   const rules = [
     { label: "Tối thiểu 8 ký tự", ok: password.length >= 8 },
-    { label: "Có chữ hoa", ok: /[A-Z]/.test(password) },
-    { label: "Có chữ số", ok: /\d/.test(password) },
+    { label: "Không toàn là chữ số", ok: !/^\d+$/.test(password) },
   ];
   return (
     <View
@@ -129,18 +128,18 @@ export default function RegisterScreen() {
         <View style={{ flex: 1, marginRight: 10 }}>
           <PillInput
             icon="user"
-            placeholder="Họ"
+            placeholder="Họ và tên đệm"
             autoCapitalize="words"
-            value={form.first_name}
-            onChangeText={(v) => update("first_name", v)}
+            value={form.last_name}
+            onChangeText={(v) => update("last_name", v)}
           />
         </View>
         <View style={{ flex: 1 }}>
           <PillInput
             placeholder="Tên"
             autoCapitalize="words"
-            value={form.last_name}
-            onChangeText={(v) => update("last_name", v)}
+            value={form.first_name}
+            onChangeText={(v) => update("first_name", v)}
           />
         </View>
       </View>

@@ -19,7 +19,7 @@ import {
   ActivityIndicator,
   ScrollView,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
 type FieldConfig = {
@@ -33,14 +33,14 @@ type FieldConfig = {
 
 const FIELDS: FieldConfig[] = [
   {
-    key: "first_name",
-    label: "Họ",
+    key: "last_name",
+    label: "Họ và tên đệm",
     icon: "user",
-    placeholder: "Nhập họ",
+    placeholder: "Nhập họ và tên đệm",
     autoCapitalize: "words",
   },
   {
-    key: "last_name",
+    key: "first_name",
     label: "Tên",
     icon: "user",
     placeholder: "Nhập tên",
@@ -62,7 +62,6 @@ const FIELDS: FieldConfig[] = [
     autoCapitalize: "none",
   },
 ];
-
 export default function EditProfileScreen() {
   const e = useEditProfile();
 
