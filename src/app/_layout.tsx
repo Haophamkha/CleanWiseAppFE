@@ -1,10 +1,10 @@
 import { ConfirmProvider } from "@/components/common/ConfirmProvider";
+import { SuccessSheetProvider } from "@/components/common/SuccessSheet";
 import { STORAGE_KEYS } from "@/config/constants";
 import { toastConfig } from "@/config/toastConfig";
 import { useGetProfileQuery } from "@/features/auth/api/authApi";
 import { usePushNotifications } from "@/features/notification/hooks/usePushNotifications";
 import { useUnreadCountRealtime } from "@/features/notification/hooks/useUnreadCountRealtime";
-
 import { registerAuthDispatch } from "@/store/baseApi";
 import { useAppSelector } from "@/store/hooks";
 import { store } from "@/store/store";
@@ -16,15 +16,12 @@ import Toast from "react-native-toast-message";
 import { Provider } from "react-redux";
 import "../global.css";
 
-// Đăng ký ngay khi module load, trước mọi request
 registerAuthDispatch(store.dispatch);
 
 function AuthInit() {
   const user = useAppSelector((s) => s.auth.user);
   const [needBootstrap, setNeedBootstrap] = useState(false);
 
-  // Mở app: nếu có token thì nạp profile (getProfile tự setUser).
-  // Token hết hạn sẽ được refresh tự động; refresh bị từ chối thì logout.
   useEffect(() => {
     storage.getItem(STORAGE_KEYS.ACCESS_TOKEN).then((t) => {
       if (t && t !== "null" && t !== "undefined") setNeedBootstrap(true);
@@ -32,7 +29,7 @@ function AuthInit() {
   }, []);
 
   useEffect(() => {
-    if (user) setNeedBootstrap(false); // đã có user, không gọi lại
+    if (user) setNeedBootstrap(false);
   }, [user]);
 
   useGetProfileQuery(undefined, { skip: !needBootstrap });
@@ -47,12 +44,14 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <Provider store={store}>
         <ConfirmProvider>
-          <AuthInit />
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(tabs)" />
-          </Stack>
-          <Toast config={toastConfig} />
+          <SuccessSheetProvider>
+            <AuthInit />
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(tabs)" />
+            </Stack>
+            <Toast config={toastConfig} />
+          </SuccessSheetProvider>
         </ConfirmProvider>
       </Provider>
     </SafeAreaProvider>

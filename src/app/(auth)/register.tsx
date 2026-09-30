@@ -1,79 +1,153 @@
-import type { FeatherName } from "@/components/ui";
-import { Button, ErrorText, Input, PasswordInput } from "@/components/ui";
 import { COLORS } from "@/constants/theme";
-import { AuthCard, AuthHeading } from "@/features/auth/components/AuthCard";
 import {
-    useRegister,
-    type RegisterFormKey,
+  AuthScreen,
+  PillButton,
+  PillInput,
+} from "@/features/auth/components/AuthKit";
+import {
+  useRegister,
+  type RegisterFormKey,
 } from "@/features/auth/hooks/useRegister";
 import { Feather } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 
+type FeatherIcon = React.ComponentProps<typeof Feather>["name"];
+
 type FieldConfig = {
   key: RegisterFormKey;
-  label: string;
-  icon: FeatherName;
+  icon: FeatherIcon;
   placeholder: string;
   keyboardType?: "phone-pad" | "email-address" | "default";
   autoCapitalize?: "none" | "words";
 };
 
-const FIELDS: FieldConfig[] = [
+const CONTACT_FIELDS: FieldConfig[] = [
   {
     key: "username",
-    label: "Tên đăng nhập",
-    icon: "user",
-    placeholder: "vd. minhanh92",
+    icon: "at-sign",
+    placeholder: "Tên đăng nhập",
     autoCapitalize: "none",
   },
   {
-    key: "first_name",
-    label: "Họ",
-    icon: "user",
-    placeholder: "Nguyễn",
-    autoCapitalize: "words",
-  },
-  {
-    key: "last_name",
-    label: "Tên",
-    icon: "user",
-    placeholder: "Minh Anh",
-    autoCapitalize: "words",
-  },
-  {
     key: "email",
-    label: "Email",
     icon: "mail",
-    placeholder: "ban@email.com",
+    placeholder: "Email",
     keyboardType: "email-address",
     autoCapitalize: "none",
   },
   {
     key: "phone_number",
-    label: "Số điện thoại",
     icon: "phone",
-    placeholder: "090 123 4567",
+    placeholder: "Số điện thoại",
     keyboardType: "phone-pad",
   },
 ];
+
+function PasswordRules({ password }: { password: string }) {
+  if (!password) return null;
+  const rules = [
+    { label: "Tối thiểu 8 ký tự", ok: password.length >= 8 },
+    { label: "Có chữ hoa", ok: /[A-Z]/.test(password) },
+    { label: "Có chữ số", ok: /\d/.test(password) },
+  ];
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        flexWrap: "wrap",
+        marginTop: -4,
+        marginBottom: 14,
+        paddingHorizontal: 6,
+      }}
+    >
+      {rules.map((r) => (
+        <View
+          key={r.label}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginRight: 14,
+            marginBottom: 4,
+          }}
+        >
+          <Feather
+            name={r.ok ? "check-circle" : "circle"}
+            size={13}
+            color={r.ok ? COLORS.success : COLORS.inkMuted}
+          />
+          <Text
+            style={{
+              marginLeft: 5,
+              fontSize: 12,
+              color: r.ok ? COLORS.ink : COLORS.inkMuted,
+            }}
+          >
+            {r.label}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
 
 export default function RegisterScreen() {
   const { form, update, agree, toggleAgree, error, isLoading, submit } =
     useRegister();
 
-  return (
-    <AuthCard onBack={() => router.back()}>
-      <AuthHeading
-        title="Tạo tài khoản"
-        subtitle="Chỉ mất một phút để bắt đầu đặt lịch dọn dẹp."
-      />
+  const mismatch =
+    form.password_confirm.length > 0 && form.password !== form.password_confirm;
 
-      {FIELDS.map((f) => (
-        <Input
+  return (
+    <AuthScreen
+      icon="user-plus"
+      title="Tạo tài khoản"
+      subtitle="Chỉ mất một phút để bắt đầu đặt lịch dọn dẹp."
+      onBack={() => router.back()}
+      footer={
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "center",
+            paddingVertical: 8,
+          }}
+        >
+          <Text style={{ fontSize: 14, color: COLORS.inkSoft }}>
+            Đã có tài khoản?{" "}
+          </Text>
+          <Link href="/(auth)/login">
+            <Text
+              style={{ fontSize: 14, fontWeight: "700", color: COLORS.primary }}
+            >
+              Đăng nhập
+            </Text>
+          </Link>
+        </View>
+      }
+    >
+      <View style={{ flexDirection: "row" }}>
+        <View style={{ flex: 1, marginRight: 10 }}>
+          <PillInput
+            icon="user"
+            placeholder="Họ"
+            autoCapitalize="words"
+            value={form.first_name}
+            onChangeText={(v) => update("first_name", v)}
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <PillInput
+            placeholder="Tên"
+            autoCapitalize="words"
+            value={form.last_name}
+            onChangeText={(v) => update("last_name", v)}
+          />
+        </View>
+      </View>
+
+      {CONTACT_FIELDS.map((f) => (
+        <PillInput
           key={f.key}
-          label={f.label}
-          required
           icon={f.icon}
           placeholder={f.placeholder}
           keyboardType={f.keyboardType ?? "default"}
@@ -83,55 +157,104 @@ export default function RegisterScreen() {
         />
       ))}
 
-      <PasswordInput
-        label="Mật khẩu"
-        required
-        placeholder="Tối thiểu 8 ký tự, có chữ hoa và số"
+      <PillInput
+        icon="lock"
+        placeholder="Mật khẩu"
+        password
+        autoCapitalize="none"
         value={form.password}
         onChangeText={(v) => update("password", v)}
       />
-      <PasswordInput
-        label="Xác nhận mật khẩu"
-        required
-        placeholder="Nhập lại mật khẩu"
+      <PasswordRules password={form.password} />
+
+      <PillInput
+        icon="lock"
+        placeholder="Xác nhận mật khẩu"
+        password
+        autoCapitalize="none"
+        invalid={mismatch}
         value={form.password_confirm}
         onChangeText={(v) => update("password_confirm", v)}
       />
+      {mismatch && (
+        <Text
+          style={{
+            marginTop: -6,
+            marginBottom: 10,
+            paddingHorizontal: 6,
+            fontSize: 12,
+            color: COLORS.danger,
+          }}
+        >
+          Mật khẩu xác nhận chưa khớp
+        </Text>
+      )}
 
       <TouchableOpacity
-        className="flex-row items-start mb-2"
         onPress={toggleAgree}
         activeOpacity={0.7}
+        style={{
+          flexDirection: "row",
+          alignItems: "flex-start",
+          marginBottom: 8,
+          paddingHorizontal: 4,
+        }}
       >
         <View
-          className={`w-5 h-5 rounded-sm mr-3 mt-0.5 items-center justify-center border ${
-            agree ? "bg-primary border-primary" : "bg-surface border-line"
-          }`}
+          style={{
+            width: 20,
+            height: 20,
+            borderRadius: 10,
+            marginRight: 10,
+            marginTop: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1.5,
+            borderColor: agree ? COLORS.primary : COLORS.line,
+            backgroundColor: agree ? COLORS.primary : COLORS.surface,
+          }}
         >
           {agree && <Feather name="check" size={12} color={COLORS.white} />}
         </View>
-        <Text className="flex-1 text-sm text-ink-soft">
+        <Text
+          style={{
+            flex: 1,
+            fontSize: 13,
+            lineHeight: 20,
+            color: COLORS.inkSoft,
+          }}
+        >
           Tôi đồng ý với{" "}
-          <Text className="font-medium text-primary">Điều khoản</Text> và{" "}
-          <Text className="font-medium text-primary">Chính sách bảo mật</Text>
+          <Text style={{ fontWeight: "600", color: COLORS.primary }}>
+            Điều khoản
+          </Text>{" "}
+          và{" "}
+          <Text style={{ fontWeight: "600", color: COLORS.primary }}>
+            Chính sách bảo mật
+          </Text>
         </Text>
       </TouchableOpacity>
 
-      <ErrorText message={error} />
+      {error ? (
+        <Text
+          style={{
+            fontSize: 13,
+            color: COLORS.danger,
+            marginVertical: 8,
+            textAlign: "center",
+          }}
+        >
+          {error}
+        </Text>
+      ) : null}
 
-      <Button
-        title={isLoading ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
-        onPress={submit}
-        disabled={isLoading}
-        className="mt-4"
-      />
-
-      <View className="flex-row justify-center mt-7">
-        <Text className="text-sm text-ink-soft">Đã có tài khoản? </Text>
-        <Link href="/(auth)/login">
-          <Text className="text-sm font-semibold text-primary">Đăng nhập</Text>
-        </Link>
+      <View style={{ marginTop: 12 }}>
+        <PillButton
+          title={isLoading ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
+          onPress={submit}
+          loading={isLoading}
+        />
       </View>
-    </AuthCard>
+    </AuthScreen>
   );
 }
