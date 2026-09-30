@@ -1,4 +1,4 @@
-export type UserRole = "CUSTOMER" | "STAFF" | "ADMIN";
+export type UserRole = "CUSTOMER" | "WORKER" | "ADMIN";
 
 export type User = {
   id: number;
@@ -28,7 +28,12 @@ export type CustomerProfile = {
   updated_at: string;
 };
 
-export type WorkerStatus = "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
+export type WorkerStatus =
+  | "DRAFT"
+  | "PENDING"
+  | "ACTIVE"
+  | "REJECTED"
+  | "SUSPENDED";
 
 export type WorkerProfile = {
   id: number;

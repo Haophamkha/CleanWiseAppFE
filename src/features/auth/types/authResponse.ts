@@ -6,6 +6,7 @@ export type AuthResponse = {
   access: string;
   refresh: string;
   user: UserResponse;
+  is_new_user?: boolean;
 };
 
 export type CustomerProfileResponse = User;

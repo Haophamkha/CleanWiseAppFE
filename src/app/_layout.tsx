@@ -1,7 +1,7 @@
 import { ConfirmProvider } from "@/components/common/ConfirmProvider";
 import { SuccessSheetProvider } from "@/components/common/SuccessSheet";
 import { STORAGE_KEYS } from "@/config/constants";
-import { toastConfig } from "@/config/toastConfig";
+import { AppToast } from "@/config/toastConfig";
 import { useGetProfileQuery } from "@/features/auth/api/authApi";
 import { usePushNotifications } from "@/features/notification/hooks/usePushNotifications";
 import { useUnreadCountRealtime } from "@/features/notification/hooks/useUnreadCountRealtime";
@@ -12,7 +12,6 @@ import { storage } from "@/utils/storage";
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import Toast from "react-native-toast-message";
 import { Provider } from "react-redux";
 import "../global.css";
 
@@ -50,7 +49,7 @@ export default function RootLayout() {
               <Stack.Screen name="(auth)" />
               <Stack.Screen name="(tabs)" />
             </Stack>
-            <Toast config={toastConfig} />
+            <AppToast />
           </SuccessSheetProvider>
         </ConfirmProvider>
       </Provider>

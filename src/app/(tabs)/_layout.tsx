@@ -1,4 +1,4 @@
-import { COLORS } from "@/constants/theme";
+import { COLORS, SHADOWS } from "@/constants/theme";
 import { useGetConversationsQuery } from "@/features/chat/api/chatApi";
 import { useChatSocket } from "@/features/chat/hooks/useChatSocket";
 import { useAppSelector } from "@/store/hooks";
@@ -7,6 +7,7 @@ import { Tabs } from "expo-router";
 import { useEffect, useRef, type ComponentProps } from "react";
 import {
   Animated,
+  Easing,
   Pressable,
   Text,
   View,
@@ -18,6 +19,7 @@ import Svg, { Path } from "react-native-svg";
 type BottomTabBarProps = Parameters<
   NonNullable<ComponentProps<typeof Tabs>["tabBar"]>
 >[0];
+type Options = BottomTabBarProps["descriptors"][string]["options"];
 
 const BAR_HEIGHT = 70;
 const BAR_RADIUS = 26; // chỉ bo 2 góc trên
@@ -46,39 +48,287 @@ function buildBarPath(width: number) {
   ].join(" ");
 }
 
-function ActiveDot({ visible, color }: { visible: boolean; color: string }) {
-  const scale = useRef(new Animated.Value(visible ? 1 : 0)).current;
+type ItemProps = {
+  options: Options;
+  label: string;
+  focused: boolean;
+  width: number;
+  onPress: () => void;
+  onLongPress: () => void;
+};
+
+/** Tab thường: nhấn thì co lại, chọn thì icon nảy lên và viên thuốc nền phóng ra */
+function TabItem({
+  options,
+  label,
+  focused,
+  width,
+  onPress,
+  onLongPress,
+}: ItemProps) {
+  const active = useRef(new Animated.Value(focused ? 1 : 0)).current;
+  const press = useRef(new Animated.Value(1)).current;
+  const badge = options.tabBarBadge;
+  const tint = focused ? COLORS.primary : COLORS.inkMuted;
 
   useEffect(() => {
-    Animated.spring(scale, {
-      toValue: visible ? 1 : 0,
+    Animated.spring(active, {
+      toValue: focused ? 1 : 0,
+      useNativeDriver: true,
+      damping: 12,
+      stiffness: 180,
+      mass: 0.8,
+    }).start();
+  }, [focused, active]);
+
+  const pressTo = (v: number) =>
+    Animated.spring(press, {
+      toValue: v,
       useNativeDriver: true,
       damping: 14,
-      stiffness: 200,
+      stiffness: 300,
     }).start();
-  }, [visible, scale]);
+
+  const translateY = active.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -3],
+  });
+  const pillScale = active.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.4, 1],
+  });
 
   return (
-    <View
-      pointerEvents="none"
-      style={{
-        position: "absolute",
-        left: 0,
-        right: 0,
-        bottom: 10,
-        alignItems: "center",
-      }}
+    <Pressable
+      onPress={onPress}
+      onLongPress={onLongPress}
+      onPressIn={() => pressTo(0.88)}
+      onPressOut={() => pressTo(1)}
+      accessibilityRole="button"
+      accessibilityState={focused ? { selected: true } : {}}
+      accessibilityLabel={options.tabBarAccessibilityLabel ?? label}
+      style={{ width, height: BAR_HEIGHT }}
     >
       <Animated.View
         style={{
-          width: 5,
-          height: 5,
-          borderRadius: 2.5,
-          backgroundColor: color,
-          transform: [{ scale }],
+          position: "absolute",
+          top: 8,
+          alignSelf: "center",
+          width: 54,
+          height: 32,
+          alignItems: "center",
+          justifyContent: "center",
+          transform: [{ scale: press }, { translateY }],
         }}
-      />
-    </View>
+      >
+        <Animated.View
+          style={{
+            position: "absolute",
+            width: 54,
+            height: 32,
+            borderRadius: 16,
+            backgroundColor: COLORS.primaryLight,
+            opacity: active,
+            transform: [{ scale: pillScale }],
+          }}
+        />
+        {options.tabBarIcon?.({ focused, color: tint, size: 22 })}
+        {badge !== undefined && (
+          <View
+            style={{
+              position: "absolute",
+              top: -2,
+              right: 2,
+              minWidth: 18,
+              height: 18,
+              paddingHorizontal: 4,
+              borderRadius: 9,
+              backgroundColor: COLORS.danger,
+              alignItems: "center",
+              justifyContent: "center",
+              borderWidth: 1.5,
+              borderColor: COLORS.surface,
+            }}
+          >
+            <Text
+              style={{ color: COLORS.white, fontSize: 10, fontWeight: "700" }}
+            >
+              {badge}
+            </Text>
+          </View>
+        )}
+      </Animated.View>
+
+      <Text
+        numberOfLines={1}
+        style={{
+          position: "absolute",
+          top: 44,
+          left: 0,
+          right: 0,
+          textAlign: "center",
+          fontSize: 11,
+          fontWeight: focused ? "700" : "500",
+          color: tint,
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+/**
+ * Nút Chatbot giữa:
+ * - Nhấn giữ: nút lún xuống, icon nhỏ lại
+ * - Thả ra: nút bật lại có độ nảy, một vòng sóng lan tỏa ra ngoài
+ * - Khi được chọn: icon xoay một vòng, viền sáng lên
+ */
+function CenterItem({
+  options,
+  label,
+  focused,
+  width,
+  onPress,
+  onLongPress,
+}: ItemProps) {
+  const press = useRef(new Animated.Value(1)).current;
+  const pop = useRef(new Animated.Value(focused ? 1 : 0)).current;
+  const pulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(pop, {
+      toValue: focused ? 1 : 0,
+      useNativeDriver: true,
+      damping: 9,
+      stiffness: 160,
+    }).start();
+  }, [focused, pop]);
+
+  const pressIn = () =>
+    Animated.spring(press, {
+      toValue: 0.86,
+      useNativeDriver: true,
+      damping: 15,
+      stiffness: 400,
+    }).start();
+
+  const pressOut = () =>
+    Animated.spring(press, {
+      toValue: 1,
+      useNativeDriver: true,
+      damping: 6, // thấp hơn để bật lại có độ nảy
+      stiffness: 260,
+    }).start();
+
+  const handlePress = () => {
+    pulse.setValue(0);
+    Animated.timing(pulse, {
+      toValue: 1,
+      duration: 600,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+    onPress();
+  };
+
+  const rotate = pop.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
+  const lift = pop.interpolate({ inputRange: [0, 1], outputRange: [0, -2] });
+  const ringScale = pulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.75],
+  });
+  const ringOpacity = pulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.4, 0],
+  });
+  const iconScale = press.interpolate({
+    inputRange: [0.86, 1],
+    outputRange: [0.85, 1],
+    extrapolate: "extend",
+  });
+
+  return (
+    <Pressable
+      onPress={handlePress}
+      onLongPress={onLongPress}
+      onPressIn={pressIn}
+      onPressOut={pressOut}
+      accessibilityRole="button"
+      accessibilityState={focused ? { selected: true } : {}}
+      accessibilityLabel={options.tabBarAccessibilityLabel ?? label}
+      style={{ width, height: BAR_HEIGHT }}
+    >
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: -OVERHANG,
+          alignSelf: "center",
+          width: CIRCLE,
+          height: CIRCLE,
+        }}
+      >
+        {/* Vòng sóng lan tỏa khi nhấn */}
+        <Animated.View
+          style={{
+            position: "absolute",
+            width: CIRCLE,
+            height: CIRCLE,
+            borderRadius: CIRCLE / 2,
+            backgroundColor: COLORS.primary,
+            opacity: ringOpacity,
+            transform: [{ scale: ringScale }],
+          }}
+        />
+
+        <Animated.View
+          style={[
+            {
+              width: CIRCLE,
+              height: CIRCLE,
+              borderRadius: CIRCLE / 2,
+              backgroundColor: COLORS.primary,
+              alignItems: "center",
+              justifyContent: "center",
+              borderWidth: 3,
+              borderColor: focused ? COLORS.primaryLight : COLORS.primary,
+              transform: [{ scale: press }, { translateY: lift }],
+            },
+            SHADOWS.float,
+          ]}
+        >
+          <Animated.View
+            style={{ transform: [{ rotate }, { scale: iconScale }] }}
+          >
+            {options.tabBarIcon?.({
+              focused,
+              color: COLORS.white,
+              size: 28,
+            })}
+          </Animated.View>
+        </Animated.View>
+      </View>
+
+      <Text
+        numberOfLines={1}
+        style={{
+          position: "absolute",
+          top: 44,
+          left: 0,
+          right: 0,
+          textAlign: "center",
+          fontSize: 11,
+          fontWeight: focused ? "700" : "500",
+          color: focused ? COLORS.primary : COLORS.inkMuted,
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -107,8 +357,18 @@ function CurvedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           height={BAR_HEIGHT}
           style={{ position: "absolute", top: 0, left: 0, overflow: "visible" }}
         >
-          <Path d={path} fill="rgba(0,0,0,0.04)" transform="translate(0,-4)" />
-          <Path d={path} fill="rgba(0,0,0,0.05)" transform="translate(0,-2)" />
+          <Path
+            d={path}
+            fill={COLORS.ink}
+            fillOpacity={0.04}
+            transform="translate(0,-4)"
+          />
+          <Path
+            d={path}
+            fill={COLORS.ink}
+            fillOpacity={0.05}
+            transform="translate(0,-2)"
+          />
           <Path d={path} fill={COLORS.surface} />
         </Svg>
 
@@ -116,11 +376,8 @@ function CurvedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           {state.routes.map((route, index) => {
             const { options } = descriptors[route.key];
             const focused = state.index === index;
-            const isCenter = index === centerIndex;
             const label =
               typeof options.title === "string" ? options.title : route.name;
-            const badge = options.tabBarBadge;
-            const tint = focused ? COLORS.primary : COLORS.inkMuted;
 
             const onPress = () => {
               const event = navigation.emit({
@@ -132,105 +389,22 @@ function CurvedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                 navigation.navigate(route.name, route.params);
               }
             };
-
             const onLongPress = () => {
               navigation.emit({ type: "tabLongPress", target: route.key });
             };
 
+            const Item = index === centerIndex ? CenterItem : TabItem;
+
             return (
-              <Pressable
+              <Item
                 key={route.key}
+                options={options}
+                label={label}
+                focused={focused}
+                width={slotWidth}
                 onPress={onPress}
                 onLongPress={onLongPress}
-                accessibilityRole="button"
-                accessibilityState={focused ? { selected: true } : {}}
-                accessibilityLabel={options.tabBarAccessibilityLabel}
-                style={{ width: slotWidth, height: BAR_HEIGHT }}
-              >
-                {isCenter ? (
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: -OVERHANG,
-                      alignSelf: "center",
-                      width: CIRCLE,
-                      height: CIRCLE,
-                      borderRadius: CIRCLE / 2,
-                      backgroundColor: COLORS.primary,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      elevation: 6,
-                      shadowColor: COLORS.primary,
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.3,
-                      shadowRadius: 8,
-                    }}
-                  >
-                    {options.tabBarIcon?.({
-                      focused,
-                      color: "#FFFFFF",
-                      size: 28,
-                    })}
-                  </View>
-                ) : (
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: 10,
-                      alignSelf: "center",
-                    }}
-                  >
-                    {options.tabBarIcon?.({ focused, color: tint, size: 22 })}
-                    {badge !== undefined && (
-                      <View
-                        style={{
-                          position: "absolute",
-                          top: -6,
-                          right: -12,
-                          minWidth: 18,
-                          height: 18,
-                          paddingHorizontal: 4,
-                          borderRadius: 9,
-                          backgroundColor: "#EF4444",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          borderWidth: 1.5,
-                          borderColor: COLORS.surface,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            color: "#FFFFFF",
-                            fontSize: 10,
-                            fontWeight: "700",
-                          }}
-                        >
-                          {badge}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                )}
-
-                {/* Tên tab: hiện ở mọi tab, kể cả nút giữa */}
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    position: "absolute",
-                    top: isCenter ? 40 : 38,
-                    left: 0,
-                    right: 0,
-                    textAlign: "center",
-                    fontSize: 11,
-                    fontWeight: focused ? "700" : "500",
-                    color: tint,
-                  }}
-                >
-                  {label}
-                </Text>
-
-                <ActiveDot visible={focused} color={COLORS.primary} />
-              </Pressable>
+              />
             );
           })}
         </View>
@@ -300,14 +474,13 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* Chatbot: tab giữa, hiển thị thành nút tròn nổi */}
       <Tabs.Screen
         name="chatbot"
         options={{
-          title: "Chatbot",
-          tabBarIcon: ({ color, size }) => (
+          title: "Trợ lý",
+          tabBarIcon: ({ color, size, focused }) => (
             <MaterialCommunityIcons
-              name="robot-happy-outline"
+              name={focused ? "robot-happy" : "robot-happy-outline"}
               size={size}
               color={color}
             />
