@@ -1,4 +1,4 @@
-import { Vouchers } from "@/components/voucher/Vouchers";
+import { Vouchers } from "@/features/voucher/components/Vouchers";
 
 export default function VouchersScreen() {
   return <Vouchers />;

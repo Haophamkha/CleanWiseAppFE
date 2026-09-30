@@ -1,5 +1,5 @@
 // utils/imagePicker.ts
-import type { PickedFile } from "@/types/Complaint";
+import type { PickedFile } from "@/features/complaint/types/Complaint";
 import * as ImagePicker from "expo-image-picker";
 import { Alert } from "react-native";
 

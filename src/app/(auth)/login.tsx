@@ -1,6 +1,6 @@
-import { AuthCard, AuthHeading } from "@/components/auth/AuthCard";
-import { GoogleButton } from "@/components/auth/GoogleButton";
 import { Button, ErrorText, Input, PasswordInput } from "@/components/ui";
+import { AuthCard, AuthHeading } from "@/features/auth/components/AuthCard";
+import { GoogleButton } from "@/features/auth/components/GoogleButton";
 import { useLogin } from "@/features/auth/hooks/useLogin";
 import { Link, router } from "expo-router";
 import { Text, View } from "react-native";

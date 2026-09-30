@@ -1,11 +1,14 @@
-import { mergeMessages, type UiChatMessage } from "@/features/chat/utils";
-import { useChatSocket } from "@/hooks/useChatSocket";
 import {
     useGetConversationQuery,
     useListChatMessagesMutation,
     useReadChatMessagesMutation,
     useSendChatMessageMutation,
-} from "@/services/chatApi";
+} from "@/features/chat/api/chatApi";
+import { useChatSocket } from "@/features/chat/hooks/useChatSocket";
+import {
+    mergeMessages,
+    type UiChatMessage,
+} from "@/features/chat/utils/chatUtils";
 import { useAppSelector } from "@/store/hooks";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";

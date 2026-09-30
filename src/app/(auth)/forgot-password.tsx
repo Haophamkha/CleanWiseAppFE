@@ -1,6 +1,6 @@
-import { AuthCard, AuthHeading } from "@/components/auth/AuthCard";
 import { Button, ErrorText, Input, PasswordInput } from "@/components/ui";
 import { COLORS } from "@/constants/theme";
+import { AuthCard, AuthHeading } from "@/features/auth/components/AuthCard";
 import { useForgotPassword } from "@/features/auth/hooks/useForgotPassword";
 import { Feather } from "@expo/vector-icons";
 import { Link } from "expo-router";

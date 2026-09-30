@@ -1,7 +1,7 @@
 // features/address/hooks/useAddAddress.ts
+import { useCreateAddressMutation } from "@/features/address/api/addressApi";
 import { useAddressForm } from "@/features/address/hooks/useAddressForm";
-import { useCreateAddressMutation } from "@/services/addressApi";
-import { setPickedAddress } from "@/store/addressPickerSlice";
+import { setPickedAddress } from "@/features/address/stores/addressPickerSlice";
 import { useAppDispatch } from "@/store/hooks";
 import { getApiErrorMessage } from "@/utils/apiError";
 import { router, useLocalSearchParams } from "expo-router";

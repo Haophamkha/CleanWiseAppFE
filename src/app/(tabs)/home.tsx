@@ -1,11 +1,11 @@
-import { ActiveBookingCard } from "@/components/home/ActiveBookingCard";
-import { GuestBanner } from "@/components/home/GuestBanner";
-import { HomeHeader } from "@/components/home/HomeHeader";
-import { HomeVoucherCard } from "@/components/home/HomeVoucherCard";
-import { SectionHeader } from "@/components/home/SectionHeader";
-import { ServiceCard } from "@/components/home/ServiceCard";
 import { EmptyState } from "@/components/ui";
 import { COLORS } from "@/constants/theme";
+import { BannerCarousel } from "@/features/home/components/BannerCarousel";
+import { GuestBanner } from "@/features/home/components/GuestBanner";
+import { HomeHeader } from "@/features/home/components/HomeHeader";
+import { HomeVoucherCard } from "@/features/home/components/HomeVoucherCard";
+import { SectionHeader } from "@/features/home/components/SectionHeader";
+import { ServiceCard } from "@/features/home/components/ServiceCard";
 import { useHome } from "@/features/home/hooks/useHome";
 import { router } from "expo-router";
 import {
@@ -43,22 +43,6 @@ export default function HomeScreen() {
         <View className="px-5 pt-5">
           {!h.isAuthenticated && <GuestBanner />}
 
-          {h.activeBookings.length > 0 && !h.isSearching && (
-            <View className="mb-3">
-              <SectionHeader
-                title="Đơn đang diễn ra"
-                onSeeAll={() => router.push("/(tabs)/booking" as any)}
-              />
-              {h.activeBookings.map((b) => (
-                <ActiveBookingCard
-                  key={b.id}
-                  booking={b}
-                  onPress={() => router.push(`/booking/${b.id}` as any)}
-                />
-              ))}
-            </View>
-          )}
-
           <SectionHeader title="Dịch vụ" />
           {h.servicesLoading ? (
             <View className="items-center py-10">
@@ -81,7 +65,7 @@ export default function HomeScreen() {
               }
             />
           ) : (
-            <View className="flex-row flex-wrap justify-between">
+            <View className="flex-row flex-wrap">
               {h.services.map((item) => (
                 <ServiceCard
                   key={item.id}
@@ -96,8 +80,10 @@ export default function HomeScreen() {
           )}
         </View>
 
+        {!h.isSearching && <BannerCarousel />}
+
         {h.vouchers.length > 0 && !h.isSearching && (
-          <View className="mt-2">
+          <View className="mt-5">
             <View className="px-5">
               <SectionHeader
                 title="Ưu đãi cho bạn"

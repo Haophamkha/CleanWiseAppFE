@@ -1,5 +1,5 @@
 import { ROUTES } from "@/config/constants";
-import { saveTokens, useRegisterMutation } from "@/services/authApi";
+import { saveTokens, useRegisterMutation } from "@/features/auth/api/authApi";
 import { setUser } from "@/store/authSlice";
 import { baseApi } from "@/store/baseApi";
 import { useAppDispatch } from "@/store/hooks";

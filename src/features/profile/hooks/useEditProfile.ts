@@ -3,8 +3,8 @@ import { ROUTES } from "@/config/constants";
 import {
     useGetProfileQuery,
     useUpdateProfileMutation,
-} from "@/services/authApi";
-import type { PickedFile } from "@/types/Complaint";
+} from "@/features/auth/api/authApi";
+import type { PickedFile } from "@/features/complaint/types/Complaint";
 import { getApiErrorMessage } from "@/utils/apiError";
 import { pickImage } from "@/utils/imagePicker";
 import { showSuccessToast } from "@/utils/toast";

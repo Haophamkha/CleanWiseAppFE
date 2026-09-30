@@ -15,4 +15,7 @@ export const ROUTES = {
   PAYMENT_METHODS: "/profile/payment-methods",
   BOOKING_CONFIRM: "/booking/confirm",
   ADDRESS: "/profile/address",
+  SETTINGS: "/profile/settings",
+  ABOUT: "/profile/about",
+  CHANGE_PASSWORD: "/profile/change-password",
 } as const;

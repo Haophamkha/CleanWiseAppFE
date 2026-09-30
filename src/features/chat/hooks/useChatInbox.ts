@@ -1,11 +1,14 @@
-import { useChatSocket } from "@/hooks/useChatSocket";
 import {
     chatApi,
     useGetConversationsQuery,
     useReadChatMessagesMutation,
-} from "@/services/chatApi";
+} from "@/features/chat/api/chatApi";
+import { useChatSocket } from "@/features/chat/hooks/useChatSocket";
+import type {
+    ChatConversation,
+    ConversationPage,
+} from "@/features/chat/types/chat";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import type { ChatConversation, ConversationPage } from "@/types/chat";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 

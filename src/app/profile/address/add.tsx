@@ -1,12 +1,12 @@
 // app/profile/address/add.tsx
-import ScreenContainer from "@/components/ScreenContainer";
-import AddressForm, {
-  FormSectionTitle,
-} from "@/components/address/AddressForm";
-import { MapPickButton } from "@/components/address/MapPickButton";
-import ProvinceWardPicker from "@/components/address/ProvinceWardPicker";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
+import ScreenContainer from "@/components/ScreenContainer";
 import { Button, ErrorText } from "@/components/ui";
+import AddressForm, {
+    FormSectionTitle,
+} from "@/features/address/components/AddressForm";
+import { MapPickButton } from "@/features/address/components/MapPickButton";
+import ProvinceWardPicker from "@/features/address/components/ProvinceWardPicker";
 import { useAddAddress } from "@/features/address/hooks/useAddAddress";
 import { ScrollView, View } from "react-native";
 

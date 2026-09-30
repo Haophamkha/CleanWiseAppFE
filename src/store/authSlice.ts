@@ -1,4 +1,4 @@
-import type { UserResponse } from "@/types/Response";
+import type { UserResponse } from "@/features/auth/types/authResponse";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type AuthState = { user: UserResponse | null };

@@ -1,6 +1,6 @@
 // features/address/hooks/useAddressForm.ts
-import type { AddressFormValues } from "@/components/address/AddressForm";
-import type { Address, AddressPayload } from "@/types/Address";
+import type { AddressFormValues } from "@/features/address/components/AddressForm";
+import type { Address, AddressPayload } from "@/features/address/types/Address";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 

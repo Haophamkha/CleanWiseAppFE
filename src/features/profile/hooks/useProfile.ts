@@ -1,7 +1,7 @@
 // features/profile/hooks/useProfile.ts
 import { useConfirm } from "@/components/common/ConfirmProvider";
 import { ROUTES } from "@/config/constants";
-import { useGetProfileQuery } from "@/services/authApi";
+import { useGetProfileQuery } from "@/features/auth/api/authApi";
 import { performLogout } from "@/store/baseApi";
 import { useAppSelector } from "@/store/hooks";
 import { useFocusEffect } from "expo-router";

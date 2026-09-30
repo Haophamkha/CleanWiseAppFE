@@ -2,7 +2,7 @@ import {
   useForgotPasswordMutation,
   useResetPasswordMutation,
   useVerifyResetOtpMutation,
-} from "@/services/authApi";
+} from "@/features/auth/api/authApi";
 import { getApiErrorMessage } from "@/utils/apiError";
 import { showSuccessToast } from "@/utils/toast";
 import { forgotPasswordSchema, resetPasswordSchema } from "@/utils/validators";

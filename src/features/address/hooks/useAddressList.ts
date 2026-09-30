@@ -1,8 +1,8 @@
 // features/address/hooks/useAddressList.ts
-import { useGetAddressesQuery } from "@/services/addressApi";
-import { setPickedAddress } from "@/store/addressPickerSlice";
+import { useGetAddressesQuery } from "@/features/address/api/addressApi";
+import { setPickedAddress } from "@/features/address/stores/addressPickerSlice";
+import type { Address } from "@/features/address/types/Address";
 import { useAppDispatch } from "@/store/hooks";
-import type { Address } from "@/types/Address";
 import { router, useLocalSearchParams } from "expo-router";
 
 export function useAddressList() {

@@ -1,12 +1,15 @@
 import type { FeatherName } from "@/components/ui/Input";
-import { useCreateBookingMutation } from "@/services/bookingApi";
-import { clearBookingDraft } from "@/store/bookingDraftSlice";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import type { UserVoucher, ValidateVoucherResponse } from "@/types/Voucher";
+import { useCreateBookingMutation } from "@/features/booking/api/bookingApi";
+import { clearBookingDraft } from "@/features/booking/stores/bookingDraftSlice";
 import {
     calculateEstimatedPrice,
     calculateRecurringPrice,
-} from "@/utils/servicePricing";
+} from "@/features/service/utils/servicePricing";
+import type {
+    UserVoucher,
+    ValidateVoucherResponse,
+} from "@/features/voucher/types/Voucher";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";

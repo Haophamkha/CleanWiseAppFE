@@ -1,9 +1,9 @@
 import {
     useGetFavoriteWorkersQuery,
     useRemoveFavoriteWorkerMutation,
-} from "@/services/favoriteWorkerApi";
+} from "@/features/favorite-worker/api/favoriteWorkerApi";
+import type { FavoriteWorker } from "@/features/favorite-worker/types/FavoriteWorker";
 import { useAppSelector } from "@/store/hooks";
-import type { FavoriteWorker } from "@/types/FavoriteWorker";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import { useEffect, useState } from "react";
 

@@ -1,12 +1,12 @@
-import { NotificationFilter } from "@/components/notification/NotificationFilterTabs";
 import {
     notificationApi,
     useGetNotificationsQuery,
     useMarkAllNotificationsReadMutation,
     useMarkNotificationReadMutation,
-} from "@/services/notificationApi";
-import { AppNotification } from "@/types/Notification";
-import { NOTIFICATION_FILTER_OPTIONS } from "@/utils/notificationMeta";
+} from "@/features/notification/api/notificationApi";
+import { NotificationFilter } from "@/features/notification/components/NotificationFilterTabs";
+import { AppNotification } from "@/features/notification/types/Notification";
+import { NOTIFICATION_FILTER_OPTIONS } from "@/features/notification/utils/notificationMeta";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";

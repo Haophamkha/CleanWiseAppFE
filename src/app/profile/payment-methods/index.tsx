@@ -1,23 +1,26 @@
 import { useConfirm } from "@/components/common/ConfirmProvider";
-import PaymentMethodCard from "@/components/payment/PaymentMethodCard";
 import {
-  useDeletePaymentMethodMutation,
-  useGetPaymentMethodsQuery,
-  useSetDefaultPaymentMethodMutation,
-} from "@/services/paymentMethodApi";
-import type { PaymentMethod } from "@/types/PaymentMethod";
+    useDeletePaymentMethodMutation,
+    useGetPaymentMethodsQuery,
+    useSetDefaultPaymentMethodMutation,
+} from "@/features/payment/api/paymentMethodApi";
+import PaymentMethodCard from "@/features/payment/components/PaymentMethodCard";
+import type { PaymentMethod } from "@/features/payment/types/PaymentMethod";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+    SafeAreaView,
+    useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const PRIMARY = "#047857";
 
@@ -143,7 +146,8 @@ export default function CustomerPaymentMethodsScreen() {
                       <Feather name="shield" size={19} color="#FFFFFF" />
                     </View>
                     <Text className="text-emerald-50 text-xs leading-5 flex-1">
-                      CleanWise chỉ lưu thông tin cần thiết và không bao giờ yêu cầu mật khẩu hoặc OTP ngân hàng.
+                      CleanWise chỉ lưu thông tin cần thiết và không bao giờ yêu
+                      cầu mật khẩu hoặc OTP ngân hàng.
                     </Text>
                   </View>
                 </View>
@@ -170,7 +174,8 @@ export default function CustomerPaymentMethodsScreen() {
                 Chưa có tài khoản nào
               </Text>
               <Text className="text-gray-500 text-center mt-2 leading-5">
-                Thêm tài khoản ngân hàng để nhận hoàn tiền hoặc rút số dư ví CleanWise.
+                Thêm tài khoản ngân hàng để nhận hoàn tiền hoặc rút số dư ví
+                CleanWise.
               </Text>
             </View>
           }

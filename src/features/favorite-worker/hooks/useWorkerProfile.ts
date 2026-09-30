@@ -1,11 +1,11 @@
-import { useLazyGetAssignmentConversationQuery } from "@/services/chatApi";
+import type { BookingScheduleDetail } from "@/features/booking/types/Booking";
+import { useLazyGetAssignmentConversationQuery } from "@/features/chat/api/chatApi";
 import {
     useAddFavoriteWorkerMutation,
     useGetWorkerProfileQuery,
     useRemoveFavoriteWorkerMutation,
-} from "@/services/favoriteWorkerApi";
-import type { BookingScheduleDetail } from "@/types/Booking";
-import type { FavoriteWorker } from "@/types/FavoriteWorker";
+} from "@/features/favorite-worker/api/favoriteWorkerApi";
+import type { FavoriteWorker } from "@/features/favorite-worker/types/FavoriteWorker";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";

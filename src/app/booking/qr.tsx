@@ -1,18 +1,18 @@
-import { BookingCodeCard } from "@/components/booking/BookingCodeCard";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { Card } from "@/components/ui/Card";
 import { COLORS, RADIUS, SHADOWS } from "@/constants/theme";
+import { BookingCodeCard } from "@/features/booking/components/BookingCodeCard";
 import { useBookingPayment } from "@/features/booking/hooks/useBookingPayment";
 import { Feather } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
 import {
-  ActivityIndicator,
-  Animated,
-  Easing,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Animated,
+    Easing,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

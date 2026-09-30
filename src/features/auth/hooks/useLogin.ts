@@ -1,14 +1,14 @@
 import { ROUTES } from "@/config/constants";
-import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import {
-  saveTokens,
-  useLoginMutation,
-  useLoginWithGoogleMutation,
-} from "@/services/authApi";
+    saveTokens,
+    useLoginMutation,
+    useLoginWithGoogleMutation,
+} from "@/features/auth/api/authApi";
+import { useGoogleAuth } from "@/features/auth/hooks/useGoogleAuth";
+import type { AuthResponse } from "@/features/auth/types/authResponse";
 import { setUser } from "@/store/authSlice";
 import { baseApi } from "@/store/baseApi";
 import { useAppDispatch } from "@/store/hooks";
-import type { AuthResponse } from "@/types/Response";
 import { getApiErrorMessage } from "@/utils/apiError";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import { loginSchema } from "@/utils/validators";

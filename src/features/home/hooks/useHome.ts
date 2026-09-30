@@ -1,6 +1,6 @@
-import { useGetBookingsQuery } from "@/services/bookingApi";
-import { useGetServicesQuery } from "@/services/serviceApi";
-import { useGetPublicVouchersQuery } from "@/services/voucherApi";
+import { useGetBookingsQuery } from "@/features/booking/api/bookingApi";
+import { useGetServicesQuery } from "@/features/service/api/serviceApi";
+import { useGetPublicVouchersQuery } from "@/features/voucher/api/voucherApi";
 import { useAppSelector } from "@/store/hooks";
 import { useCallback, useMemo, useState } from "react";
 
@@ -64,9 +64,15 @@ export function useHome() {
     }
   }, [isAuthenticated, servicesQ, vouchersQ, bookingsQ]);
 
+  // Họ và tên đầy đủ (họ trước, tên sau); không có thì rơi về username
+  const fullName = [user?.last_name, user?.first_name]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
   return {
     isAuthenticated,
-    displayName: user?.first_name || user?.username || "bạn",
+    displayName: fullName || user?.username || "bạn",
     query,
     setQuery,
     isSearching: query.trim().length > 0,

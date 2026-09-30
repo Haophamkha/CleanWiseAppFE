@@ -1,4 +1,4 @@
-import { COLORS } from "@/components/service/formFieldShared";
+import { COLORS } from "@/features/service/components/formFieldShared";
 import { BlurView } from "expo-blur";
 import LottieView from "lottie-react-native";
 import { Text, View } from "react-native";

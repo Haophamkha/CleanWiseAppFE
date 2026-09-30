@@ -1,6 +1,6 @@
-import { BookingCodeCard } from "@/components/booking/BookingCodeCard";
-import { IconRow } from "@/components/booking/IconRow";
 import { COLORS, RADIUS, SHADOWS } from "@/constants/theme";
+import { BookingCodeCard } from "@/features/booking/components/BookingCodeCard";
+import { IconRow } from "@/features/booking/components/IconRow";
 import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";

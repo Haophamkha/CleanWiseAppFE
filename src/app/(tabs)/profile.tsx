@@ -1,15 +1,17 @@
-// app/(tabs)/profile.tsx
 import { MenuGroup } from "@/components/common/MenuGroup";
 import { MenuListItem } from "@/components/common/MenuListItem";
 import { RequireLoginNotice } from "@/components/common/RequireLoginNotice";
-import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import type { FeatherName } from "@/components/ui";
 import { ROUTES } from "@/config/constants";
 import { COLORS } from "@/constants/theme";
+import { ProfileHeader } from "@/features/profile/components/ProfileHeader";
 import { useProfile } from "@/features/profile/hooks/useProfile";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+const TAB_BAR_CONTENT_HEIGHT = 96;
 
 type MenuItem = {
   icon: FeatherName;
@@ -32,8 +34,8 @@ const ACCOUNT_ITEMS: MenuItem[] = [
 ];
 
 const SUPPORT_ITEMS: MenuItem[] = [
-  { icon: "settings", label: "Cài đặt" },
-  { icon: "info", label: "Về CleanWise" },
+  { icon: "settings", label: "Cài đặt", href: ROUTES.SETTINGS },
+  { icon: "info", label: "Về CleanWise", href: ROUTES.ABOUT },
 ];
 
 const renderItems = (items: MenuItem[]) =>
@@ -49,12 +51,15 @@ const renderItems = (items: MenuItem[]) =>
 
 export default function ProfileScreen() {
   const p = useProfile();
+  const insets = useSafeAreaInsets();
 
   return (
     <View className="flex-1 bg-canvas">
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={{
+          paddingBottom: TAB_BAR_CONTENT_HEIGHT + insets.bottom + 16,
+        }}
       >
         <ProfileHeader
           isAuthenticated={p.isAuthenticated}

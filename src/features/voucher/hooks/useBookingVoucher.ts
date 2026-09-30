@@ -1,9 +1,12 @@
-import { formatVoucherMoney } from "@/components/voucher/VoucherCard";
 import {
     useGetMyVouchersQuery,
     useValidateVoucherMutation,
-} from "@/services/voucherApi";
-import type { UserVoucher, ValidateVoucherResponse } from "@/types/Voucher";
+} from "@/features/voucher/api/voucherApi";
+import { formatVoucherMoney } from "@/features/voucher/components/VoucherCard";
+import type {
+    UserVoucher,
+    ValidateVoucherResponse,
+} from "@/features/voucher/types/Voucher";
 import { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 

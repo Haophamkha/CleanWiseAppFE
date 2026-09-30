@@ -1,9 +1,11 @@
 import { ScreenHeader } from "@/components/common/ScreenHeader";
-import NotificationFilterTabs from "@/components/notification/NotificationFilterTabs";
-import NotificationItem from "@/components/notification/NotificationItem";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { COLORS, SHADOWS } from "@/constants/theme";
+import { ClearNotificationsButton } from "@/features/notification/components/ClearNotificationsButton";
+import NotificationFilterTabs from "@/features/notification/components/NotificationFilterTabs";
+import NotificationItem from "@/features/notification/components/NotificationItem";
+import { useClearNotifications } from "@/features/notification/hooks/useClearNotifications";
 import { useNotifications } from "@/features/notification/hooks/useNotifications";
 import { Feather } from "@expo/vector-icons";
 import {
@@ -33,7 +35,10 @@ export default function NotificationsScreen() {
     refresh,
   } = useNotifications();
 
+  const { confirmClear, isClearing } = useClearNotifications(refresh);
+
   const canMarkAll = unreadCount > 0 && !isMarkingAll;
+  const canClear = items.length > 0 && !isLoading;
 
   return (
     <View className="flex-1 bg-canvas">
@@ -41,34 +46,44 @@ export default function NotificationsScreen() {
         <ScreenHeader
           title="Thông báo"
           right={
-            <TouchableOpacity
-              onPress={confirmMarkAllRead}
-              disabled={!canMarkAll}
-              activeOpacity={0.8}
-              className={`flex-row items-center justify-center h-10 px-4 rounded-full border ${
-                canMarkAll
-                  ? "bg-primary border-primary"
-                  : "bg-canvas border-line"
-              }`}
-              style={canMarkAll ? SHADOWS.float : undefined}
-            >
-              {isMarkingAll ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Feather
-                  name="check-circle"
-                  size={18}
-                  color={canMarkAll ? "#FFFFFF" : COLORS.inkMuted}
-                />
-              )}
-              <Text
-                className={`ml-2 text-sm font-bold ${
-                  canMarkAll ? "text-white" : "text-ink-muted"
+            <View className="flex-row items-center">
+              <TouchableOpacity
+                onPress={confirmMarkAllRead}
+                disabled={!canMarkAll}
+                activeOpacity={0.8}
+                className={`flex-row items-center justify-center h-10 px-3 rounded-full border ${
+                  canMarkAll
+                    ? "bg-primary border-primary"
+                    : "bg-canvas border-line"
                 }`}
+                style={canMarkAll ? SHADOWS.float : undefined}
               >
-                Đọc tất cả
-              </Text>
-            </TouchableOpacity>
+                {isMarkingAll ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Feather
+                    name="check-circle"
+                    size={18}
+                    color={canMarkAll ? "#FFFFFF" : COLORS.inkMuted}
+                  />
+                )}
+                <Text
+                  className={`ml-1.5 text-sm font-bold ${
+                    canMarkAll ? "text-white" : "text-ink-muted"
+                  }`}
+                >
+                  Đọc hết
+                </Text>
+              </TouchableOpacity>
+
+              <View style={{ marginLeft: 8 }}>
+                <ClearNotificationsButton
+                  onPress={confirmClear}
+                  loading={isClearing}
+                  disabled={!canClear}
+                />
+              </View>
+            </View>
           }
         />
       </View>

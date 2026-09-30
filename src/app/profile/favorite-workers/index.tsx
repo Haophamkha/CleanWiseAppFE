@@ -1,4 +1,4 @@
-import { FavoriteWorkers } from "@/components/favorite-worker/FavoriteWorkers";
+import { FavoriteWorkers } from "@/features/favorite-worker/components/FavoriteWorkers";
 
 export default function FavoriteWorkersScreen() {
   return <FavoriteWorkers />;

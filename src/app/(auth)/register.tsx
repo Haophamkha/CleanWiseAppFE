@@ -1,10 +1,10 @@
-import { AuthCard, AuthHeading } from "@/components/auth/AuthCard";
 import type { FeatherName } from "@/components/ui";
 import { Button, ErrorText, Input, PasswordInput } from "@/components/ui";
 import { COLORS } from "@/constants/theme";
+import { AuthCard, AuthHeading } from "@/features/auth/components/AuthCard";
 import {
-  useRegister,
-  type RegisterFormKey,
+    useRegister,
+    type RegisterFormKey,
 } from "@/features/auth/hooks/useRegister";
 import { Feather } from "@expo/vector-icons";
 import { Link, router } from "expo-router";

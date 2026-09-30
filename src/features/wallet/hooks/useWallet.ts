@@ -1,9 +1,9 @@
-import { useIdempotencyKey } from "@/hooks/useIdempotencyKey";
-import { useRefreshControl } from "@/hooks/useRefreshControl";
+import { useIdempotencyKey } from "@/features/booking/hooks/useIdempotencyKey";
 import {
     useGetWalletQuery,
     useRequestWithdrawMutation,
-} from "@/services/walletApi";
+} from "@/features/wallet/api/walletApi";
+import { useRefreshControl } from "@/hooks/useRefreshControl";
 import { useState } from "react";
 import { Alert } from "react-native";
 

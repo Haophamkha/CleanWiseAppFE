@@ -2,9 +2,9 @@ import {
     useClaimVoucherByCodeMutation,
     useGetMyVouchersQuery,
     useGetPublicVouchersQuery,
-} from "@/services/voucherApi";
+} from "@/features/voucher/api/voucherApi";
+import type { UserVoucher, Voucher } from "@/features/voucher/types/Voucher";
 import { useAppSelector } from "@/store/hooks";
-import type { UserVoucher, Voucher } from "@/types/Voucher";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import { useMemo, useState } from "react";
 import { Keyboard } from "react-native";

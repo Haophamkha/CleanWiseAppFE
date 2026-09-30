@@ -2,7 +2,7 @@ import { ROUTES } from "@/config/constants";
 import {
     useCreatePaymentLinkMutation,
     useGetBookingDetailQuery,
-} from "@/services/bookingApi";
+} from "@/features/booking/api/bookingApi";
 import { formatVnd } from "@/utils/currency";
 import { router, useLocalSearchParams } from "expo-router";
 import * as WebBrowser from "expo-web-browser";

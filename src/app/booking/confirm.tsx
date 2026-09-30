@@ -1,15 +1,15 @@
-import { AddressSummaryCard } from "@/components/booking/AddressSummaryCard";
-import { IconRow } from "@/components/booking/IconRow";
-import { PaymentMethodSheet } from "@/components/booking/PaymentMethodSheet";
-import { ServiceOptionsSummary } from "@/components/booking/ServiceOptionsSummary";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { BookingVoucherModal } from "@/components/voucher/BookingVoucherModal";
 import { COLORS, RADIUS, SHADOWS } from "@/constants/theme";
+import { AddressSummaryCard } from "@/features/booking/components/AddressSummaryCard";
+import { IconRow } from "@/features/booking/components/IconRow";
+import { PaymentMethodSheet } from "@/features/booking/components/PaymentMethodSheet";
+import { ServiceOptionsSummary } from "@/features/booking/components/ServiceOptionsSummary";
 import {
-  PAYMENT_METHODS,
-  useBookingConfirm,
+    PAYMENT_METHODS,
+    useBookingConfirm,
 } from "@/features/booking/hooks/useBookingConfirm";
+import { BookingVoucherModal } from "@/features/voucher/components/BookingVoucherModal";
 import { formatVnd } from "@/utils/currency";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";

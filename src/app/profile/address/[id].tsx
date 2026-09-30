@@ -1,22 +1,22 @@
 // app/profile/address/[id].tsx
-import ScreenContainer from "@/components/ScreenContainer";
-import AddressForm, {
-  FormSectionTitle,
-} from "@/components/address/AddressForm";
-import DefaultAddressSwitch from "@/components/address/DefaultAddressSwitch";
-import { MapPickButton } from "@/components/address/MapPickButton";
-import ProvinceWardPicker from "@/components/address/ProvinceWardPicker";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
+import ScreenContainer from "@/components/ScreenContainer";
 import { Button, EmptyState, ErrorText } from "@/components/ui";
 import { COLORS } from "@/constants/theme";
+import AddressForm, {
+    FormSectionTitle,
+} from "@/features/address/components/AddressForm";
+import DefaultAddressSwitch from "@/features/address/components/DefaultAddressSwitch";
+import { MapPickButton } from "@/features/address/components/MapPickButton";
+import ProvinceWardPicker from "@/features/address/components/ProvinceWardPicker";
 import { useEditAddress } from "@/features/address/hooks/useEditAddress";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
-  ActivityIndicator,
-  ScrollView,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    ScrollView,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 export default function EditAddressScreen() {

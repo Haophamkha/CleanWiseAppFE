@@ -1,4 +1,4 @@
-import type { FormField } from "@/types/Service";
+import type { FormField } from "@/features/service/types/Service";
 import { z } from "zod";
 
 const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;

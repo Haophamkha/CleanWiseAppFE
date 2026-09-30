@@ -1,5 +1,5 @@
 import { COLORS } from "@/constants/theme";
-import { useGetUnreadCountQuery } from "@/services/notificationApi";
+import { useGetUnreadCountQuery } from "@/features/notification/api/notificationApi";
 import { useAppSelector } from "@/store/hooks";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -8,10 +8,8 @@ import { Text, TouchableOpacity, View } from "react-native";
 const UNREAD_COUNT_POLL_MS = 15000;
 
 export function NotificationBellButton() {
-  useGetUnreadCountQuery(undefined, {
-    refetchOnFocus: true,
-    pollingInterval: UNREAD_COUNT_POLL_MS,
-  });
+  const user = useAppSelector((s) => s.auth.user);
+  useGetUnreadCountQuery(undefined, { skip: !user });
   const unreadCount = useAppSelector((s) => s.notification.unreadCount);
 
   return (

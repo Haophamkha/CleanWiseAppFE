@@ -1,6 +1,9 @@
-import { useGetBookingsQuery } from "@/services/bookingApi";
+import { useGetBookingsQuery } from "@/features/booking/api/bookingApi";
+import type {
+    BookingListItem,
+    BookingStatus,
+} from "@/features/booking/types/Booking";
 import { useAppSelector } from "@/store/hooks";
-import type { BookingListItem, BookingStatus } from "@/types/Booking";
 import { useEffect, useState } from "react";
 
 export type BookingTab = BookingStatus | "ALL";

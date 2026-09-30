@@ -1,11 +1,14 @@
 // app/profile/address/choose-method.tsx
 import ScreenContainer from "@/components/ScreenContainer";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
-import { Card, type FeatherName } from "@/components/ui";
+import type { FeatherName } from "@/components/ui";
 import { COLORS } from "@/constants/theme";
 import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { Text, TouchableOpacity, View } from "react-native";
+import { useRef } from "react";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+
+const RADIUS = 20;
 
 function MethodCard({
   icon,
@@ -18,19 +21,116 @@ function MethodCard({
   description: string;
   onPress: () => void;
 }) {
+  // 0 = bình thường, 1 = đang nhấn
+  const press = useRef(new Animated.Value(0)).current;
+
+  const animateTo = (value: number) =>
+    Animated.timing(press, {
+      toValue: value,
+      duration: value === 1 ? 110 : 180,
+      useNativeDriver: true,
+    }).start();
+
+  const scale = press.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 0.98],
+  });
+  const arrowX = press.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 4],
+  });
+  const tintOpacity = press.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 0.06],
+  });
+
   return (
-    <TouchableOpacity activeOpacity={0.85} onPress={onPress}>
-      <Card className="flex-row items-center">
-        <View className="w-12 h-12 rounded-full bg-primary-soft items-center justify-center mr-4">
-          <Feather name={icon} size={22} color={COLORS.primary} />
+    <Animated.View style={{ transform: [{ scale }] }}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={() => animateTo(1)}
+        onPressOut={() => animateTo(0)}
+        accessibilityRole="button"
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            padding: 16,
+            borderRadius: RADIUS,
+            backgroundColor: COLORS.surface,
+            borderWidth: 1.5,
+            borderColor: COLORS.line,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.05,
+            shadowRadius: 8,
+            elevation: 2,
+          }}
+        >
+          {/* Lớp phủ màu chính nhạt khi nhấn */}
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                borderRadius: RADIUS,
+                backgroundColor: COLORS.primary,
+                opacity: tintOpacity,
+              },
+            ]}
+          />
+          {/* Viền màu chính hiện dần khi nhấn */}
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                borderRadius: RADIUS,
+                borderWidth: 1.5,
+                borderColor: COLORS.primary,
+                opacity: press,
+              },
+            ]}
+          />
+
+          {/* Vòng icon: nền nhạt cố định */}
+          <View
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 26,
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 14,
+            }}
+          >
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  borderRadius: 26,
+                  backgroundColor: COLORS.primary,
+                  opacity: 0.12,
+                },
+              ]}
+            />
+            <Feather name={icon} size={24} color={COLORS.primary} />
+          </View>
+
+          <View style={{ flex: 1, paddingRight: 8 }}>
+            <Text className="text-base font-bold text-ink mb-1">{title}</Text>
+            <Text className="text-sm text-ink-soft" style={{ lineHeight: 19 }}>
+              {description}
+            </Text>
+          </View>
+
+          <Animated.View style={{ transform: [{ translateX: arrowX }] }}>
+            <Feather name="chevron-right" size={22} color={COLORS.inkMuted} />
+          </Animated.View>
         </View>
-        <View className="flex-1">
-          <Text className="text-base font-bold text-ink mb-0.5">{title}</Text>
-          <Text className="text-sm text-ink-soft">{description}</Text>
-        </View>
-        <Feather name="chevron-right" size={20} color={COLORS.inkMuted} />
-      </Card>
-    </TouchableOpacity>
+      </Pressable>
+    </Animated.View>
   );
 }
 

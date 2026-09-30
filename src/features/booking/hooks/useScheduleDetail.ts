@@ -1,4 +1,4 @@
-import type { BookingScheduleDetail } from "@/types/Booking";
+import type { BookingScheduleDetail } from "@/features/booking/types/Booking";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 

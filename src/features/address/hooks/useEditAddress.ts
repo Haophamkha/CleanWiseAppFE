@@ -1,12 +1,12 @@
 // features/address/hooks/useEditAddress.ts
 import { useConfirm } from "@/components/common/ConfirmProvider";
-import { useAddressForm } from "@/features/address/hooks/useAddressForm";
 import {
     useDeleteAddressMutation,
     useGetAddressDetailQuery,
     useSetDefaultAddressMutation,
     useUpdateAddressMutation,
-} from "@/services/addressApi";
+} from "@/features/address/api/addressApi";
+import { useAddressForm } from "@/features/address/hooks/useAddressForm";
 import { getApiErrorMessage } from "@/utils/apiError";
 import { showErrorToast } from "@/utils/toast";
 import { router, useLocalSearchParams } from "expo-router";

@@ -1,7 +1,7 @@
 import {
     useCancelBookingMutation,
     useGetBookingDetailQuery,
-} from "@/services/bookingApi";
+} from "@/features/booking/api/bookingApi";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Alert } from "react-native";

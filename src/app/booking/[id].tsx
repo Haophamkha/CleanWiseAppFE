@@ -1,17 +1,17 @@
-import { BookingBottomBar } from "@/components/booking/BookingBottomBar";
-import { BookingHeader } from "@/components/booking/BookingHeader";
-import { BookingProgressBar } from "@/components/booking/BookingProgressBar";
-import { CancelBookingModal } from "@/components/booking/CancelBookingModal";
-import { PackageScheduleSection } from "@/components/booking/PackageScheduleSection";
-import { ReceiptCard } from "@/components/booking/ReceiptCard";
-import { ReviewFeedbackButtons } from "@/components/booking/ReviewFeedbackButtons";
-import { ScheduleCard } from "@/components/booking/ScheduleCard";
-import { SectionTitle } from "@/components/booking/SectionTitle";
-import { ServiceOptionsSummary } from "@/components/booking/ServiceOptionsSummary";
-import { SingleScheduleSection } from "@/components/booking/SingleScheduleSection";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { COLORS } from "@/constants/theme";
+import { BookingBottomBar } from "@/features/booking/components/BookingBottomBar";
+import { BookingCodeCard } from "@/features/booking/components/BookingCodeCard";
+import { BookingHeader } from "@/features/booking/components/BookingHeader";
+import { BookingProgressBar } from "@/features/booking/components/BookingProgressBar";
+import { CancelBookingModal } from "@/features/booking/components/CancelBookingModal";
+import { PackageScheduleSection } from "@/features/booking/components/PackageScheduleSection";
+import { ReceiptCard } from "@/features/booking/components/ReceiptCard";
+import { ScheduleCard } from "@/features/booking/components/ScheduleCard";
+import { SectionTitle } from "@/features/booking/components/SectionTitle";
+import { ServiceOptionsSummary } from "@/features/booking/components/ServiceOptionsSummary";
+import { SingleScheduleSection } from "@/features/booking/components/SingleScheduleSection";
 import { useBookingDetail } from "@/features/booking/hooks/useBookingDetail";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -91,7 +91,6 @@ export default function BookingDetailScreen() {
     <View className="flex-1 bg-canvas">
       <BookingHeader
         serviceName={booking.service_name}
-        bookingCode={booking.booking_code}
         status={booking.status}
       />
 
@@ -104,6 +103,8 @@ export default function BookingDetailScreen() {
           paddingBottom: isCancellable ? 24 : 24 + insets.bottom,
         }}
       >
+        <BookingCodeCard code={booking.booking_code} large />
+
         <BookingProgressBar status={booking.status} />
 
         {isPackage ? (
@@ -122,11 +123,6 @@ export default function BookingDetailScreen() {
             )}
             {singleSchedule && (
               <SingleScheduleSection schedule={singleSchedule} />
-            )}
-            {singleSchedule?.status === "COMPLETED" && (
-              <View className="mb-5">
-                <ReviewFeedbackButtons />
-              </View>
             )}
           </>
         )}
