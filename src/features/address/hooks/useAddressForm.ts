@@ -1,6 +1,7 @@
 // features/address/hooks/useAddressForm.ts
 import type { AddressFormValues } from "@/features/address/components/AddressForm";
 import type { Address, AddressPayload } from "@/features/address/types/Address";
+import { nameKey } from "@/features/address/utils/regionName";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 
@@ -24,6 +25,7 @@ export function useAddressForm(map: MapResultParams) {
   const [values, setValues] = useState<AddressFormValues>(EMPTY_VALUES);
   const [city, setCity] = useState("");
   const [ward, setWard] = useState("");
+  const [wardCode, setWardCode] = useState("");
   const [latitude, setLatitude] = useState<string | undefined>(undefined);
   const [longitude, setLongitude] = useState<string | undefined>(undefined);
   const [error, setError] = useState("");
@@ -35,13 +37,29 @@ export function useAddressForm(map: MapResultParams) {
     }, []),
   );
 
-  // Nhận kết quả từ màn chọn vị trí
+  // Nhận kết quả từ màn chọn vị trí.
+  // wardCode do ProvinceWardPicker điền sau khi khớp tên phường với BE;
+  // ở đây chỉ xóa khi tỉnh/phường thật sự đổi để không giữ mã cũ.
   useEffect(() => {
     if (!map.latitude || !map.longitude) return;
     setLatitude(map.latitude);
     setLongitude(map.longitude);
+
+    const provinceChanged =
+      !!map.province && nameKey(map.province) !== nameKey(city);
     if (map.province) setCity(map.province);
-    if (map.ward) setWard(map.ward);
+
+    if (map.ward) {
+      if (provinceChanged || nameKey(map.ward) !== nameKey(ward)) {
+        setWardCode("");
+      }
+      setWard(map.ward);
+    } else {
+      // Không xác định được phường ở vị trí mới -> bắt chọn lại
+      setWard("");
+      setWardCode("");
+    }
+
     if (map.addressLine) {
       setValues((prev) => ({ ...prev, address_line: map.addressLine! }));
     }
@@ -50,9 +68,14 @@ export function useAddressForm(map: MapResultParams) {
   const change = (field: keyof AddressFormValues, value: string) =>
     setValues((prev) => ({ ...prev, [field]: value }));
 
-  const pickProvinceWard = (province: string, selectedWard: string) => {
+  const pickProvinceWard = (
+    province: string,
+    selectedWard: string,
+    selectedWardCode: string = "",
+  ) => {
     setCity(province);
     setWard(selectedWard);
+    setWardCode(selectedWardCode);
   };
 
   // Nạp địa chỉ có sẵn (màn sửa). keepLocation: giữ vị trí vừa chọn từ bản đồ
@@ -66,6 +89,7 @@ export function useAddressForm(map: MapResultParams) {
     if (!keepLocation) {
       setCity(a.city ?? "");
       setWard(a.ward ?? "");
+      setWardCode(a.ward_code ?? "");
       setLatitude(a.latitude ?? undefined);
       setLongitude(a.longitude ?? undefined);
     }
@@ -80,8 +104,16 @@ export function useAddressForm(map: MapResultParams) {
       city,
       ward,
     ].every((v) => v.trim());
-    setError(ok ? "" : "Vui lòng nhập đầy đủ thông tin");
-    return ok;
+    if (!ok) {
+      setError("Vui lòng nhập đầy đủ thông tin");
+      return false;
+    }
+    if (!wardCode) {
+      setError("Vui lòng chọn phường/xã từ danh sách");
+      return false;
+    }
+    setError("");
+    return true;
   };
 
   const buildPayload = (): AddressPayload => ({
@@ -91,6 +123,7 @@ export function useAddressForm(map: MapResultParams) {
     address_line: values.address_line.trim(),
     ward: ward.trim(),
     city: city.trim(),
+    ward_code: wardCode,
     latitude,
     longitude,
   });
@@ -108,6 +141,7 @@ export function useAddressForm(map: MapResultParams) {
     values,
     city,
     ward,
+    wardCode,
     error,
     setError,
     isNavigating,

@@ -34,5 +34,11 @@ export function getApiErrorMessage(e: any, fallback: string): string {
     if (messages.length > 0) return messages.join(" | ");
   }
 
+  // Dạng mảng thuần ["msg"] (ValidationError raise bằng chuỗi)
+  if (Array.isArray(data)) {
+    const first = data.find((m) => typeof m === "string" && m);
+    if (first) return first;
+  }
+
   return fallback;
 }
