@@ -1,4 +1,9 @@
-import type { Address, AddressPayload } from "@/features/address/types/Address";
+import type {
+  Address,
+  AddressPayload,
+  AreaProvince,
+  AreaWard,
+} from "@/features/address/types/Address";
 import { baseApi } from "@/store/baseApi";
 
 const unwrap = (response: any) =>
@@ -63,7 +68,6 @@ export const addressApi = baseApi.injectEndpoints({
       invalidatesTags: ["Addresses"],
     }),
 
-    // PATCH đặt địa chỉ mặc định
     setDefaultAddress: builder.mutation<Address, number>({
       query: (id) => ({
         url: `/api/customer/addresses/${id}/default/`,
@@ -71,6 +75,20 @@ export const addressApi = baseApi.injectEndpoints({
       }),
       transformResponse: unwrap,
       invalidatesTags: ["Addresses"],
+    }),
+
+    getAreaProvinces: builder.query<AreaProvince[], void>({
+      query: () => ({ url: "/api/worker/provinces/", method: "GET" }),
+      transformResponse: unwrap,
+    }),
+
+    getAreaWards: builder.query<AreaWard[], string>({
+      query: (province_code) => ({
+        url: "/api/worker/areas/",
+        method: "GET",
+        params: { province_code },
+      }),
+      transformResponse: unwrap,
     }),
   }),
 
@@ -84,4 +102,6 @@ export const {
   useUpdateAddressMutation,
   useDeleteAddressMutation,
   useSetDefaultAddressMutation,
+  useGetAreaProvincesQuery,
+  useGetAreaWardsQuery,
 } = addressApi;

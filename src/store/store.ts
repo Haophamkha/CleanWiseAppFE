@@ -1,7 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import { AppState, AppStateStatus } from "react-native";
-import { provinceApi } from "../features/address/api/provinceApi";
 import addressPickerReducer from "../features/address/stores/addressPickerSlice";
 import bookingDraftReducer from "../features/booking/stores/bookingDraftSlice";
 import notificationReducer from "../features/notification/stores/notificationSlice";
@@ -11,14 +10,12 @@ import { baseApi } from "./baseApi";
 export const store = configureStore({
   reducer: {
     [baseApi.reducerPath]: baseApi.reducer,
-    [provinceApi.reducerPath]: provinceApi.reducer,
     auth: authReducer,
     notification: notificationReducer,
     addressPicker: addressPickerReducer,
     bookingDraft: bookingDraftReducer,
   },
-  middleware: (getDefault) =>
-    getDefault().concat(baseApi.middleware, provinceApi.middleware),
+  middleware: (getDefault) => getDefault().concat(baseApi.middleware),
 });
 
 // RTK Query mặc định dựa vào sự kiện `focus` của web để refetch —

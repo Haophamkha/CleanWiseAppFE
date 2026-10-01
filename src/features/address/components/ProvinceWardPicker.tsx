@@ -2,40 +2,37 @@
 import { EmptyState, Input } from "@/components/ui";
 import { COLORS } from "@/constants/theme";
 import {
-    Province,
-    useGetProvincesQuery,
-    useGetWardsByProvinceQuery,
-    Ward,
-} from "@/features/address/api/provinceApi";
+  useGetAreaProvincesQuery,
+  useGetAreaWardsQuery,
+} from "@/features/address/api/addressApi";
+import type { AreaProvince, AreaWard } from "@/features/address/types/Address";
+import { sameName } from "@/features/address/utils/regionName";
 import { Feather } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Modal,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   initialProvince?: string;
   initialWard?: string;
-  onSelect: (province: string, ward: string) => void;
+  onSelect: (province: string, ward: string, wardCode: string) => void;
 };
 
 // Bỏ dấu để gõ "ha noi" vẫn tìm ra "Hà Nội"
-const normalize = (s: string) =>
+const fold = (s: string) =>
   s
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/đ/g, "d")
     .trim();
-
-const sameName = (a: string, b: string) =>
-  a.trim().toLowerCase() === b.trim().toLowerCase();
 
 function PickerField({
   label,
@@ -81,47 +78,76 @@ export default function ProvinceWardPicker({
   onSelect,
 }: Props) {
   const insets = useSafeAreaInsets();
-  const [selectedProvince, setSelectedProvince] = useState<Province | null>(
+  const [selectedProvince, setSelectedProvince] = useState<AreaProvince | null>(
     null,
   );
-  const [selectedWard, setSelectedWard] = useState<Ward | null>(null);
+  const [selectedWard, setSelectedWard] = useState<AreaWard | null>(null);
   const [pickerVisible, setPickerVisible] = useState<
     "province" | "ward" | null
   >(null);
   const [search, setSearch] = useState("");
+  // ward_code đã báo lên form, tránh gọi onSelect lặp
+  const notified = useRef("");
 
   const { data: provinces, isLoading: loadingProvinces } =
-    useGetProvincesQuery();
-  const { data: wards, isLoading: loadingWards } = useGetWardsByProvinceQuery(
-    selectedProvince?.code ?? 0,
-    { skip: !selectedProvince },
+    useGetAreaProvincesQuery();
+  // currentData: không dùng nhầm danh sách phường của tỉnh trước
+  const { currentData: wards, isFetching: loadingWards } = useGetAreaWardsQuery(
+    selectedProvince?.province_code ?? "",
+    {
+      skip: !selectedProvince,
+    },
   );
 
-  // Điền tỉnh ban đầu (màn sửa, hoặc kết quả từ bản đồ)
+  // Điền tỉnh từ tên (màn sửa, hoặc kết quả từ bản đồ)
   useEffect(() => {
     if (!initialProvince || !provinces?.length) return;
-    const province = provinces.find((p) => sameName(p.name, initialProvince));
+    const province = provinces.find((p) => sameName(p.city, initialProvince));
     if (province) setSelectedProvince(province);
   }, [initialProvince, provinces]);
 
-  // Điền phường/xã sau khi danh sách phường đã tải
+  // Điền phường từ tên, rồi báo ward_code lên form.
+  // Không khớp được -> xóa phường để người dùng chọn lại.
   useEffect(() => {
     if (!initialWard) {
+      notified.current = "";
       setSelectedWard(null);
       return;
     }
-    if (!wards?.length) return;
+    if (!selectedProvince || !wards) return;
+    // Đang chờ selectedProvince đồng bộ với initialProvince mới
+    if (!sameName(selectedProvince.city, initialProvince)) return;
+
     const ward = wards.find((w) => sameName(w.name, initialWard));
-    if (ward) setSelectedWard(ward);
-  }, [initialWard, wards]);
+    setSelectedWard(ward ?? null);
+    if (ward) {
+      if (notified.current !== ward.ward_code) {
+        notified.current = ward.ward_code;
+        onSelect(selectedProvince.city, ward.name, ward.ward_code);
+      }
+    } else {
+      notified.current = "";
+      onSelect(selectedProvince.city, "", "");
+    }
+  }, [initialProvince, initialWard, selectedProvince, wards]);
 
   const isProvince = pickerVisible === "province";
-  const items: (Province | Ward)[] = (isProvince ? provinces : wards) ?? [];
-  const keyword = normalize(search);
+  const items: (AreaProvince | AreaWard)[] =
+    (isProvince ? provinces : wards) ?? [];
+  const labelOf = (item: AreaProvince | AreaWard) =>
+    isProvince ? (item as AreaProvince).city : (item as AreaWard).name;
+  const codeOf = (item: AreaProvince | AreaWard) =>
+    isProvince
+      ? (item as AreaProvince).province_code
+      : (item as AreaWard).ward_code;
+
+  const keyword = fold(search);
   const filtered = keyword
-    ? items.filter((item) => normalize(item.name).includes(keyword))
+    ? items.filter((item) => fold(labelOf(item)).includes(keyword))
     : items;
-  const selectedCode = isProvince ? selectedProvince?.code : selectedWard?.code;
+  const selectedCode = isProvince
+    ? selectedProvince?.province_code
+    : selectedWard?.ward_code;
   const loading = isProvince ? loadingProvinces : loadingWards;
 
   const closePicker = () => {
@@ -129,14 +155,20 @@ export default function ProvinceWardPicker({
     setSearch("");
   };
 
-  const handlePick = (item: Province | Ward) => {
+  const handlePick = (item: AreaProvince | AreaWard) => {
     if (isProvince) {
-      setSelectedProvince(item as Province);
+      const province = item as AreaProvince;
+      setSelectedProvince(province);
       setSelectedWard(null);
-      onSelect(item.name, "");
+      notified.current = "";
+      onSelect(province.city, "", "");
     } else {
-      setSelectedWard(item as Ward);
-      if (selectedProvince) onSelect(selectedProvince.name, item.name);
+      const ward = item as AreaWard;
+      setSelectedWard(ward);
+      notified.current = ward.ward_code;
+      if (selectedProvince) {
+        onSelect(selectedProvince.city, ward.name, ward.ward_code);
+      }
     }
     closePicker();
   };
@@ -145,7 +177,7 @@ export default function ProvinceWardPicker({
     <View>
       <PickerField
         label="Tỉnh/Thành phố"
-        value={selectedProvince?.name}
+        value={selectedProvince?.city}
         placeholder="Chọn tỉnh/thành phố"
         onPress={() => setPickerVisible("province")}
       />
@@ -198,7 +230,7 @@ export default function ProvinceWardPicker({
           ) : (
             <FlatList
               data={filtered}
-              keyExtractor={(item) => String(item.code)}
+              keyExtractor={(item) => codeOf(item)}
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={{
                 paddingHorizontal: 20,
@@ -212,14 +244,14 @@ export default function ProvinceWardPicker({
                 >
                   <Text
                     className={`flex-1 mr-3 text-base ${
-                      item.code === selectedCode
+                      codeOf(item) === selectedCode
                         ? "font-semibold text-primary"
                         : "text-ink"
                     }`}
                   >
-                    {item.name}
+                    {labelOf(item)}
                   </Text>
-                  {item.code === selectedCode && (
+                  {codeOf(item) === selectedCode && (
                     <Feather name="check" size={18} color={COLORS.primary} />
                   )}
                 </TouchableOpacity>

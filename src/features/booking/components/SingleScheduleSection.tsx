@@ -9,21 +9,12 @@ import {
   Image,
   LayoutAnimation,
   Modal,
-  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
-  UIManager,
   View,
 } from "react-native";
 import { SectionTitle } from "./SectionTitle";
-
-if (
-  Platform.OS === "android" &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 type FeatherName = keyof typeof Feather.glyphMap;
 
