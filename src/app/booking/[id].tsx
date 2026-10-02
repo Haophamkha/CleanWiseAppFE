@@ -122,7 +122,11 @@ export default function BookingDetailScreen() {
               />
             )}
             {singleSchedule && (
-              <SingleScheduleSection schedule={singleSchedule} />
+              <SingleScheduleSection
+                schedule={singleSchedule}
+                bookingId={booking.id}
+                bookingStatus={booking.status}
+              />
             )}
           </>
         )}

@@ -1,7 +1,11 @@
 import { Card } from "@/components/ui/Card";
 import { COLORS } from "@/constants/theme";
-import { ReviewFeedbackButtons } from "@/features/booking/components/ReviewFeedbackButtons";
-import type { BookingScheduleDetail } from "@/features/booking/types/Booking";
+import { ScheduleReviewActions } from "@/features/review/components/ScheduleReviewActions";
+import type {
+  BookingScheduleDetail,
+  BookingStatus,
+} from "@/features/booking/types/Booking";
+import { ComplaintModal } from "@/features/complaint/components/ComplaintModal";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -171,9 +175,14 @@ function PhotoRow({
 
 export function SingleScheduleSection({
   schedule,
+  bookingId,
+  bookingStatus,
 }: {
   schedule: BookingScheduleDetail;
+  bookingId: number;
+  bookingStatus: BookingStatus;
 }) {
+  const [complaintVisible, setComplaintVisible] = useState(false);
   const [viewerImage, setViewerImage] = useState<string | null>(null);
   const [photosOpen, setPhotosOpen] = useState(false);
 
@@ -185,6 +194,12 @@ export function SingleScheduleSection({
   const config = STATUS_CONFIG[schedule.status] ?? STATUS_CONFIG.PENDING;
   const images = schedule.images ?? [];
   const canReview = schedule.status === "COMPLETED";
+  const canComplaint = [
+    "PENDING",
+    "ASSIGNED",
+    "IN_PROGRESS",
+    "COMPLETED",
+  ].includes(bookingStatus);
   const worker = schedule.worker;
 
   const groupedImages = images.reduce<Record<string, typeof images>>(
@@ -363,8 +378,25 @@ export function SingleScheduleSection({
           )}
         </View>
 
-        {canReview && <ReviewFeedbackButtons style={{ marginTop: 12 }} />}
+        {(canReview || canComplaint) && (
+          <ScheduleReviewActions
+            assignmentId={schedule.assignment_id}
+            completed={canReview}
+            onFeedback={
+              canComplaint ? () => setComplaintVisible(true) : undefined
+            }
+            style={{ marginTop: 12 }}
+          />
+        )}
       </Card>
+
+      <ComplaintModal
+        visible={complaintVisible}
+        bookingId={bookingId}
+        scheduleId={schedule.id}
+        bookingStatus={bookingStatus}
+        onClose={() => setComplaintVisible(false)}
+      />
 
       <Modal
         visible={!!viewerImage}
