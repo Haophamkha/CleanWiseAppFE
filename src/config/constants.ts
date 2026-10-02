@@ -12,6 +12,7 @@ export const ROUTES = {
   VOUCHERS: "/vouchers",
   WALLET: "/profile/wallets/wallet",
   FAVORITE_WORKERS: "/profile/favorite-workers",
+  MY_REVIEWS: "/profile/reviews",
   PAYMENT_METHODS: "/profile/payment-methods",
   BOOKING_CONFIRM: "/booking/confirm",
   ADDRESS: "/profile/address",

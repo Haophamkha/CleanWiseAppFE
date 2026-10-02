@@ -1,21 +1,21 @@
 import { COLORS, RADIUS, SHADOWS } from "@/constants/theme";
-import { ReviewFeedbackButtons } from "@/features/booking/components/ReviewFeedbackButtons";
+import { ScheduleReviewActions } from "@/features/review/components/ScheduleReviewActions";
 import {
-    useScheduleDetail,
-    type ScheduleImage,
+  useScheduleDetail,
+  type ScheduleImage,
 } from "@/features/booking/hooks/useScheduleDetail";
 import { ComplaintModal } from "@/features/complaint/components/ComplaintModal";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import type { ReactNode } from "react";
 import {
-    Image,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -713,15 +713,10 @@ export function ScheduleDetail() {
           </Card>
 
           {s.canComplaint && (
-            <ReviewFeedbackButtons
+            <ScheduleReviewActions
+              assignmentId={schedule.assignment_id}
+              completed={s.canReview}
               style={{ marginTop: 6 }}
-              onReview={
-                s.canReview
-                  ? () => {
-                      // TODO: mở màn hình đánh giá
-                    }
-                  : undefined
-              }
               onFeedback={() => s.setComplaintVisible(true)}
             />
           )}

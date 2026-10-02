@@ -347,6 +347,7 @@ export const baseApi = createApi({
   baseQuery: axiosBaseQuery(),
 
   tagTypes: [
+    "Reviews",
     "ChatConversations",
     "Profile",
     "Addresses",

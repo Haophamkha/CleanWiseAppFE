@@ -110,7 +110,7 @@ export function ConversationItem({
               fontWeight: hasUnread ? "600" : "400",
             }}
           >
-            {preview}
+            {preview || "Chưa có tin nhắn"}
           </Text>
           {hasUnread && (
             <View
