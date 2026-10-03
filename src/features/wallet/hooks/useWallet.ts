@@ -1,7 +1,8 @@
 import { useIdempotencyKey } from "@/features/booking/hooks/useIdempotencyKey";
 import {
-    useGetWalletQuery,
-    useRequestWithdrawMutation,
+  useGetWalletQuery,
+  useGetWalletTransactionsQuery,
+  useRequestWithdrawMutation,
 } from "@/features/wallet/api/walletApi";
 import { useRefreshControl } from "@/hooks/useRefreshControl";
 import { useState } from "react";
@@ -21,7 +22,16 @@ export function useWallet() {
   } = useGetWalletQuery();
   const balance = wallet ? Number(wallet.balance) : 0;
 
-  const { refreshing, onRefresh } = useRefreshControl(refetch);
+  const {
+    data: txData,
+    isLoading: txLoading,
+    refetch: refetchTx,
+  } = useGetWalletTransactionsQuery({ page_size: 20 });
+
+  const { refreshing, onRefresh } = useRefreshControl(() =>
+    Promise.all([refetch(), refetchTx()]),
+  );
+
   const isInitialLoading = walletLoading && !wallet;
 
   return {
@@ -31,6 +41,8 @@ export function useWallet() {
     isInitialLoading,
     isBackgroundFetching: walletFetching && !isInitialLoading && !refreshing,
     withdrawVisible,
+    transactions: txData?.results ?? [],
+    txLoading,
     openWithdraw: () => setWithdrawVisible(true),
     closeWithdraw: () => setWithdrawVisible(false),
   };

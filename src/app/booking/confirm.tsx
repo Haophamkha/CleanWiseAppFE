@@ -5,10 +5,8 @@ import { AddressSummaryCard } from "@/features/booking/components/AddressSummary
 import { IconRow } from "@/features/booking/components/IconRow";
 import { PaymentMethodSheet } from "@/features/booking/components/PaymentMethodSheet";
 import { ServiceOptionsSummary } from "@/features/booking/components/ServiceOptionsSummary";
-import {
-    PAYMENT_METHODS,
-    useBookingConfirm,
-} from "@/features/booking/hooks/useBookingConfirm";
+
+import { useBookingConfirm } from "@/features/booking/hooks/useBookingConfirm";
 import { BookingVoucherModal } from "@/features/voucher/components/BookingVoucherModal";
 import { formatVnd } from "@/utils/currency";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -73,6 +71,7 @@ export default function BookingConfirmScreen() {
     paymentModalVisible,
     setPaymentModalVisible,
     confirm,
+    paymentOptions,
   } = useBookingConfirm();
 
   if (!service) {
@@ -272,9 +271,16 @@ export default function BookingConfirmScreen() {
                 color={COLORS.primaryDark}
               />
             </View>
-            <Text className="flex-1 text-[15px] font-semibold text-ink">
-              {selectedPaymentMethod.label}
-            </Text>
+            <View className="flex-1">
+              <Text className="text-[15px] font-semibold text-ink">
+                {selectedPaymentMethod.label}
+              </Text>
+              {!!selectedPaymentMethod.subtitle && (
+                <Text className="text-ink-muted text-xs mt-0.5">
+                  {selectedPaymentMethod.subtitle}
+                </Text>
+              )}
+            </View>
             <Text className="text-xs font-semibold text-primary mr-1">Đổi</Text>
             <Feather name="chevron-right" size={18} color={COLORS.inkMuted} />
           </TouchableOpacity>
@@ -317,7 +323,7 @@ export default function BookingConfirmScreen() {
       <PaymentMethodSheet
         visible={paymentModalVisible}
         value={paymentMethod}
-        options={PAYMENT_METHODS}
+        options={paymentOptions}
         onSelect={(v) => {
           setPaymentMethod(v);
           setPaymentModalVisible(false);

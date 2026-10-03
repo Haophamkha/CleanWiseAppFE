@@ -1,10 +1,10 @@
 import { COLORS, RADIUS, SHADOWS } from "@/constants/theme";
-import { ScheduleReviewActions } from "@/features/review/components/ScheduleReviewActions";
 import {
   useScheduleDetail,
   type ScheduleImage,
 } from "@/features/booking/hooks/useScheduleDetail";
 import { ComplaintModal } from "@/features/complaint/components/ComplaintModal";
+import { ScheduleReviewActions } from "@/features/review/components/ScheduleReviewActions";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import type { ReactNode } from "react";
@@ -53,7 +53,7 @@ const STATUS_CONFIG: Record<
     icon: "x-circle",
   },
   MISSED: {
-    label: "Bỏ lỡ",
+    label: "Không có nhân viên nhận",
     bg: COLORS.canvas,
     text: COLORS.inkSoft,
     icon: "alert-triangle",

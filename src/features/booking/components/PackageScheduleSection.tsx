@@ -23,10 +23,14 @@ export function PackageScheduleSection({
   schedules,
   bookingId,
   bookingStatus,
+  canCancelSchedule,
+  onCancelSchedule,
 }: {
   schedules: BookingScheduleDetail[];
   bookingId: number;
   bookingStatus: string;
+  canCancelSchedule?: (s: BookingScheduleDetail) => boolean;
+  onCancelSchedule?: (s: BookingScheduleDetail) => void;
 }) {
   const displaySchedule = useMemo(
     () => pickUpcomingSchedule(schedules),
@@ -52,7 +56,11 @@ export function PackageScheduleSection({
 
   const listItems = restSchedules.map((schedule) => (
     <View key={schedule.id} className="mb-3">
-      <ScheduleItemCard schedule={schedule} onPress={openDetail} />
+      <ScheduleItemCard
+        schedule={schedule}
+        onPress={openDetail}
+        onCancel={canCancelSchedule?.(schedule) ? onCancelSchedule : undefined}
+      />
     </View>
   ));
 
@@ -61,7 +69,13 @@ export function PackageScheduleSection({
       <SectionTitle icon="user">Buổi làm việc sắp tới</SectionTitle>
 
       {displaySchedule && (
-        <ScheduleItemCard schedule={displaySchedule} onPress={openDetail} />
+        <ScheduleItemCard
+          schedule={displaySchedule}
+          onPress={openDetail}
+          onCancel={
+            canCancelSchedule?.(displaySchedule) ? onCancelSchedule : undefined
+          }
+        />
       )}
 
       {restSchedules.length > 0 &&

@@ -1,26 +1,28 @@
 import {
-    useCreateComplaintMutation,
-    useGetComplaintDetailQuery,
-    useGetComplaintIssueTypesQuery,
-    useGetComplaintsQuery,
+  useCreateComplaintMutation,
+  useGetComplaintDetailQuery,
+  useGetComplaintIssueTypesQuery,
+  useGetComplaintsQuery,
 } from "@/features/complaint/api/complaintApi";
 import type {
-    ComplaintStage,
-    PickedFile,
+  ComplaintStage,
+  PickedFile,
 } from "@/features/complaint/types/Complaint";
 import { COLORS } from "@/features/service/components/formFieldShared";
+import { getApiErrorMessage } from "@/utils/apiError";
+import { formatVnd } from "@/utils/currency";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import { Feather } from "@expo/vector-icons";
 import { useEffect, useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    Image,
-    Modal,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  Modal,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { ComplaintAttachmentPicker } from "./ComplaintAttachmentPicker";
 
@@ -123,10 +125,12 @@ export function ComplaintModal({
       showErrorToast("Không thể gửi phản hồi", message);
       return;
     }
+
     if (!issueTypeId) {
       setError("Vui lòng chọn lý do phản hồi");
       return;
     }
+
     if (!content.trim()) {
       setError("Vui lòng mô tả chi tiết vấn đề gặp phải");
       return;
@@ -147,21 +151,17 @@ export function ComplaintModal({
         "Đã gửi phản hồi",
         "Chúng tôi sẽ xem xét và phản hồi bạn sớm nhất",
       );
+
       resetAndClose();
       onSuccess?.();
     } catch (err: any) {
-      const message =
-        err?.data?.issue_type?.[0] ||
-        err?.data?.schedule?.[0] ||
-        err?.data?.booking?.[0] ||
-        err?.data?.content?.[0] ||
-        err?.data?.attachments?.[0] ||
-        err?.data?.message ||
-        err?.data?.detail ||
-        "Gửi phản hồi thất bại, vui lòng thử lại";
+      const message = getApiErrorMessage(
+        err,
+        "Gửi phản hồi thất bại, vui lòng thử lại",
+      );
 
-      setError(String(message));
-      showErrorToast("Không thể gửi phản hồi", String(message));
+      setError(message);
+      showErrorToast("Không thể gửi phản hồi", message);
     }
   };
 
@@ -196,6 +196,7 @@ export function ComplaintModal({
         >
           Lý do
         </Text>
+
         <Text
           className="text-[15px] font-medium mb-3"
           style={{ color: COLORS.text }}
@@ -209,6 +210,7 @@ export function ComplaintModal({
         >
           Mô tả
         </Text>
+
         <Text className="text-[14px] mb-3" style={{ color: COLORS.text }}>
           {existingComplaint.content || "—"}
         </Text>
@@ -221,6 +223,7 @@ export function ComplaintModal({
             >
               Ảnh minh chứng
             </Text>
+
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View className="flex-row mb-3" style={{ gap: 10 }}>
                 {existingComplaint.attachments.map((att) => (
@@ -243,10 +246,36 @@ export function ComplaintModal({
             >
               Phản hồi từ chúng tôi
             </Text>
+
             <Text className="text-[14px] mb-3" style={{ color: COLORS.text }}>
               {existingComplaint.resolution_note}
             </Text>
           </>
+        )}
+
+        {Number(existingComplaint.refund_amount ?? 0) > 0 && (
+          <View
+            className="flex-row items-center justify-between rounded-xl px-4 py-3 mb-3"
+            style={{
+              backgroundColor: "#F5F3FF",
+              borderWidth: 1,
+              borderColor: "#DDD6FE",
+            }}
+          >
+            <Text
+              className="text-[13px] font-semibold"
+              style={{ color: "#6D28D9" }}
+            >
+              Đã hoàn vào ví
+            </Text>
+
+            <Text
+              className="text-[15px] font-extrabold"
+              style={{ color: "#6D28D9" }}
+            >
+              {formatVnd(Number(existingComplaint.refund_amount))}
+            </Text>
+          </View>
         )}
 
         <View
@@ -270,6 +299,7 @@ export function ComplaintModal({
       return (
         <View className="items-center justify-center py-6">
           <ActivityIndicator color={COLORS.primary} />
+
           <Text className="text-[13px] text-gray-400 mt-2">
             Đang tải danh sách lý do...
           </Text>
@@ -357,10 +387,13 @@ export function ComplaintModal({
               <View className="flex-1">
                 <Text
                   className="text-[14.5px] font-bold"
-                  style={{ color: selected ? COLORS.danger : COLORS.text }}
+                  style={{
+                    color: selected ? COLORS.danger : COLORS.text,
+                  }}
                 >
                   {item.name}
                 </Text>
+
                 {!!item.description && (
                   <Text
                     className="text-[12px] mt-0.5"
@@ -401,6 +434,7 @@ export function ComplaintModal({
           }}
           maxLength={1000}
         />
+
         <Text className="text-[11px] text-gray-400 text-right mt-1">
           {content.length}/1000
         </Text>
@@ -411,6 +445,7 @@ export function ComplaintModal({
         >
           Ảnh minh chứng (không bắt buộc)
         </Text>
+
         <ComplaintAttachmentPicker
           images={images}
           onChange={setImages}

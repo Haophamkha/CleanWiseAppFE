@@ -6,13 +6,13 @@ import { useBookingPayment } from "@/features/booking/hooks/useBookingPayment";
 import { Feather } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
 import {
-    ActivityIndicator,
-    Animated,
-    Easing,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Animated,
+  Easing,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -25,6 +25,7 @@ const STEPS = [
 
 function PulseDot() {
   const pulse = useRef(new Animated.Value(0.6)).current;
+
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
@@ -42,7 +43,9 @@ function PulseDot() {
         }),
       ]),
     );
+
     loop.start();
+
     return () => loop.stop();
   }, [pulse]);
 
@@ -56,12 +59,15 @@ function PulseDot() {
 
 export default function BookingQrScreen() {
   const insets = useSafeAreaInsets();
+
   const {
     code,
     link,
     isLoading,
     hasError,
     expired,
+    unavailable,
+    refreshLink,
     showLink,
     isUrgent,
     countdownText,
@@ -97,6 +103,7 @@ export default function BookingQrScreen() {
             <Text className="text-white/80 text-xs font-semibold">
               Số tiền cần thanh toán
             </Text>
+
             <Text className="text-white font-extrabold text-[32px] mt-1">
               {totalText}
             </Text>
@@ -106,14 +113,15 @@ export default function BookingQrScreen() {
             {isLoading && (
               <View className="h-40 items-center justify-center">
                 <ActivityIndicator size="large" color={COLORS.primary} />
+
                 <Text className="text-ink-muted text-[13px] mt-3">
                   Đang tạo link thanh toán...
                 </Text>
               </View>
             )}
 
-            {hasError && !isLoading && (
-              <View className="h-40 items-center justify-center px-6">
+            {hasError && !isLoading && !unavailable && (
+              <View className="items-center justify-center px-6 py-4">
                 <View className="w-14 h-14 rounded-full bg-danger-light items-center justify-center mb-3">
                   <Feather
                     name="alert-triangle"
@@ -121,9 +129,22 @@ export default function BookingQrScreen() {
                     color={COLORS.danger}
                   />
                 </View>
-                <Text className="text-danger text-center text-[13px] font-medium">
+
+                <Text className="text-danger text-center text-[13px] font-medium mb-4">
                   Không tạo được link thanh toán, vui lòng thử lại.
                 </Text>
+
+                <TouchableOpacity
+                  onPress={refreshLink}
+                  activeOpacity={0.85}
+                  className="flex-row items-center h-11 px-5 rounded-full bg-primary"
+                >
+                  <Feather name="refresh-cw" size={15} color={COLORS.white} />
+
+                  <Text className="text-white font-bold ml-2 text-[13px]">
+                    Thử lại
+                  </Text>
+                </TouchableOpacity>
               </View>
             )}
 
@@ -144,6 +165,7 @@ export default function BookingQrScreen() {
                         size={18}
                         color={COLORS.white}
                       />
+
                       <Text className="text-white font-bold ml-2 text-[15px]">
                         Mở trang thanh toán
                       </Text>
@@ -168,6 +190,7 @@ export default function BookingQrScreen() {
                     size={12}
                     color={isUrgent ? COLORS.white : COLORS.primaryDark}
                   />
+
                   <Text
                     className={`ml-1.5 text-xs font-bold ${
                       isUrgent ? "text-white" : "text-primary-dark"
@@ -185,6 +208,7 @@ export default function BookingQrScreen() {
                   <Text className="text-[13px] font-semibold text-ink-soft">
                     {showQr ? "Ẩn mã QR" : "Hoặc quét mã QR"}
                   </Text>
+
                   <Feather
                     name={showQr ? "chevron-up" : "chevron-down"}
                     size={15}
@@ -202,6 +226,7 @@ export default function BookingQrScreen() {
                 <View className="w-full items-center border-t border-dashed border-line mt-5 pt-4">
                   <View className="flex-row items-center">
                     <PulseDot />
+
                     <Text className="text-ink-muted text-[13px]">
                       Đang chờ thanh toán...
                     </Text>
@@ -210,25 +235,49 @@ export default function BookingQrScreen() {
               </>
             )}
 
-            {expired && (
+            {expired && !unavailable && (
               <View className="items-center py-4">
-                <View className="w-14 h-14 rounded-full bg-canvas items-center justify-center mb-3">
-                  <Feather name="clock" size={24} color={COLORS.inkMuted} />
-                </View>
-                <Text className="text-ink text-[14px] font-semibold">
+                <ActivityIndicator color={COLORS.primary} />
+
+                <Text className="text-ink text-[14px] font-semibold mt-3">
                   Link thanh toán đã hết hạn
                 </Text>
+
                 <Text className="text-ink-muted text-xs mt-1 mb-4">
-                  Đang quay về trang đặt lịch...
+                  Đang tạo link mới...
                 </Text>
+
                 <TouchableOpacity
-                  onPress={goBackToConfirm}
+                  onPress={refreshLink}
                   activeOpacity={0.85}
                   className="flex-row items-center h-11 px-5 rounded-full bg-primary"
                 >
                   <Feather name="refresh-cw" size={15} color={COLORS.white} />
+
                   <Text className="text-white font-bold ml-2 text-[13px]">
-                    Đặt lại để lấy link mới
+                    Lấy link mới
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {unavailable && (
+              <View className="items-center py-4 px-2">
+                <View className="w-14 h-14 rounded-full bg-canvas items-center justify-center mb-3">
+                  <Feather name="x-circle" size={24} color={COLORS.inkMuted} />
+                </View>
+
+                <Text className="text-ink text-[14px] font-semibold text-center">
+                  Đơn đã hết hạn hoặc đã hủy, vui lòng đặt lại
+                </Text>
+
+                <TouchableOpacity
+                  onPress={goBackToConfirm}
+                  activeOpacity={0.85}
+                  className="flex-row items-center h-11 px-5 rounded-full bg-primary mt-4"
+                >
+                  <Text className="text-white font-bold text-[13px]">
+                    Đặt lại
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -241,6 +290,7 @@ export default function BookingQrScreen() {
           <Text className="font-bold text-[14px] text-ink mb-3">
             Hướng dẫn thanh toán
           </Text>
+
           {STEPS.map((text, i) => (
             <View
               key={i}
@@ -253,6 +303,7 @@ export default function BookingQrScreen() {
                   {i + 1}
                 </Text>
               </View>
+
               <Text className="flex-1 text-[13px] text-ink-soft">{text}</Text>
             </View>
           ))}
@@ -269,6 +320,7 @@ export default function BookingQrScreen() {
           className="flex-row items-center justify-center h-12 rounded-2xl border border-line"
         >
           <Feather name="repeat" size={15} color={COLORS.inkSoft} />
+
           <Text className="font-semibold text-[14px] text-ink-soft ml-2">
             Đổi phương thức thanh toán khác
           </Text>

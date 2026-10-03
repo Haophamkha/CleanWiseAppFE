@@ -58,12 +58,18 @@ export default function BookingDetailScreen() {
     isError,
     isPackage,
     singleSchedule,
-    isCancellable,
+    canCancelBooking,
     isPaidOnline,
     cancelVisible,
     setCancelVisible,
     isCancelling,
     confirmCancel,
+    canCancelSchedule,
+    cancelTarget,
+    openCancelSchedule,
+    closeCancelSchedule,
+    isCancellingSchedule,
+    confirmCancelSchedule,
   } = useBookingDetail();
 
   if (isLoading) {
@@ -100,18 +106,29 @@ export default function BookingDetailScreen() {
         contentContainerStyle={{
           paddingHorizontal: 20,
           paddingTop: 20,
-          paddingBottom: isCancellable ? 24 : 24 + insets.bottom,
+          paddingBottom: canCancelBooking ? 24 : 24 + insets.bottom,
         }}
       >
         <BookingCodeCard code={booking.booking_code} large />
 
         <BookingProgressBar status={booking.status} />
 
+        {!!booking.cancel_reason && (
+          <Card className="mb-4">
+            <SectionTitle icon="info">Lý do hủy</SectionTitle>
+            <Text className="text-[14px] leading-5 text-ink-soft">
+              {booking.cancel_reason}
+            </Text>
+          </Card>
+        )}
+
         {isPackage ? (
           <PackageScheduleSection
             schedules={booking.schedules}
             bookingId={booking.id}
             bookingStatus={booking.status}
+            canCancelSchedule={canCancelSchedule}
+            onCancelSchedule={openCancelSchedule}
           />
         ) : (
           <>
@@ -166,16 +183,33 @@ export default function BookingDetailScreen() {
         )}
       </ScrollView>
 
-      {isCancellable && (
+      {canCancelBooking && (
         <BookingBottomBar onCancel={() => setCancelVisible(true)} />
       )}
 
+      {/* Hủy cả đơn */}
       <CancelBookingModal
         visible={cancelVisible}
         loading={isCancelling}
         isPaidOnline={isPaidOnline}
         onClose={() => setCancelVisible(false)}
         onConfirm={confirmCancel}
+      />
+
+      {/* Hủy từng buổi */}
+      <CancelBookingModal
+        visible={!!cancelTarget}
+        loading={isCancellingSchedule}
+        title={
+          cancelTarget ? `Hủy buổi ${cancelTarget.sequence_no}` : "Hủy buổi"
+        }
+        refundNote={
+          isPaidOnline
+            ? "Số tiền của buổi này sẽ được hoàn ngay vào ví của bạn."
+            : undefined
+        }
+        onClose={closeCancelSchedule}
+        onConfirm={confirmCancelSchedule}
       />
     </View>
   );

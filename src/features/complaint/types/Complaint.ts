@@ -120,6 +120,8 @@ export type ComplaintDetail = {
 
   resolution_note: string | null;
   resolved_at: string | null;
+  /** Số tiền đã hoàn vào ví cho khiếu nại này (0 nếu không hoàn) */
+  refund_amount: string;
 
   created_at: string;
 
@@ -138,4 +140,5 @@ export type PickedFile = {
   uri: string;
   name?: string;
   type?: string;
+  size?: number;
 };

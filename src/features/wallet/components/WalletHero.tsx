@@ -16,7 +16,8 @@ type Props = {
   balance: number;
   isInitialLoading: boolean;
   isBackgroundFetching: boolean;
-  onWithdraw: () => void;
+  /** Không truyền = ẩn nút "Rút tiền" */
+  onWithdraw?: () => void;
 };
 
 function Action({
@@ -170,11 +171,13 @@ export function WalletHero({
         />
 
         <View style={{ flexDirection: "row" }}>
-          <Action
-            icon="arrow-down-left"
-            label="Rút tiền"
-            onPress={onWithdraw}
-          />
+          {onWithdraw && (
+            <Action
+              icon="arrow-down-left"
+              label="Rút tiền"
+              onPress={onWithdraw}
+            />
+          )}
           <Action
             icon="plus"
             label="Nạp tiền"
