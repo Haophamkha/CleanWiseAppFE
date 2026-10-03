@@ -78,6 +78,20 @@ export function getPaymentStatusMeta(status: string) {
         bg: "#F3F4F6",
         icon: "x-circle" as const,
       };
+    case "PAID":
+      return {
+        label: "Đã thanh toán",
+        color: "#047857",
+        bg: "#D1FAE5",
+        icon: "check-circle" as const,
+      };
+    case "PARTIALLY_REFUNDED":
+      return {
+        label: "Đã hoàn một phần",
+        color: "#7C3AED",
+        bg: "#EDE9FE",
+        icon: "rotate-ccw" as const,
+      };
     default:
       return {
         label: "Chưa thanh toán",

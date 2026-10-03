@@ -33,6 +33,7 @@ export function ReceiptCard({ booking }: { booking: BookingDetail }) {
   const payment = booking.payment;
   const paymentStatus = getPaymentStatusMeta(booking.payment_status);
   const discount = Number(booking.discount_amount);
+  const refunded = Number(booking.refunded_amount ?? 0);
 
   const methodLabel =
     payment?.method_display ??
@@ -40,7 +41,9 @@ export function ReceiptCard({ booking }: { booking: BookingDetail }) {
       ? "Chuyển khoản"
       : payment?.method === "CASH"
         ? "Tiền mặt"
-        : "Chưa xác định");
+        : payment?.method === "WALLET"
+          ? "Ví CleanWise"
+          : "Chưa xác định");
 
   return (
     <Card className="mb-5 rounded-3xl">
@@ -97,6 +100,9 @@ export function ReceiptCard({ booking }: { booking: BookingDetail }) {
         />
         {discount > 0 && (
           <LineRow label="Giảm giá" value={`-${formatVnd(discount)}`} accent />
+        )}
+        {refunded > 0 && (
+          <LineRow label="Đã hoàn vào ví" value={formatVnd(refunded)} accent />
         )}
       </View>
 

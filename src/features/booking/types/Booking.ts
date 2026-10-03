@@ -1,4 +1,4 @@
-export type PaymentMethod = "CASH" | "BANK_TRANSFER";
+export type PaymentMethod = "CASH" | "BANK_TRANSFER" | "WALLET";
 
 export type PaymentStatus =
   | "PENDING"
@@ -137,6 +137,17 @@ export type BookingDetail = {
   discount_amount: string;
   total_amount: string | null;
   schedules: BookingScheduleDetail[];
+  refunded_amount: string;
+  cancelled_at: string | null;
+  cancel_reason: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type CancelScheduleResult = {
+  schedule_id: number;
+  schedule_status: BookingScheduleDetail["status"];
+  booking_status: BookingStatus;
+  payment_status: string;
+  refunded_amount: string;
 };

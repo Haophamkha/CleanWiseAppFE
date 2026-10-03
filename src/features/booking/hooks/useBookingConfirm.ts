@@ -1,31 +1,38 @@
 import type { FeatherName } from "@/components/ui/Input";
 import { useCreateBookingMutation } from "@/features/booking/api/bookingApi";
+import { useIdempotencyKey } from "@/features/booking/hooks/useIdempotencyKey";
 import { clearBookingDraft } from "@/features/booking/stores/bookingDraftSlice";
 import {
-    calculateEstimatedPrice,
-    calculateRecurringPrice,
+  calculateEstimatedPrice,
+  calculateRecurringPrice,
 } from "@/features/service/utils/servicePricing";
 import type {
-    UserVoucher,
-    ValidateVoucherResponse,
+  UserVoucher,
+  ValidateVoucherResponse,
 } from "@/features/voucher/types/Voucher";
+import { useGetWalletQuery } from "@/features/wallet/api/walletApi";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { formatVnd } from "@/utils/currency";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 
-export type PaymentMethodValue = "CASH" | "BANK_TRANSFER";
+export type PaymentMethodValue = "CASH" | "BANK_TRANSFER" | "WALLET";
 export type PaymentOption = {
   value: PaymentMethodValue;
   label: string;
   icon: string;
+  subtitle?: string;
+  disabled?: boolean;
 };
-export type ScheduleRow = { icon: FeatherName; text: string; error?: boolean };
 
 export const PAYMENT_METHODS: PaymentOption[] = [
   { value: "CASH", label: "Tiền mặt", icon: "cash" },
   { value: "BANK_TRANSFER", label: "Chuyển khoản", icon: "bank" },
+  { value: "WALLET", label: "Ví CleanWise", icon: "wallet" },
 ];
+
+export type ScheduleRow = { icon: FeatherName; text: string; error?: boolean };
 
 const WEEKDAY_LABELS: Record<string, string> = {
   MON: "T2",
@@ -73,6 +80,11 @@ export function useBookingConfirm() {
   const dispatch = useAppDispatch();
   const draft = useAppSelector((s) => s.bookingDraft);
   const [createBooking, { isLoading }] = useCreateBookingMutation();
+  const { data: wallet } = useGetWalletQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
+  const walletBalance = wallet ? Number(wallet.balance) : null;
+  const { getKey, resetKey } = useIdempotencyKey();
 
   const [paymentMethod, setPaymentMethod] =
     useState<PaymentMethodValue>("CASH");
@@ -226,7 +238,23 @@ export function useBookingConfirm() {
       f.key !== "package_duration",
   );
 
-  const selectedPaymentMethod = PAYMENT_METHODS.find(
+  const paymentOptions = useMemo<PaymentOption[]>(
+    () =>
+      PAYMENT_METHODS.map((m) => {
+        if (m.value !== "WALLET" || walletBalance == null) return m;
+        const insufficient = totalAmount != null && walletBalance < totalAmount;
+        return {
+          ...m,
+          subtitle: `Số dư ${formatVnd(walletBalance)}${
+            insufficient ? " · Không đủ" : ""
+          }`,
+          disabled: insufficient,
+        };
+      }),
+    [walletBalance, totalAmount],
+  );
+
+  const selectedPaymentMethod = paymentOptions.find(
     (m) => m.value === paymentMethod,
   )!;
 
@@ -319,7 +347,11 @@ export function useBookingConfirm() {
             : undefined,
       };
 
-      const result = await createBooking(payload as any).unwrap();
+      const result = await createBooking({
+        ...payload,
+        idempotencyKey: getKey(),
+      } as any).unwrap();
+      resetKey();
 
       if (paymentMethod === "BANK_TRANSFER") {
         router.replace({
@@ -334,9 +366,13 @@ export function useBookingConfirm() {
         });
       }
     } catch (err: any) {
+      if (err?.data) resetKey(); // lỗi từ BE -> lần sau là ý định mới; lỗi mạng giữ key để retry an toàn
+
       const voucherError = err?.data?.errors?.voucher_code;
+      const amountError = err?.data?.errors?.amount ?? err?.data?.amount;
       const message =
         voucherError ||
+        amountError ||
         err?.data?.errors?.service_data ||
         err?.data?.service_data?.__extra__ ||
         err?.data?.message ||
@@ -345,7 +381,11 @@ export function useBookingConfirm() {
 
       if (voucherError) clearSelectedVoucher();
       Alert.alert(
-        voucherError ? "Voucher không còn hợp lệ" : "Không thể đặt lịch",
+        voucherError
+          ? "Voucher không còn hợp lệ"
+          : amountError
+            ? "Ví không đủ tiền"
+            : "Không thể đặt lịch",
         Array.isArray(message) ? message.join("\n") : String(message),
       );
     }
@@ -378,5 +418,6 @@ export function useBookingConfirm() {
     paymentModalVisible,
     setPaymentModalVisible,
     confirm,
+    paymentOptions,
   };
 }

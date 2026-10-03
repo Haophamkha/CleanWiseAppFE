@@ -1,7 +1,7 @@
 import { COLORS, OVERLAY, RADIUS } from "@/constants/theme";
 import type {
-    PaymentMethodValue,
-    PaymentOption,
+  PaymentMethodValue,
+  PaymentOption,
 } from "@/features/booking/hooks/useBookingConfirm";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Modal, Text, TouchableOpacity, View } from "react-native";
@@ -64,13 +64,15 @@ export function PaymentMethodSheet({
               return (
                 <TouchableOpacity
                   key={m.value}
-                  onPress={() => onSelect(m.value)}
+                  onPress={() => !m.disabled && onSelect(m.value)}
+                  disabled={m.disabled}
                   activeOpacity={0.8}
                   className={`flex-row items-center rounded-2xl border p-4 mb-3 ${
                     selected
                       ? "bg-primary-soft border-primary"
                       : "bg-surface border-line"
                   }`}
+                  style={{ opacity: m.disabled ? 0.5 : 1 }}
                 >
                   <View
                     className={`w-11 h-11 rounded-full items-center justify-center mr-3 ${
@@ -83,13 +85,20 @@ export function PaymentMethodSheet({
                       color={selected ? COLORS.white : COLORS.inkSoft}
                     />
                   </View>
-                  <Text
-                    className={`flex-1 text-[15px] font-semibold ${
-                      selected ? "text-primary-dark" : "text-ink"
-                    }`}
-                  >
-                    {m.label}
-                  </Text>
+                  <View className="flex-1">
+                    <Text
+                      className={`text-[15px] font-semibold ${
+                        selected ? "text-primary-dark" : "text-ink"
+                      }`}
+                    >
+                      {m.label}
+                    </Text>
+                    {!!m.subtitle && (
+                      <Text className="text-ink-muted text-xs mt-0.5">
+                        {m.subtitle}
+                      </Text>
+                    )}
+                  </View>
                   {selected && (
                     <Feather
                       name="check-circle"

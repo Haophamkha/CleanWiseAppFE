@@ -4,7 +4,8 @@ export type WalletTransactionType =
   | "PAYMENT"
   | "REFUND"
   | "WITHDRAW"
-  | "ADJUSTMENT";
+  | "ADJUSTMENT"
+  | "EARNING";
 
 export type WalletTransactionStatus = "PENDING" | "SUCCESS" | "FAILED";
 
@@ -21,6 +22,7 @@ export type WalletTransaction = {
   amount: string;
   balance_after: string;
   status: WalletTransactionStatus;
+  direction: "CREDIT" | "DEBIT";
   status_display: string;
   booking_code: string | null;
   note: string | null;

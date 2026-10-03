@@ -42,7 +42,7 @@ const STATUS_CONFIG: Record<
     text: "#991B1B",
   },
   MISSED: {
-    label: "Bỏ lỡ",
+    label: "Không có nhân viên nhận",
     bg: "#F3F4F6",
     text: "#6B7280",
   },
@@ -172,9 +172,11 @@ function NoWorkerRow() {
 export function ScheduleItemCard({
   schedule,
   onPress,
+  onCancel,
 }: {
   schedule: BookingScheduleDetail;
   onPress?: (schedule: BookingScheduleDetail) => void;
+  onCancel?: (schedule: BookingScheduleDetail) => void;
 }) {
   const { weekday, dateStr, startTime, endTime } = formatDateRange(
     schedule.scheduled_start,
@@ -227,8 +229,22 @@ export function ScheduleItemCard({
           worker={schedule.worker}
           assignmentId={schedule.assignment_id}
         />
-      ) : (
+      ) : schedule.status === "PENDING" ? (
         <NoWorkerRow />
+      ) : null}
+
+      {onCancel && schedule.status === "PENDING" && (
+        <TouchableOpacity
+          onPress={() => onCancel(schedule)}
+          activeOpacity={0.8}
+          className="flex-row items-center justify-center mt-3 rounded-full border border-danger"
+          style={{ height: 40 }}
+        >
+          <Feather name="x-circle" size={15} color="#DC2626" />
+          <Text className="ml-1.5 text-[13px] font-bold text-danger">
+            Hủy buổi này
+          </Text>
+        </TouchableOpacity>
       )}
     </TouchableOpacity>
   );

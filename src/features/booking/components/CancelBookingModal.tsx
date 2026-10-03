@@ -2,7 +2,7 @@ import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
 import { COLORS } from "@/constants/theme";
 import { Feather } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
 const QUICK_REASONS = [
@@ -16,17 +16,31 @@ export function CancelBookingModal({
   visible,
   loading,
   isPaidOnline,
+  title = "Hủy đơn hàng",
+  refundNote,
   onClose,
   onConfirm,
 }: {
   visible: boolean;
   loading?: boolean;
-  /** true nếu đơn đã thanh toán online -> hiện ghi chú sẽ hoàn tiền vào ví */
   isPaidOnline?: boolean;
+  title?: string;
+  /** Ghi đè nội dung ghi chú hoàn tiền (dùng khi hủy từng buổi) */
+  refundNote?: string;
   onClose: () => void;
   onConfirm: (reason: string) => void;
 }) {
   const [reason, setReason] = useState("");
+
+  useEffect(() => {
+    if (!visible) setReason("");
+  }, [visible]);
+
+  const note =
+    refundNote ??
+    (isPaidOnline
+      ? "Đơn này đã thanh toán. Số tiền sẽ được hoàn ngay vào ví của bạn sau khi hủy."
+      : null);
 
   const handleClose = () => {
     setReason("");
@@ -47,14 +61,14 @@ export function CancelBookingModal({
             <Feather name="x-circle" size={22} color={COLORS.danger} />
           </View>
           <View className="flex-1">
-            <Text className="text-lg font-bold text-ink">Hủy đơn hàng</Text>
+            <Text className="text-lg font-bold text-ink">{title}</Text>
             <Text className="text-[13px] text-ink-muted mt-0.5">
               Cho chúng tôi biết lý do để cải thiện dịch vụ.
             </Text>
           </View>
         </View>
 
-        {isPaidOnline && (
+        {!!note && (
           <View className="flex-row items-start rounded-2xl bg-primary-soft border border-primary-border px-3.5 py-3 mt-4">
             <Feather
               name="info"
@@ -63,8 +77,7 @@ export function CancelBookingModal({
               style={{ marginTop: 1, marginRight: 8 }}
             />
             <Text className="flex-1 text-[12px] leading-[17px] text-primary-dark">
-              Đơn này đã thanh toán online. Số tiền sẽ được hoàn ngay vào ví của
-              bạn sau khi hủy.
+              {note}
             </Text>
           </View>
         )}
@@ -98,7 +111,7 @@ export function CancelBookingModal({
         <TextInput
           className="rounded-2xl border border-line bg-canvas px-4 py-3 text-[14px] text-ink mb-5"
           style={{ minHeight: 88, textAlignVertical: "top" }}
-          placeholder="Nhập lý do hủy đơn..."
+          placeholder="Nhập lý do hủy..."
           placeholderTextColor={COLORS.inkMuted}
           multiline
           numberOfLines={3}

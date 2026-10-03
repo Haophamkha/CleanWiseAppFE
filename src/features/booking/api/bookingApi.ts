@@ -2,6 +2,7 @@ import type {
   BookingDetail,
   BookingListResponse,
   BookingStatus,
+  CancelScheduleResult,
   CreateBookingRequest,
 } from "@/features/booking/types/Booking";
 import { baseApi } from "@/store/baseApi";
@@ -25,7 +26,12 @@ export const bookingApi = baseApi.injectEndpoints({
         },
       }),
       transformResponse: unwrap,
-      invalidatesTags: ["Bookings", "MyVouchers"],
+      invalidatesTags: [
+        "Bookings",
+        "MyVouchers",
+        "Wallet",
+        "WalletTransactions",
+      ],
     }),
 
     getBookings: builder.query<
@@ -59,6 +65,7 @@ export const bookingApi = baseApi.injectEndpoints({
         checkout_url: string;
         qr_code: string;
         payment_link_id: string;
+        expires_at: string;
       },
       {
         bookingId: number;
@@ -80,6 +87,7 @@ export const bookingApi = baseApi.injectEndpoints({
         id: number;
         status: BookingStatus;
         payment_status: string;
+        refunded_amount: string;
       },
       {
         id: number;
@@ -103,6 +111,24 @@ export const bookingApi = baseApi.injectEndpoints({
         "MyVouchers",
       ],
     }),
+    cancelSchedule: builder.mutation<
+      CancelScheduleResult,
+      { scheduleId: number; bookingId: number; reason: string }
+    >({
+      query: ({ scheduleId, reason }) => ({
+        url: `/api/customer/bookings/schedules/${scheduleId}/cancel/`,
+        method: "POST",
+        data: { reason },
+        headers: { "Idempotency-Key": `cancel-schedule-${scheduleId}` },
+      }),
+      transformResponse: unwrap,
+      invalidatesTags: (result, error, { bookingId }) => [
+        { type: "Bookings", id: bookingId },
+        "Bookings",
+        "Wallet",
+        "WalletTransactions",
+      ],
+    }),
   }),
 
   overrideExisting: false,
@@ -114,4 +140,5 @@ export const {
   useGetBookingDetailQuery,
   useCreatePaymentLinkMutation,
   useCancelBookingMutation,
+  useCancelScheduleMutation,
 } = bookingApi;
