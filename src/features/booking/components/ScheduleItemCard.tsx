@@ -6,6 +6,12 @@ import { Image, Text, TouchableOpacity, View } from "react-native";
 
 type Worker = NonNullable<BookingScheduleDetail["worker"]>;
 
+const CUSTOMER_MIN_CANCEL_HOURS = 6;
+
+const canCancelSchedule = (startIso: string) =>
+  new Date(startIso).getTime() - Date.now() >=
+  CUSTOMER_MIN_CANCEL_HOURS * 60 * 60 * 1000;
+
 const WEEKDAY_LABELS = [
   "Chủ nhật",
   "Thứ 2",
@@ -233,19 +239,26 @@ export function ScheduleItemCard({
         <NoWorkerRow />
       ) : null}
 
-      {onCancel && schedule.status === "PENDING" && (
-        <TouchableOpacity
-          onPress={() => onCancel(schedule)}
-          activeOpacity={0.8}
-          className="flex-row items-center justify-center mt-3 rounded-full border border-danger"
-          style={{ height: 40 }}
-        >
-          <Feather name="x-circle" size={15} color="#DC2626" />
-          <Text className="ml-1.5 text-[13px] font-bold text-danger">
-            Hủy buổi này
+      {onCancel &&
+        schedule.status === "PENDING" &&
+        (canCancelSchedule(schedule.scheduled_start) ? (
+          <TouchableOpacity
+            onPress={() => onCancel(schedule)}
+            activeOpacity={0.8}
+            className="flex-row items-center justify-center mt-3 rounded-full border border-danger"
+            style={{ height: 40 }}
+          >
+            <Feather name="x-circle" size={15} color="#DC2626" />
+            <Text className="ml-1.5 text-[13px] font-bold text-danger">
+              Hủy buổi này
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <Text className="text-[12px] text-gray-500 text-center mt-3">
+            Chỉ hủy được trước giờ bắt đầu ít nhất {CUSTOMER_MIN_CANCEL_HOURS}{" "}
+            giờ.
           </Text>
-        </TouchableOpacity>
-      )}
+        ))}
     </TouchableOpacity>
   );
 }

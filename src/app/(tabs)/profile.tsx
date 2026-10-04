@@ -16,7 +16,7 @@ const TAB_BAR_CONTENT_HEIGHT = 96;
 type MenuItem = {
   icon: FeatherName;
   label: string;
-  href?: string; // không có href = chưa làm, hiện "Sắp có"
+  href?: string;
 };
 
 const ACCOUNT_ITEMS: MenuItem[] = [
@@ -28,7 +28,7 @@ const ACCOUNT_ITEMS: MenuItem[] = [
     href: ROUTES.FAVORITE_WORKERS,
   },
   { icon: "credit-card", label: "Ví / Thẻ thanh toán", href: ROUTES.WALLET },
-  { icon: "clock", label: "Lịch sử thanh toán" },
+  { icon: "clock", label: "Lịch sử thanh toán", href: ROUTES.PAYMENT_HISTORY },
   { icon: "tag", label: "Khuyến mãi", href: ROUTES.VOUCHERS },
   { icon: "star", label: "Đánh giá của tôi", href: ROUTES.MY_REVIEWS },
 ];

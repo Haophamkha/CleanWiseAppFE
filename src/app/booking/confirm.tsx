@@ -72,6 +72,7 @@ export default function BookingConfirmScreen() {
     setPaymentModalVisible,
     confirm,
     paymentOptions,
+    prepaidOnly,
   } = useBookingConfirm();
 
   if (!service) {
@@ -284,6 +285,13 @@ export default function BookingConfirmScreen() {
             <Text className="text-xs font-semibold text-primary mr-1">Đổi</Text>
             <Feather name="chevron-right" size={18} color={COLORS.inkMuted} />
           </TouchableOpacity>
+
+          {prepaidOnly && (
+            <Text className="text-ink-muted text-xs mt-2">
+              Gói định kỳ cần thanh toán trước. Hủy buổi nào sẽ được hoàn tiền
+              buổi đó vào ví.
+            </Text>
+          )}
         </View>
       </ScrollView>
 

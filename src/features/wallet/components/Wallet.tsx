@@ -1,98 +1,206 @@
 import { LoadingOverlay } from "@/components/common/LoadingOverlay";
-import { COLORS } from "@/constants/theme";
+import { COLORS, SHADOWS, TREND } from "@/constants/theme";
 import type { WalletTransaction } from "@/features/wallet/api/walletApi";
+import { TopupModal } from "@/features/wallet/components/TopupModal";
 import { WalletHero } from "@/features/wallet/components/WalletHero";
 import { WithdrawModal } from "@/features/wallet/components/WithdrawModal";
 import { useWallet } from "@/features/wallet/hooks/useWallet";
 import { formatVnd } from "@/utils/currency";
 import { Feather } from "@expo/vector-icons";
+import { useState } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const WITHDRAW_ENABLED = false; // bật true khi BE làm xong rút tiền
+type Filter = "ALL" | "CREDIT" | "DEBIT";
+const FILTERS: { key: Filter; label: string }[] = [
+  { key: "ALL", label: "Tất cả" },
+  { key: "CREDIT", label: "Tiền vào" },
+  { key: "DEBIT", label: "Tiền ra" },
+];
 
-const fmtDateTime = (iso: string) =>
-  new Date(iso).toLocaleString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
+const fmtTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString("vi-VN", {
     hour: "2-digit",
     minute: "2-digit",
   });
 
-function TransactionRow({
-  tx,
-  last,
+const dayLabel = (iso: string) => {
+  const d = new Date(iso);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return "Hôm nay";
+  if (d.toDateString() === yesterday.toDateString()) return "Hôm qua";
+  return d.toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+};
+
+function groupByDay(list: WalletTransaction[]) {
+  const groups: { label: string; items: WalletTransaction[] }[] = [];
+  for (const tx of list) {
+    const label = dayLabel(tx.created_at);
+    const last = groups[groups.length - 1];
+    if (last && last.label === label) last.items.push(tx);
+    else groups.push({ label, items: [tx] });
+  }
+  return groups;
+}
+
+function Chip({
+  label,
+  active,
+  onPress,
 }: {
-  tx: WalletTransaction;
-  last: boolean;
+  label: string;
+  active: boolean;
+  onPress: () => void;
 }) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      style={{
+        marginRight: 8,
+        paddingHorizontal: 18,
+        paddingVertical: 10,
+        borderRadius: 999,
+        backgroundColor: active ? COLORS.primary : COLORS.surface,
+        borderWidth: 1,
+        borderColor: active ? COLORS.primary : COLORS.line,
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 13,
+          fontWeight: "700",
+          color: active ? COLORS.white : COLORS.inkSoft,
+        }}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+function TransactionRow({ tx }: { tx: WalletTransaction }) {
   const isCredit = tx.direction === "CREDIT";
   const failed = tx.status === "FAILED";
-  const color = failed
-    ? COLORS.inkMuted
-    : isCredit
-      ? COLORS.success
-      : COLORS.danger;
+  const tone = isCredit ? TREND.up : TREND.down;
+  const toneBg = isCredit ? TREND.upBg : TREND.downBg;
+  const amountColor = failed ? COLORS.inkMuted : tone;
 
   return (
     <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        paddingVertical: 14,
-        borderBottomWidth: last ? 0 : StyleSheet.hairlineWidth,
-        borderBottomColor: COLORS.line,
-      }}
+      style={[
+        {
+          flexDirection: "row",
+          alignItems: "center",
+          padding: 14,
+          marginBottom: 10,
+          borderRadius: 22,
+          backgroundColor: COLORS.surface,
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: COLORS.line,
+        },
+        SHADOWS.card,
+      ]}
     >
       <View
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 20,
+          width: 44,
+          height: 44,
+          borderRadius: 14,
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: isCredit ? COLORS.successLight : COLORS.dangerLight,
+          backgroundColor: failed ? COLORS.canvas : toneBg,
         }}
       >
         <Feather
           name={isCredit ? "arrow-down-left" : "arrow-up-right"}
-          size={17}
-          color={isCredit ? COLORS.success : COLORS.danger}
+          size={19}
+          color={failed ? COLORS.inkMuted : tone}
         />
       </View>
 
       <View style={{ flex: 1, marginLeft: 12 }}>
         <Text
           numberOfLines={1}
-          style={{ fontSize: 14, fontWeight: "700", color: COLORS.ink }}
+          style={{ fontSize: 14.5, fontWeight: "700", color: COLORS.ink }}
         >
           {tx.type_display}
         </Text>
         {!!(tx.note || tx.booking_code) && (
           <Text
-            numberOfLines={2}
+            numberOfLines={1}
             style={{ marginTop: 2, fontSize: 12, color: COLORS.inkSoft }}
           >
             {tx.note || tx.booking_code}
           </Text>
         )}
-        <Text style={{ marginTop: 2, fontSize: 12, color: COLORS.inkMuted }}>
-          {fmtDateTime(tx.created_at)}
-          {tx.status !== "SUCCESS" ? ` · ${tx.status_display}` : ""}
-        </Text>
+        <View
+          style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}
+        >
+          <Text style={{ fontSize: 12, color: COLORS.inkMuted }}>
+            {fmtTime(tx.created_at)}
+          </Text>
+          {tx.status !== "SUCCESS" && (
+            <View
+              style={{
+                marginLeft: 8,
+                paddingHorizontal: 8,
+                paddingVertical: 2,
+                borderRadius: 999,
+                backgroundColor: failed
+                  ? COLORS.dangerLight
+                  : COLORS.primaryLight,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: "700",
+                  color: failed ? COLORS.danger : COLORS.primaryDark,
+                }}
+              >
+                {tx.status_display}
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
 
-      <Text style={{ marginLeft: 8, fontSize: 14, fontWeight: "800", color }}>
-        {isCredit ? "+" : "-"}
-        {formatVnd(Number(tx.amount))}
-      </Text>
+      <View style={{ marginLeft: 8, alignItems: "flex-end" }}>
+        <Text
+          style={{
+            fontSize: 15,
+            fontWeight: "800",
+            color: amountColor,
+            textDecorationLine: failed ? "line-through" : "none",
+          }}
+        >
+          {isCredit ? "+" : "-"}
+          {formatVnd(Number(tx.amount))}
+        </Text>
+        {!failed && (
+          <Feather
+            name={isCredit ? "trending-up" : "trending-down"}
+            size={14}
+            color={tone}
+            style={{ marginTop: 4 }}
+          />
+        )}
+      </View>
     </View>
   );
 }
@@ -100,6 +208,17 @@ function TransactionRow({
 export function Wallet() {
   const w = useWallet();
   const insets = useSafeAreaInsets();
+  const [filter, setFilter] = useState<Filter>("ALL");
+
+  const list =
+    filter === "ALL"
+      ? w.transactions
+      : w.transactions.filter((t) =>
+          filter === "CREDIT"
+            ? t.direction === "CREDIT"
+            : t.direction !== "CREDIT",
+        );
+  const groups = groupByDay(list);
 
   return (
     <View className="flex-1 bg-canvas">
@@ -120,101 +239,111 @@ export function Wallet() {
           balance={w.balance}
           isInitialLoading={w.isInitialLoading}
           isBackgroundFetching={w.isBackgroundFetching}
-          onWithdraw={WITHDRAW_ENABLED ? w.openWithdraw : undefined}
+          transactions={w.transactions}
+          onWithdraw={w.openWithdraw}
+          onTopup={w.openTopup}
         />
 
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "flex-start",
-            marginHorizontal: 16,
-            marginTop: 16,
-            padding: 14,
-            borderRadius: 16,
-            backgroundColor: COLORS.primarySoft,
-          }}
-        >
-          <Feather
-            name="info"
-            size={16}
-            color={COLORS.primaryDark}
-            style={{ marginTop: 2, marginRight: 10 }}
-          />
+        <View style={{ marginTop: 28, paddingHorizontal: 16 }}>
           <Text
             style={{
-              flex: 1,
-              fontSize: 13,
-              lineHeight: 19,
-              color: COLORS.primaryDark,
-            }}
-          >
-            Số dư trong ví được cộng khi đơn hàng hoặc buổi làm được hoàn tiền,
-            và có thể dùng để thanh toán đơn mới.
-          </Text>
-        </View>
-
-        <View style={{ marginHorizontal: 16, marginTop: 24 }}>
-          <Text
-            style={{
-              marginBottom: 10,
               marginLeft: 4,
-              fontSize: 12,
-              fontWeight: "700",
-              letterSpacing: 1,
-              color: COLORS.inkMuted,
+              fontSize: 20,
+              fontWeight: "800",
+              color: COLORS.ink,
             }}
           >
-            LỊCH SỬ GIAO DỊCH
+            Lịch sử giao dịch
           </Text>
+
+          <View style={{ flexDirection: "row", marginTop: 14 }}>
+            {FILTERS.map((f) => (
+              <Chip
+                key={f.key}
+                label={f.label}
+                active={filter === f.key}
+                onPress={() => setFilter(f.key)}
+              />
+            ))}
+          </View>
 
           {w.txLoading ? (
-            <View style={{ paddingVertical: 32, alignItems: "center" }}>
+            <View style={{ paddingVertical: 40, alignItems: "center" }}>
               <ActivityIndicator color={COLORS.primary} />
             </View>
-          ) : w.transactions.length === 0 ? (
+          ) : groups.length === 0 ? (
             <View
               style={{
-                paddingVertical: 32,
+                marginTop: 16,
+                paddingVertical: 36,
                 alignItems: "center",
-                borderRadius: 20,
+                borderRadius: 24,
                 backgroundColor: COLORS.surface,
                 borderWidth: StyleSheet.hairlineWidth,
                 borderColor: COLORS.line,
               }}
             >
-              <Text style={{ fontSize: 13, color: COLORS.inkMuted }}>
+              <View
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 28,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: COLORS.primaryLight,
+                }}
+              >
+                <Feather
+                  name="file-text"
+                  size={24}
+                  color={COLORS.primaryDark}
+                />
+              </View>
+              <Text
+                style={{
+                  marginTop: 14,
+                  fontSize: 15,
+                  fontWeight: "700",
+                  color: COLORS.ink,
+                }}
+              >
                 Chưa có giao dịch nào
+              </Text>
+              <Text
+                style={{ marginTop: 4, fontSize: 13, color: COLORS.inkMuted }}
+              >
+                Nạp tiền để thanh toán đơn nhanh hơn.
               </Text>
             </View>
           ) : (
-            <View
-              style={{
-                paddingHorizontal: 16,
-                borderRadius: 20,
-                backgroundColor: COLORS.surface,
-                borderWidth: StyleSheet.hairlineWidth,
-                borderColor: COLORS.line,
-              }}
-            >
-              {w.transactions.map((tx, i) => (
-                <TransactionRow
-                  key={tx.id}
-                  tx={tx}
-                  last={i === w.transactions.length - 1}
-                />
-              ))}
-            </View>
+            groups.map((g) => (
+              <View key={g.label} style={{ marginTop: 18 }}>
+                <Text
+                  style={{
+                    marginBottom: 10,
+                    marginLeft: 4,
+                    fontSize: 13,
+                    fontWeight: "600",
+                    color: COLORS.inkSoft,
+                  }}
+                >
+                  {g.label}
+                </Text>
+                {g.items.map((tx) => (
+                  <TransactionRow key={tx.id} tx={tx} />
+                ))}
+              </View>
+            ))
           )}
         </View>
       </ScrollView>
 
-      {WITHDRAW_ENABLED && (
-        <WithdrawModal
-          visible={w.withdrawVisible}
-          balance={w.balance}
-          onClose={w.closeWithdraw}
-        />
-      )}
+      <WithdrawModal
+        visible={w.withdrawVisible}
+        balance={w.balance}
+        onClose={w.closeWithdraw}
+      />
+      <TopupModal visible={w.topupVisible} onClose={w.closeTopup} />
 
       <LoadingOverlay
         visible={w.isInitialLoading}

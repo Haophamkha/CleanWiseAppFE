@@ -2,6 +2,7 @@ import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { Card } from "@/components/ui/Card";
 import { COLORS, RADIUS, SHADOWS } from "@/constants/theme";
 import { BookingCodeCard } from "@/features/booking/components/BookingCodeCard";
+import { OpenBankAppButtons } from "@/features/booking/components/OpenBankAppButtons";
 import { useBookingPayment } from "@/features/booking/hooks/useBookingPayment";
 import { Feather } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
@@ -18,9 +19,9 @@ import QRCode from "react-native-qrcode-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const STEPS = [
-  "Nhấn “Mở trang thanh toán”",
-  "Chọn ngân hàng hoặc ví điện tử bạn muốn dùng",
-  "Xác nhận thanh toán trong app đó",
+  "Chọn app ngân hàng của bạn ở bên dưới (hoặc nhấn “Mở trang thanh toán”)",
+  "Kiểm tra số tiền và nội dung chuyển khoản",
+  "Xác nhận thanh toán trong app ngân hàng",
 ];
 
 function PulseDot() {
@@ -174,9 +175,11 @@ export default function BookingQrScreen() {
                 </TouchableOpacity>
 
                 <Text className="text-ink-muted text-xs text-center mt-3 px-2">
-                  Bạn có thể chọn ngân hàng hoặc ví điện tử bất kỳ ngay trong
-                  trang thanh toán
+                  Thanh toán bằng chuyển khoản ngân hàng (VietQR)
                 </Text>
+
+                {/* Mở thẳng app ngân hàng, chỉ hiện khi BE đã trả thông tin chuyển khoản */}
+                {!!link?.account_number && <OpenBankAppButtons info={link} />}
 
                 <View
                   className={`flex-row items-center mt-4 px-3 py-1.5 rounded-full border ${

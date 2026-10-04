@@ -134,6 +134,9 @@ let isLoggingOut = false;
 export const performLogout = async (
   redirectTo: string = "/(auth)/login",
 ): Promise<void> => {
+  // CHẨN ĐOÁN: in ra ai gọi performLogout và từ đâu. Xoá sau khi tìm ra lỗi.
+  if (__DEV__) console.log("[LOGOUT TRIGGERED]", new Error().stack);
+
   if (isLoggingOut) return;
   isLoggingOut = true;
   try {
@@ -250,6 +253,21 @@ axiosInstance.interceptors.response.use(
       // Không await: lỗi của request retry không được rơi vào catch bên dưới
       return axiosInstance(originalRequest);
     } catch (refreshError) {
+      // CHẨN ĐOÁN: in ra lý do refresh thất bại trước khi quyết định logout.
+      // Xoá sau khi tìm ra lỗi.
+      if (__DEV__)
+        console.log(
+          "[REFRESH FAILED]",
+          refreshError instanceof Error ? refreshError.message : undefined,
+          axios.isAxiosError(refreshError)
+            ? {
+                status: refreshError.response?.status,
+                data: refreshError.response?.data,
+                code: refreshError.code,
+              }
+            : String(refreshError),
+        );
+
       if (await shouldLogout(refreshError)) await performLogout();
       return Promise.reject(error);
     }
