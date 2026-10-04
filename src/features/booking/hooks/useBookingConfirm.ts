@@ -86,7 +86,7 @@ export function useBookingConfirm() {
   const walletBalance = wallet ? Number(wallet.balance) : null;
   const { getKey, resetKey } = useIdempotencyKey();
 
-  const [paymentMethod, setPaymentMethod] =
+  const [rawPaymentMethod, setPaymentMethod] =
     useState<PaymentMethodValue>("CASH");
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const [voucherModalVisible, setVoucherModalVisible] = useState(false);
@@ -104,6 +104,17 @@ export function useBookingConfirm() {
     addresses?.pickup_address ?? Object.values(addresses ?? {})[0];
   const deliveryAddress = addresses?.delivery_address;
   const scheduleType: string = service?.form_schema?.schedule_type ?? "ONCE";
+
+  // Dịch vụ định kỳ / nhiều buổi: bắt buộc thanh toán trước -> ẩn tiền mặt.
+  // (BE vẫn là chốt chặn cuối, FE chỉ ẩn cho khách đỡ chọn nhầm.)
+  const prepaidOnly = scheduleType !== "ONCE";
+
+  // Nếu state đang là CASH mà dịch vụ là định kỳ thì coi như CHUYỂN KHOẢN,
+  // không cần chờ useEffect nên không bị "nháy" tiền mặt.
+  const paymentMethod: PaymentMethodValue =
+    prepaidOnly && rawPaymentMethod === "CASH"
+      ? "BANK_TRANSFER"
+      : rawPaymentMethod;
 
   const recurringPrice = useMemo(() => {
     if (!service) return null;
@@ -240,23 +251,26 @@ export function useBookingConfirm() {
 
   const paymentOptions = useMemo<PaymentOption[]>(
     () =>
-      PAYMENT_METHODS.map((m) => {
-        if (m.value !== "WALLET" || walletBalance == null) return m;
-        const insufficient = totalAmount != null && walletBalance < totalAmount;
-        return {
-          ...m,
-          subtitle: `Số dư ${formatVnd(walletBalance)}${
-            insufficient ? " · Không đủ" : ""
-          }`,
-          disabled: insufficient,
-        };
-      }),
-    [walletBalance, totalAmount],
+      PAYMENT_METHODS
+        // Dịch vụ định kỳ: ẩn hẳn tiền mặt
+        .filter((m) => !(prepaidOnly && m.value === "CASH"))
+        .map((m) => {
+          if (m.value !== "WALLET" || walletBalance == null) return m;
+          const insufficient =
+            totalAmount != null && walletBalance < totalAmount;
+          return {
+            ...m,
+            subtitle: `Số dư ${formatVnd(walletBalance)}${
+              insufficient ? " · Không đủ" : ""
+            }`,
+            disabled: insufficient,
+          };
+        }),
+    [walletBalance, totalAmount, prepaidOnly],
   );
 
-  const selectedPaymentMethod = paymentOptions.find(
-    (m) => m.value === paymentMethod,
-  )!;
+  const selectedPaymentMethod =
+    paymentOptions.find((m) => m.value === paymentMethod) ?? paymentOptions[0];
 
   const buildServiceData = () => {
     const allowedKeys = new Set(serviceFields.map((f) => f.key));
@@ -339,7 +353,7 @@ export function useBookingConfirm() {
         address_id: pickupAddress.id,
         delivery_address_id: isMovingService ? deliveryAddress?.id : undefined,
         service_data: serviceData,
-        payment_method: paymentMethod,
+        payment_method: paymentMethod, // đã tự đổi sang BANK_TRANSFER nếu là định kỳ
         voucher_code: selectedVoucher?.voucher.code,
         note:
           typeof values.note === "string" && values.note.trim()
@@ -369,9 +383,11 @@ export function useBookingConfirm() {
       if (err?.data) resetKey(); // lỗi từ BE -> lần sau là ý định mới; lỗi mạng giữ key để retry an toàn
 
       const voucherError = err?.data?.errors?.voucher_code;
+      const paymentError = err?.data?.errors?.payment_method;
       const amountError = err?.data?.errors?.amount ?? err?.data?.amount;
       const message =
         voucherError ||
+        paymentError ||
         amountError ||
         err?.data?.errors?.service_data ||
         err?.data?.service_data?.__extra__ ||
@@ -380,12 +396,15 @@ export function useBookingConfirm() {
         "Đặt lịch thất bại, vui lòng thử lại.";
 
       if (voucherError) clearSelectedVoucher();
+      if (paymentError) setPaymentModalVisible(true);
       Alert.alert(
         voucherError
           ? "Voucher không còn hợp lệ"
-          : amountError
-            ? "Ví không đủ tiền"
-            : "Không thể đặt lịch",
+          : paymentError
+            ? "Phương thức thanh toán"
+            : amountError
+              ? "Ví không đủ tiền"
+              : "Không thể đặt lịch",
         Array.isArray(message) ? message.join("\n") : String(message),
       );
     }
@@ -419,5 +438,6 @@ export function useBookingConfirm() {
     setPaymentModalVisible,
     confirm,
     paymentOptions,
+    prepaidOnly,
   };
 }

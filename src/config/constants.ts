@@ -19,4 +19,5 @@ export const ROUTES = {
   SETTINGS: "/profile/settings",
   ABOUT: "/profile/about",
   CHANGE_PASSWORD: "/profile/change-password",
+  PAYMENT_HISTORY: "/profile/payment-history",
 } as const;

@@ -66,6 +66,11 @@ export const bookingApi = baseApi.injectEndpoints({
         qr_code: string;
         payment_link_id: string;
         expires_at: string;
+        bank_bin?: string;
+        account_number?: string;
+        account_name?: string;
+        transfer_content?: string;
+        amount?: number;
       },
       {
         bookingId: number;

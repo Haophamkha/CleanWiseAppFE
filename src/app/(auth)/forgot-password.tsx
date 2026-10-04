@@ -69,7 +69,6 @@ export default function ForgotPasswordScreen() {
       show({
         title: "Đổi mật khẩu thành công!",
         message: "Bạn có thể đăng nhập lại bằng mật khẩu mới.",
-        buttonTitle: "Quay lại đăng nhập",
         onClose: () => goToLoginRef.current(),
       });
     }

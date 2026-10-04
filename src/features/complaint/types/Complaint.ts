@@ -13,6 +13,8 @@ export type ComplaintIssueTypeStage =
   | "AFTER_SERVICE"
   | "ANY";
 
+export type ComplaintReporterRole = "CUSTOMER" | "WORKER";
+
 /**
  * Loại vấn đề/khiếu nại mà customer có thể chọn.
  *
@@ -26,6 +28,9 @@ export type ComplaintIssueType = {
   description: string;
   stage: ComplaintIssueTypeStage;
   stage_label: string;
+  // BE lọc sẵn theo role người gọi; field này vẫn trả về để hiển thị
+  // nếu cần (ví dụ debug), không cần tự lọc lại ở FE.
+  applies_to: ComplaintReporterRole | "ANY";
   is_active: boolean;
 };
 
@@ -65,6 +70,8 @@ export type ComplaintListItem = {
   booking: number;
   schedule: number | null;
 
+  reporter_role: ComplaintReporterRole;
+
   issue_type: number;
   issue_type_code: string;
   issue_type_name: string;
@@ -93,12 +100,20 @@ export type ComplaintListResponse = {
 
 /**
  * Chi tiết complaint.
+ *
+ * ĐỔI: BE đổi field `customer`/`customer_name` thành `reporter`/
+ * `reporter_name` (chung cho cả khách lẫn nhân viên), thêm `reporter_role`,
+ * `worker`/`worker_name` (nhân viên liên quan tới khiếu nại, có thể null).
  */
 export type ComplaintDetail = {
   id: number;
 
-  customer: number;
-  customer_name: string;
+  reporter: number;
+  reporter_role: ComplaintReporterRole;
+  reporter_name: string;
+
+  worker: number | null;
+  worker_name: string | null;
 
   booking: number;
   schedule: number | null;
@@ -142,3 +157,4 @@ export type PickedFile = {
   type?: string;
   size?: number;
 };
+

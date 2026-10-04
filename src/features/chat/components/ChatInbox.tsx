@@ -31,7 +31,7 @@ export function ChatInbox() {
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.surface }}>
-      <TabScreenHeader title="Tin nhắn" showBell={c.isLoggedIn}>
+      <TabScreenHeader title="Tin nhắn">
         {c.isLoggedIn && (
           <View
             style={{

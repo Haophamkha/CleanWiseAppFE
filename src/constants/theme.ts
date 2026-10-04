@@ -36,7 +36,14 @@ export const COLORS = {
 
 export const GRADIENTS = {
   hero: tokens.gradients.hero as [string, string, string],
+  wallet: [COLORS.primary, COLORS.primaryDark] as [string, string],
 };
+export const TREND = {
+  up: COLORS.success,
+  upBg: COLORS.successLight,
+  down: COLORS.danger,
+  downBg: COLORS.dangerLight,
+} as const;
 
 // Hai mức đổ bóng dùng chung toàn app
 export const SHADOWS = {
