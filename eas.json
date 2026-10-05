@@ -12,7 +12,12 @@
       }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "android": { "buildType": "apk" },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://take-unreeling-shaping.ngrok-free.dev",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "1078682876234-ho94va8q9horn2am3vun6vvcev8fq3db.apps.googleusercontent.com"
+      }
     },
     "production": {
       "autoIncrement": true

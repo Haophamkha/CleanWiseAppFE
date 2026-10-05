@@ -18,7 +18,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.haophamkha.CleanWiseAppFE"
+      "package": "com.haophamkha.CleanWiseAppFE",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
@@ -26,6 +27,7 @@
     },
     "plugins": [
       "expo-router",
+      "@react-native-google-signin/google-signin",
       [
         "expo-splash-screen",
         {
