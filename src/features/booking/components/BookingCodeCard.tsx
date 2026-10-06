@@ -1,9 +1,15 @@
-import { COLORS } from "@/constants/theme";
+import { COLORS, SHADOWS } from "@/constants/theme";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { Feather } from "@expo/vector-icons";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 
 type Props = { code?: string; large?: boolean };
+
+const MONO = Platform.select({
+  ios: "Menlo",
+  android: "monospace",
+  default: "monospace",
+});
 
 export function BookingCodeCard({ code, large }: Props) {
   const { copied, copy } = useCopyToClipboard();
@@ -11,23 +17,24 @@ export function BookingCodeCard({ code, large }: Props) {
   const copyButton = (
     <TouchableOpacity
       onPress={() => copy(code)}
-      activeOpacity={0.8}
-      className={`flex-row items-center h-10 px-4 rounded-full ${
-        copied ? "bg-primary" : large ? "bg-surface" : "bg-primary-light"
-      }`}
+      activeOpacity={0.7}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel="Sao chép mã đơn"
+      className="items-center justify-center rounded-full"
+      style={{
+        width: 40,
+        height: 40,
+        backgroundColor: copied ? COLORS.successLight : COLORS.canvas,
+        borderWidth: 1,
+        borderColor: copied ? COLORS.success : COLORS.line,
+      }}
     >
       <Feather
         name={copied ? "check" : "copy"}
-        size={14}
-        color={copied ? COLORS.white : COLORS.primaryDark}
+        size={16}
+        color={copied ? COLORS.success : COLORS.inkSoft}
       />
-      <Text
-        className={`ml-1.5 text-xs font-bold ${
-          copied ? "text-white" : "text-primary-dark"
-        }`}
-      >
-        {copied ? "Đã chép" : "Sao chép"}
-      </Text>
     </TouchableOpacity>
   );
 
@@ -40,9 +47,8 @@ export function BookingCodeCard({ code, large }: Props) {
           </Text>
           <Text
             selectable
-            numberOfLines={1}
             className="font-extrabold mt-0.5 text-base text-ink"
-            style={{ letterSpacing: 1 }}
+            style={{ fontFamily: MONO, letterSpacing: 0.8 }}
           >
             {code}
           </Text>
@@ -53,9 +59,12 @@ export function BookingCodeCard({ code, large }: Props) {
   }
 
   return (
-    <View className="mb-4 flex-row items-center rounded-3xl bg-primary-soft border border-primary-border p-4">
-      <View className="w-12 h-12 rounded-2xl bg-primary-light items-center justify-center mr-3">
-        <Feather name="hash" size={20} color={COLORS.primaryDark} />
+    <View
+      className="mb-4 flex-row items-center rounded-3xl bg-surface border border-line p-4"
+      style={SHADOWS.card}
+    >
+      <View className="w-11 h-11 rounded-2xl bg-canvas items-center justify-center mr-3">
+        <Feather name="hash" size={18} color={COLORS.inkSoft} />
       </View>
       <View className="flex-1 mr-3">
         <Text
@@ -66,9 +75,8 @@ export function BookingCodeCard({ code, large }: Props) {
         </Text>
         <Text
           selectable
-          numberOfLines={1}
-          className="text-[20px] font-extrabold text-primary mt-0.5"
-          style={{ letterSpacing: 1.2 }}
+          className="text-[19px] font-extrabold text-ink mt-0.5"
+          style={{ fontFamily: MONO, letterSpacing: 0.8 }}
         >
           {code}
         </Text>

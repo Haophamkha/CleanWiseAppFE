@@ -30,7 +30,11 @@ const ACCOUNT_ITEMS: MenuItem[] = [
   { icon: "credit-card", label: "Ví / Thẻ thanh toán", href: ROUTES.WALLET },
   { icon: "clock", label: "Lịch sử thanh toán", href: ROUTES.PAYMENT_HISTORY },
   { icon: "tag", label: "Khuyến mãi", href: ROUTES.VOUCHERS },
-  { icon: "star", label: "Đánh giá của tôi", href: ROUTES.MY_REVIEWS },
+  {
+    icon: "message-square",
+    label: "Đánh giá và khiếu nại",
+    href: ROUTES.MY_REVIEWS,
+  },
 ];
 
 const SUPPORT_ITEMS: MenuItem[] = [
