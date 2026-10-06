@@ -68,6 +68,9 @@ export type CreateComplaintRequest = {
 export type ComplaintListItem = {
   id: number;
   booking: number;
+  booking_code: string;
+  schedule_sequence_no: number | null;
+  worker_name: string | null;
   schedule: number | null;
 
   reporter_role: ComplaintReporterRole;
@@ -116,6 +119,8 @@ export type ComplaintDetail = {
   worker_name: string | null;
 
   booking: number;
+  booking_code: string;
+  schedule_sequence_no: number | null;
   schedule: number | null;
 
   issue_type: number;
@@ -157,4 +162,3 @@ export type PickedFile = {
   type?: string;
   size?: number;
 };
-

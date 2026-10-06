@@ -9,7 +9,14 @@ import { BOOKING_STATUS_META } from "@/features/booking/utils/bookingStatus";
 import { formatVnd } from "@/utils/currency";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
+
+const MONO = Platform.select({
+  ios: "Menlo",
+  android: "monospace",
+  default: "monospace",
+});
+
 const STATUS_ICON: Record<BookingStatus, keyof typeof Feather.glyphMap> = {
   PENDING: "clock",
   ASSIGNED: "user-check",
@@ -54,9 +61,14 @@ function MetaRow({
   children: string;
 }) {
   return (
-    <View className="flex-row items-center mt-2">
-      <Feather name={icon} size={13} color={COLORS.inkMuted} />
-      <Text className="text-ink-soft text-[13px] ml-2 flex-1" numberOfLines={1}>
+    <View className="flex-row items-center mt-2.5">
+      <View
+        className="items-center justify-center rounded-full bg-surface"
+        style={{ width: 24, height: 24 }}
+      >
+        <Feather name={icon} size={12} color={COLORS.inkSoft} />
+      </View>
+      <Text className="text-ink text-[13px] ml-2.5 flex-1" numberOfLines={1}>
         {children}
       </Text>
     </View>
@@ -93,12 +105,33 @@ export function BookingCard({ item }: { item: BookingCardData }) {
         })
       }
     >
-      {/* dải màu theo trạng thái */}
-      <View style={{ height: 4, backgroundColor: meta.color }} />
+      {/* Hàng 1: MÃ ĐƠN riêng một hàng, không bị cắt */}
+      <View
+        className="flex-row flex-wrap items-center px-4 py-3"
+        style={{ backgroundColor: COLORS.primaryLight }}
+      >
+        <Text
+          className="text-[11px] font-bold mr-2"
+          style={{ color: COLORS.primaryDark, opacity: 0.7 }}
+        >
+          MÃ ĐƠN
+        </Text>
+        <Text
+          selectable
+          className="text-[15px] font-extrabold"
+          style={{
+            color: COLORS.primaryDark,
+            fontFamily: MONO,
+            letterSpacing: 0.8,
+          }}
+        >
+          {item.booking_code}
+        </Text>
+      </View>
 
       <View className="p-4">
-        {/* Hàng 1: icon + tên + trạng thái */}
-        <View className="flex-row items-start">
+        {/* Hàng 2: ảnh + tên dịch vụ + trạng thái bên dưới */}
+        <View className="flex-row items-center">
           <ServiceThumb
             imageUrl={item.service_image}
             serviceName={item.service_name}
@@ -106,43 +139,35 @@ export function BookingCard({ item }: { item: BookingCardData }) {
             tint={meta.color}
             bg={meta.bg}
           />
-
-          <View className="flex-1 mr-2">
-            <Text className="text-ink font-bold text-[16px]" numberOfLines={2}>
+          <View className="flex-1">
+            <Text className="text-ink font-bold text-[17px]" numberOfLines={2}>
               {item.service_name}
             </Text>
-            <Text
-              selectable
-              className="text-ink-muted text-[11.5px] mt-0.5"
-              style={{ letterSpacing: 0.6 }}
-              numberOfLines={1}
+            <View
+              className="self-start flex-row items-center px-2.5 py-1 rounded-full mt-1.5"
+              style={{ backgroundColor: meta.bg }}
             >
-              #{item.booking_code}
-            </Text>
-          </View>
-
-          <View
-            className="px-2.5 py-1 rounded-full"
-            style={{ backgroundColor: meta.bg }}
-          >
-            <Text
-              className="text-[11px] font-bold"
-              style={{ color: meta.color }}
-            >
-              {meta.label}
-            </Text>
+              <View
+                className="rounded-full mr-1.5"
+                style={{ width: 6, height: 6, backgroundColor: meta.color }}
+              />
+              <Text
+                className="text-[11.5px] font-bold"
+                style={{ color: meta.color }}
+              >
+                {meta.label}
+              </Text>
+            </View>
           </View>
         </View>
 
-        {/* Hàng 2: thông tin phụ */}
-        <View className="mt-3 rounded-2xl bg-canvas px-3.5 pt-1 pb-3">
-          {item.next_schedule_start ? (
-            <MetaRow icon="calendar">
-              {dateTimeText(item.next_schedule_start)}
-            </MetaRow>
-          ) : (
-            <MetaRow icon="calendar">{`Đặt ngày ${dateText(item.created_at)}`}</MetaRow>
-          )}
+        {/* Hàng 3: thông tin phụ */}
+        <View className="mt-4 rounded-2xl bg-canvas px-3.5 pt-0.5 pb-3.5">
+          <MetaRow icon="calendar">
+            {item.next_schedule_start
+              ? dateTimeText(item.next_schedule_start)
+              : `Đặt ngày ${dateText(item.created_at)}`}
+          </MetaRow>
 
           {!!item.address_summary && (
             <MetaRow icon="map-pin">{item.address_summary}</MetaRow>
@@ -155,7 +180,7 @@ export function BookingCard({ item }: { item: BookingCardData }) {
           )}
 
           {hasProgress && (
-            <View className="mt-3">
+            <View className="mt-3.5">
               <View className="flex-row items-center justify-between mb-1.5">
                 <Text className="text-[11.5px] text-ink-muted">Tiến độ</Text>
                 <Text className="text-[11.5px] font-bold text-ink-soft">
@@ -175,8 +200,8 @@ export function BookingCard({ item }: { item: BookingCardData }) {
           )}
         </View>
 
-        {/* Hàng 3: thanh toán + tổng tiền */}
-        <View className="flex-row items-end justify-between mt-4">
+        {/* Hàng 4: thanh toán + tổng tiền */}
+        <View className="flex-row items-end justify-between mt-4 pt-4 border-t border-dashed border-line">
           <View className="flex-1 mr-3">
             {showPayment && (
               <View
@@ -207,19 +232,6 @@ export function BookingCard({ item }: { item: BookingCardData }) {
                 : "Chờ báo giá"}
             </Text>
           </View>
-        </View>
-
-        {/* Nút xem chi tiết */}
-        <View className="flex-row items-center justify-center mt-3 pt-3 border-t border-dashed border-line">
-          <Text className="text-primary-dark text-[13px] font-bold">
-            Xem chi tiết
-          </Text>
-          <Feather
-            name="arrow-right"
-            size={14}
-            color={COLORS.primaryDark}
-            style={{ marginLeft: 6 }}
-          />
         </View>
       </View>
     </TouchableOpacity>
