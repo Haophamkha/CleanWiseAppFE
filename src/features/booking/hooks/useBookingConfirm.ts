@@ -2,6 +2,7 @@ import type { FeatherName } from "@/components/ui/Input";
 import { useCreateBookingMutation } from "@/features/booking/api/bookingApi";
 import { useIdempotencyKey } from "@/features/booking/hooks/useIdempotencyKey";
 import { clearBookingDraft } from "@/features/booking/stores/bookingDraftSlice";
+import { useGetFavoriteWorkersQuery } from "@/features/favorite-worker/api/favoriteWorkerApi";
 import {
   calculateEstimatedPrice,
   calculateRecurringPrice,
@@ -104,6 +105,23 @@ export function useBookingConfirm() {
     addresses?.pickup_address ?? Object.values(addresses ?? {})[0];
   const deliveryAddress = addresses?.delivery_address;
   const scheduleType: string = service?.form_schema?.schedule_type ?? "ONCE";
+  const user = useAppSelector((s) => s.auth.user);
+  const [selectedWorkerId, setPreferredWorkerId] = useState<number | null>(
+    null,
+  );
+  const { data: favoriteData, isLoading: favoritesLoading } =
+    useGetFavoriteWorkersQuery(
+      {
+        service_id: service?.id,
+        address_id: pickupAddress?.id,
+        page_size: 50,
+      },
+      { skip: !user || !service || !pickupAddress },
+    );
+  const favoriteWorkers = favoriteData?.results ?? [];
+  // Chọn xong mà đổi địa chỉ/dịch vụ làm người đó không còn hợp lệ -> tự bỏ qua
+  const preferredWorker =
+    favoriteWorkers.find((w) => w.worker_id === selectedWorkerId) ?? null;
 
   // Dịch vụ định kỳ / nhiều buổi: bắt buộc thanh toán trước -> ẩn tiền mặt.
   // (BE vẫn là chốt chặn cuối, FE chỉ ẩn cho khách đỡ chọn nhầm.)
@@ -355,6 +373,7 @@ export function useBookingConfirm() {
         service_data: serviceData,
         payment_method: paymentMethod, // đã tự đổi sang BANK_TRANSFER nếu là định kỳ
         voucher_code: selectedVoucher?.voucher.code,
+        preferred_worker_id: preferredWorker?.worker_id,
         note:
           typeof values.note === "string" && values.note.trim()
             ? values.note.trim()
@@ -384,10 +403,12 @@ export function useBookingConfirm() {
 
       const voucherError = err?.data?.errors?.voucher_code;
       const paymentError = err?.data?.errors?.payment_method;
+      const preferredError = err?.data?.errors?.preferred_worker_id;
       const amountError = err?.data?.errors?.amount ?? err?.data?.amount;
       const message =
         voucherError ||
         paymentError ||
+        preferredError ||
         amountError ||
         err?.data?.errors?.service_data ||
         err?.data?.service_data?.__extra__ ||
@@ -397,14 +418,17 @@ export function useBookingConfirm() {
 
       if (voucherError) clearSelectedVoucher();
       if (paymentError) setPaymentModalVisible(true);
+      if (preferredError) setPreferredWorkerId(null);
       Alert.alert(
         voucherError
           ? "Voucher không còn hợp lệ"
           : paymentError
             ? "Phương thức thanh toán"
-            : amountError
-              ? "Ví không đủ tiền"
-              : "Không thể đặt lịch",
+            : preferredError
+              ? "Nhân viên yêu thích"
+              : amountError
+                ? "Ví không đủ tiền"
+                : "Không thể đặt lịch",
         Array.isArray(message) ? message.join("\n") : String(message),
       );
     }
@@ -431,6 +455,10 @@ export function useBookingConfirm() {
     setVoucherModalVisible,
     applyVoucher,
     clearSelectedVoucher,
+    favoriteWorkers,
+    favoritesLoading,
+    preferredWorkerId: preferredWorker?.worker_id ?? null,
+    setPreferredWorkerId,
     paymentMethod,
     setPaymentMethod,
     selectedPaymentMethod,

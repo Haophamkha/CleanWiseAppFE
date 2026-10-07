@@ -4,19 +4,21 @@ import { useGetServiceDetailQuery } from "@/features/service/api/serviceApi";
 import { AddressPickerField } from "@/features/service/components/AddressPickerField";
 import { FormSchemaRenderer } from "@/features/service/components/FormSchemaRenderer";
 import { RepeatableItemsFooter } from "@/features/service/components/RepeatableItemsFooter";
+import { ServiceIcon } from "@/features/service/components/ServiceIcon";
 import { calculateEstimatedPrice } from "@/features/service/utils/servicePricing";
 import { getServiceVisual } from "@/features/service/utils/serviceVisuals";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { formatVnd } from "@/utils/currency";
-import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -36,6 +38,7 @@ export default function ServiceDetailScreen() {
     isError,
   } = useGetServiceDetailQuery(serviceId, {
     skip: !Number.isFinite(serviceId),
+    refetchOnMountOrArgChange: true,
   });
 
   const [values, setValues] = useState<Record<string, any>>({});
@@ -135,6 +138,11 @@ export default function ServiceDetailScreen() {
   }
 
   const visual = getServiceVisual(service.section_code);
+  const heroImage =
+    service.images?.find((i) => i.is_primary)?.image ??
+    service.images?.[0]?.image ??
+    null;
+
   const estimatedPrice = calculateEstimatedPrice(
     serviceFields,
     service.pricing_config,
@@ -177,16 +185,25 @@ export default function ServiceDetailScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 220 }}
       >
-        <View
-          className="items-center justify-center py-10"
-          style={{ backgroundColor: visual.bg }}
-        >
-          <MaterialCommunityIcons
-            name={visual.icon as any}
-            size={56}
-            color={visual.color}
+        {heroImage ? (
+          <Image
+            source={{ uri: heroImage }}
+            style={{ width: "100%", height: 200 }}
+            resizeMode="cover"
           />
-        </View>
+        ) : (
+          <View
+            className="items-center justify-center py-10"
+            style={{ backgroundColor: visual.bg }}
+          >
+            <ServiceIcon
+              uri={service.icon}
+              fallbackName={visual.icon}
+              size={56}
+              color={visual.color}
+            />
+          </View>
+        )}
 
         <View className="px-5 pt-5">
           <Text className="text-gray-500 text-sm mb-5">
