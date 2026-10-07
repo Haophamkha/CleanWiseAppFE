@@ -1,5 +1,6 @@
 import { useRegisterPushTokenMutation } from "@/features/notification/api/notificationApi";
 import Constants, { ExecutionEnvironment } from "expo-constants";
+import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Platform } from "react-native";
 
@@ -9,11 +10,35 @@ import { storage } from "@/utils/storage";
 const isExpoGo =
   Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
+const handledResponses = new Set<string>();
+
+function openFromPush(response: any) {
+  const id = response?.notification?.request?.identifier;
+  if (id) {
+    if (handledResponses.has(id)) return;
+    handledResponses.add(id);
+  }
+
+  const data = response?.notification?.request?.content?.data;
+
+  if (data?.booking_id) {
+    router.push({
+      pathname: "/booking/[id]",
+      params: { id: String(data.booking_id) },
+    } as any);
+  } else if (data?.type === "PAYMENT") {
+    router.push("/profile/wallets/wallet" as any);
+  } else {
+    router.push("/notifications" as any);
+  }
+}
+
 export function usePushNotifications(enabled: boolean) {
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const [registerToken] = useRegisterPushTokenMutation();
   const registeredRef = useRef(false);
 
+  // Đăng ký token + tạo channel
   useEffect(() => {
     if (!enabled) {
       registeredRef.current = false;
@@ -35,6 +60,17 @@ export function usePushNotifications(enabled: boolean) {
             shouldShowList: true,
           }),
         });
+
+        // Tạo channel TRƯỚC khi xin quyền / lấy token (Android 13+ yêu cầu)
+        if (Platform.OS === "android") {
+          await Notifications.setNotificationChannelAsync("default", {
+            name: "Thông báo chung",
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: "#208AEF",
+            sound: "default",
+          });
+        }
 
         if (!Device.isDevice) return;
 
@@ -59,13 +95,6 @@ export function usePushNotifications(enabled: boolean) {
         registeredRef.current = true;
 
         await registerToken({ token, platform: Platform.OS }).unwrap();
-
-        if (Platform.OS === "android") {
-          await Notifications.setNotificationChannelAsync("default", {
-            name: "default",
-            importance: Notifications.AndroidImportance.MAX,
-          });
-        }
       } catch (error) {
         if (__DEV__) {
           console.log(
@@ -77,6 +106,30 @@ export function usePushNotifications(enabled: boolean) {
     };
 
     register();
+  }, [enabled]);
+
+  // Bấm vào thông báo -> mở đúng màn hình
+  useEffect(() => {
+    if (!enabled || isExpoGo) return;
+    let cancelled = false;
+    let sub: { remove: () => void } | undefined;
+
+    (async () => {
+      const Notifications = await import("expo-notifications");
+      if (cancelled) return;
+
+      // App mở từ trạng thái tắt hẳn bằng cách bấm push
+      const last = await Notifications.getLastNotificationResponseAsync();
+      if (last) openFromPush(last);
+
+      sub = Notifications.addNotificationResponseReceivedListener(openFromPush);
+      if (cancelled) sub.remove();
+    })();
+
+    return () => {
+      cancelled = true;
+      sub?.remove();
+    };
   }, [enabled]);
 
   return { expoPushToken };

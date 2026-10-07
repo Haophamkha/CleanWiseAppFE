@@ -15,6 +15,7 @@ export type CreateBookingRequest = {
   note?: string;
   voucher_code?: string;
   payment_method: PaymentMethod;
+  preferred_worker_id?: number | null;
 };
 
 export type BookingWorker = {
@@ -123,6 +124,8 @@ export type BookingDetail = {
   status: BookingStatus;
   payment_status: string;
   payment: BookingPayment | null;
+  preferred_worker?: number | null;
+  preferred_worker_expires_at?: string | null;
   price_breakdown: {
     subtotal_amount: string | null;
     discount_amount: string;

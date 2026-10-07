@@ -2,7 +2,8 @@ import { useGetBookingsQuery } from "@/features/booking/api/bookingApi";
 import { useGetServicesQuery } from "@/features/service/api/serviceApi";
 import { useGetPublicVouchersQuery } from "@/features/voucher/api/voucherApi";
 import { useAppSelector } from "@/store/hooks";
-import { useCallback, useMemo, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 const ACTIVE_STATUSES = ["PENDING", "ASSIGNED", "IN_PROGRESS"];
 
@@ -20,7 +21,9 @@ export function useHome() {
   const [query, setQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
 
-  const servicesQ = useGetServicesQuery();
+  const servicesQ = useGetServicesQuery(undefined, {
+    refetchOnFocus: true, // mở lại app từ background thì refetch
+  });
   // Bỏ `skip` nếu endpoint voucher công khai cho phép khách chưa đăng nhập
   const vouchersQ = useGetPublicVouchersQuery(undefined, {
     skip: !isAuthenticated,
@@ -28,6 +31,19 @@ export function useHome() {
   const bookingsQ = useGetBookingsQuery(
     { page_size: 10 },
     { skip: !isAuthenticated, refetchOnMountOrArgChange: 30 },
+  );
+
+  // Refetch mỗi lần tab Home được focus lại (bỏ qua lần focus đầu tiên)
+  const firstFocus = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (firstFocus.current) {
+        firstFocus.current = false;
+        return;
+      }
+      servicesQ.refetch();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []),
   );
 
   const services = useMemo(() => {

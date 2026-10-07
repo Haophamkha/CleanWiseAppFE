@@ -22,7 +22,12 @@ export const favoriteWorkerApi = baseApi.injectEndpoints({
 
     getFavoriteWorkers: builder.query<
       FavoriteWorkerListResponse,
-      { page?: number; page_size?: number } | void
+      {
+        page?: number;
+        page_size?: number;
+        service_id?: number;
+        address_id?: number;
+      } | void
     >({
       query: (params) => ({
         url: "/api/customer/favorite-workers/",

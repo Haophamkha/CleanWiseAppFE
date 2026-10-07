@@ -4,14 +4,26 @@ import { COLORS, RADIUS, SHADOWS } from "@/constants/theme";
 import { AddressSummaryCard } from "@/features/booking/components/AddressSummaryCard";
 import { IconRow } from "@/features/booking/components/IconRow";
 import { PaymentMethodSheet } from "@/features/booking/components/PaymentMethodSheet";
+import {
+  PreferredWorkerInfoModal,
+  PreferredWorkerSheet,
+  workerKey,
+  workerName,
+} from "@/features/booking/components/PreferredWorkerSheet";
 import { ServiceOptionsSummary } from "@/features/booking/components/ServiceOptionsSummary";
-
 import { useBookingConfirm } from "@/features/booking/hooks/useBookingConfirm";
 import { BookingVoucherModal } from "@/features/voucher/components/BookingVoucherModal";
 import { formatVnd } from "@/utils/currency";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Heading = ({ children }: { children: string }) => (
@@ -73,7 +85,17 @@ export default function BookingConfirmScreen() {
     confirm,
     paymentOptions,
     prepaidOnly,
+    favoriteWorkers,
+    favoritesLoading,
+    preferredWorkerId,
+    setPreferredWorkerId,
   } = useBookingConfirm();
+
+  const [workerModalVisible, setWorkerModalVisible] = useState(false);
+  const [infoVisible, setInfoVisible] = useState(false);
+  const selectedWorker = favoriteWorkers.find(
+    (w: any) => workerKey(w) === preferredWorkerId,
+  );
 
   if (!service) {
     return (
@@ -254,6 +276,90 @@ export default function BookingConfirmScreen() {
           </View>
         )}
 
+        {/* Nhân viên yêu thích */}
+        <View className="mt-6">
+          <Text className="font-bold text-base text-ink mb-2">
+            Nhân viên yêu thích
+          </Text>
+
+          {favoritesLoading ? (
+            <View className="py-4 items-center">
+              <ActivityIndicator color={COLORS.primary} />
+            </View>
+          ) : favoriteWorkers.length > 0 ? (
+            <View
+              className="flex-row items-center rounded-2xl border border-line bg-surface"
+              style={SHADOWS.card}
+            >
+              <TouchableOpacity
+                onPress={() => setWorkerModalVisible(true)}
+                activeOpacity={0.8}
+                className="flex-1 flex-row items-center p-4"
+              >
+                <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center mr-3">
+                  <Feather name="heart" size={18} color={COLORS.primaryDark} />
+                </View>
+                <View className="flex-1">
+                  <Text
+                    className="text-[15px] font-semibold text-ink"
+                    numberOfLines={1}
+                  >
+                    {selectedWorker
+                      ? workerName(selectedWorker)
+                      : "Chọn nhân viên"}
+                  </Text>
+                  {selectedWorker && (
+                    <Text className="text-ink-muted text-xs mt-0.5">
+                      Gửi yêu cầu riêng cho nhân viên này
+                    </Text>
+                  )}
+                </View>
+                {selectedWorker && (
+                  <TouchableOpacity
+                    onPress={() => setPreferredWorkerId(null as any)}
+                    hitSlop={8}
+                    className="mr-2"
+                  >
+                    <Feather
+                      name="x-circle"
+                      size={18}
+                      color={COLORS.inkMuted}
+                    />
+                  </TouchableOpacity>
+                )}
+                <Feather
+                  name="chevron-right"
+                  size={18}
+                  color={COLORS.inkMuted}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setInfoVisible(true)}
+                hitSlop={8}
+                className="pr-4 pl-1"
+              >
+                <Feather name="help-circle" size={22} color="#F59E0B" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View className="flex-row items-center rounded-2xl border border-dashed border-line bg-surface p-4">
+              <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center mr-3">
+                <Feather name="heart" size={18} color={COLORS.primaryDark} />
+              </View>
+              <View className="flex-1">
+                <Text className="text-[14px] font-semibold text-ink">
+                  Chưa có nhân viên yêu thích phù hợp
+                </Text>
+                <Text className="text-ink-muted text-xs mt-0.5">
+                  Sau khi hoàn thành đơn, bạn có thể thêm nhân viên vào danh
+                  sách yêu thích để gửi yêu cầu riêng cho lần đặt sau.
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+
         {/* Phương thức thanh toán */}
         <View className="mt-6">
           <Text className="font-bold text-base text-ink mb-2">
@@ -337,6 +443,19 @@ export default function BookingConfirmScreen() {
           setPaymentModalVisible(false);
         }}
         onClose={() => setPaymentModalVisible(false)}
+      />
+
+      <PreferredWorkerSheet
+        visible={workerModalVisible}
+        workers={favoriteWorkers}
+        selectedId={preferredWorkerId ?? null}
+        onSelect={setPreferredWorkerId}
+        onClose={() => setWorkerModalVisible(false)}
+      />
+
+      <PreferredWorkerInfoModal
+        visible={infoVisible}
+        onClose={() => setInfoVisible(false)}
       />
     </View>
   );

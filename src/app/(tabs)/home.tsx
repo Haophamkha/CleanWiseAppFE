@@ -93,7 +93,10 @@ export default function HomeScreen() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 20 }}
+              contentContainerStyle={{
+                paddingHorizontal: 20,
+                paddingVertical: 6,
+              }}
             >
               {h.vouchers.map((v) => (
                 <HomeVoucherCard

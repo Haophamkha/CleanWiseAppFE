@@ -33,7 +33,12 @@ export function ServiceIcon({
           ...(TINT_REMOTE_ICON ? { tintColor: color } : null),
         }}
         resizeMode="contain"
-        onError={() => setFailedUri(uri)}
+        onError={(e) => {
+          if (__DEV__) {
+            console.log("[ServiceIcon] load failed", uri, e.nativeEvent);
+          }
+          setFailedUri(uri);
+        }}
       />
     );
   }
