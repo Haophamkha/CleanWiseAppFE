@@ -367,6 +367,7 @@ export const baseApi = createApi({
   tagTypes: [
     "Reviews",
     "ChatConversations",
+    "ChatbotConversations",
     "Profile",
     "Addresses",
     "PublicVouchers",

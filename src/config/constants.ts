@@ -20,4 +20,5 @@ export const ROUTES = {
   ABOUT: "/profile/about",
   CHANGE_PASSWORD: "/profile/change-password",
   PAYMENT_HISTORY: "/profile/payment-history",
+  HELP: "/help",
 } as const;

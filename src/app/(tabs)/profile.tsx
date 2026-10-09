@@ -38,6 +38,7 @@ const ACCOUNT_ITEMS: MenuItem[] = [
 ];
 
 const SUPPORT_ITEMS: MenuItem[] = [
+  { icon: "book-open", label: "Hướng dẫn sử dụng", href: ROUTES.HELP },
   { icon: "settings", label: "Cài đặt", href: ROUTES.SETTINGS },
   { icon: "info", label: "Về CleanWise", href: ROUTES.ABOUT },
 ];
