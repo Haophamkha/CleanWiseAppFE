@@ -143,6 +143,7 @@ export const {
   useCreateBookingMutation,
   useGetBookingsQuery,
   useGetBookingDetailQuery,
+  useLazyGetBookingDetailQuery,
   useCreatePaymentLinkMutation,
   useCancelBookingMutation,
   useCancelScheduleMutation,

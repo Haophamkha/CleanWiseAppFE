@@ -4,10 +4,12 @@ import { useChatSocket } from "@/features/chat/hooks/useChatSocket";
 import { useAppSelector } from "@/store/hooks";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { useEffect, useRef, type ComponentProps } from "react";
+import { useEffect, useRef, useState, type ComponentProps } from "react";
 import {
   Animated,
   Easing,
+  Keyboard,
+  Platform,
   Pressable,
   Text,
   View,
@@ -333,18 +335,40 @@ function CenterItem({
 }
 
 function CurvedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  useEffect(() => {
+    const show = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      () => setKeyboardVisible(true),
+    );
+    const hide = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => setKeyboardVisible(false),
+    );
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
   const insets = useSafeAreaInsets();
   const { width: barWidth } = useWindowDimensions();
   const count = state.routes.length;
   const slotWidth = barWidth / count;
   const centerIndex = Math.floor(count / 2);
   const path = buildBarPath(barWidth);
+  const isChatbot = state.routes[state.index]?.name === "chatbot";
+  // Reserve the raised center button inside the bar's own layout so it cannot
+  // overlap the chatbot composer. Keep a small gap for its active animation.
+  const topClearance = isChatbot ? OVERHANG + 8 : 0;
+
+  if (keyboardVisible && isChatbot) return null;
 
   return (
     <View
       style={{
         backgroundColor: COLORS.canvas,
-        height: BAR_HEIGHT + insets.bottom,
+        height: BAR_HEIGHT + insets.bottom + topClearance,
+        paddingTop: topClearance,
         overflow: "visible",
       }}
     >
