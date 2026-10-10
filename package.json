@@ -62,7 +62,6 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
-    "test:chatbot": "node scripts/tests/chatbot.test.cjs",
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",

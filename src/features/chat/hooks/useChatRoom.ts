@@ -6,10 +6,15 @@ import {
 } from "@/features/chat/api/chatApi";
 import { useChatSocket } from "@/features/chat/hooks/useChatSocket";
 import {
+    getChatBlockedMessage,
+    restoreBlockedDraft,
+} from "@/features/chat/utils/chatModeration";
+import {
     mergeMessages,
     type UiChatMessage,
 } from "@/features/chat/utils/chatUtils";
 import { useAppSelector } from "@/store/hooks";
+import { showErrorToast } from "@/utils/toast";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, FlatList, Keyboard, Platform } from "react-native";
@@ -249,7 +254,15 @@ export function useChatRoom(id: number) {
         ),
       );
       scrollToLatest();
-    } catch {
+    } catch (error) {
+      const blockedMessage = getChatBlockedMessage(error);
+      if (blockedMessage) {
+        setMessages((previous) => previous.filter((item) => item.id !== localId));
+        draftRef.current = restoreBlockedDraft(text, draftRef.current);
+        setDraft(draftRef.current);
+        showErrorToast("Không thể gửi tin nhắn", blockedMessage);
+        return;
+      }
       setMessages((previous) =>
         previous.map((item) =>
           item.id === localId ? { ...item, localStatus: "failed" } : item,
