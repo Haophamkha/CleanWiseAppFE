@@ -1,15 +1,56 @@
 import { COLORS } from "@/constants/theme";
 import { Feather } from "@expo/vector-icons";
+import type { ComponentProps } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import type { ChatbotCard } from "../types/chatbot";
 
+type IconName = ComponentProps<typeof Feather>["name"];
+
 export function chatbotCardKey(card: ChatbotCard) {
-  if (card.type === "help") return `help:${card.article_id}`;
-  return card.type === "service"
-    ? `service:${card.service_id}`
-    : card.type === "booking"
-      ? `booking:${card.booking_id}`
-      : `schedule:${card.schedule_id}`;
+  switch (card.type) {
+    case "help":
+      return `help:${card.article_id}`;
+    case "service":
+      return `service:${card.service_id}`;
+    case "booking":
+      return `booking:${card.booking_id}`;
+    case "schedule":
+      return `schedule:${card.schedule_id}`;
+    case "address_map":
+      return "address_map";
+  }
+}
+
+function cardIcon(card: ChatbotCard): IconName {
+  switch (card.type) {
+    case "help":
+      return "book-open";
+    case "service":
+      return "grid";
+    case "booking":
+      return "package";
+    case "address_map":
+      return "map-pin";
+    default:
+      return "calendar";
+  }
+}
+
+function cardSubtitle(card: ChatbotCard): string {
+  switch (card.type) {
+    case "help":
+      return `Nguồn hướng dẫn · Phiên bản ${card.version}`;
+    case "booking":
+      return [card.data?.service_name, card.data?.status_label]
+        .filter(Boolean)
+        .join(" · ");
+    case "schedule":
+      return card.status_label;
+    case "address_map":
+      return "Chọn vị trí rồi lưu, tôi sẽ tiếp tục giúp bạn";
+    default:
+      return "Dịch vụ CleanWise";
+  }
 }
 
 export function ChatbotActionCard({
@@ -21,24 +62,8 @@ export function ChatbotActionCard({
   onPress: () => void;
   loading: boolean;
 }) {
-  const icon =
-    card.type === "help"
-      ? "book-open"
-      : card.type === "service"
-      ? "grid"
-      : card.type === "booking"
-        ? "package"
-        : "calendar";
-  const subtitle =
-    card.type === "help"
-      ? `Nguồn hướng dẫn · Phiên bản ${card.version}`
-      : card.type === "booking"
-      ? [card.data?.service_name, card.data?.status_label]
-          .filter(Boolean)
-          .join(" · ")
-      : card.type === "schedule"
-        ? card.status_label
-        : "Dịch vụ CleanWise";
+  const icon = cardIcon(card);
+  const subtitle = cardSubtitle(card);
   return (
     <TouchableOpacity
       onPress={onPress}
