@@ -9,6 +9,14 @@ import type {
 } from "../types/chatbot";
 
 const unwrap = <T>(response: { data: T }): T => response.data;
+const BOT_ACTION_TAGS = [
+  "ChatbotConversations",
+  "Bookings",
+  "Wallet",
+  "WalletTransactions",
+  "Addresses",
+  "MyVouchers",
+] as const;
 
 export const chatbotApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -18,7 +26,10 @@ export const chatbotApi = baseApi.injectEndpoints({
       keepUnusedDataFor: 0,
     }),
     getHelpArticle: builder.query<HelpArticle, number>({
-      query: (id) => ({ url: `/api/chatbot/help-articles/${id}/`, method: "GET" }),
+      query: (id) => ({
+        url: `/api/chatbot/help-articles/${id}/`,
+        method: "GET",
+      }),
       transformResponse: unwrap<HelpArticle>,
       keepUnusedDataFor: 0,
     }),
@@ -40,7 +51,9 @@ export const chatbotApi = baseApi.injectEndpoints({
         method: "GET",
       }),
       transformResponse: unwrap<ChatbotConversation>,
-      providesTags: (_result, _error, id) => [{ type: "ChatbotConversations", id }],
+      providesTags: (_result, _error, id) => [
+        { type: "ChatbotConversations", id },
+      ],
     }),
     createChatbotConversation: builder.mutation<ChatbotConversation, void>({
       query: () => ({
@@ -56,7 +69,8 @@ export const chatbotApi = baseApi.injectEndpoints({
         url: `/api/chatbot/conversations/${id}/`,
         method: "DELETE",
       }),
-      invalidatesTags: (_result, error) => error ? [] : ["ChatbotConversations"],
+      invalidatesTags: (_result, error) =>
+        error ? [] : ["ChatbotConversations"],
     }),
     getChatbotMessages: builder.query<
       ChatbotPage<ChatbotMessage>,
@@ -83,7 +97,7 @@ export const chatbotApi = baseApi.injectEndpoints({
         timeout: 130000,
       }),
       transformResponse: unwrap<ChatbotReply>,
-      invalidatesTags: ["ChatbotConversations"],
+      invalidatesTags: [...BOT_ACTION_TAGS],
     }),
     getChatbotRun: builder.query<ChatbotRunDetail, string>({
       query: (id) => ({ url: `/api/chatbot/runs/${id}/`, method: "GET" }),

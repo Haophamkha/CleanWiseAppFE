@@ -2,6 +2,7 @@ import { useLazyGetBookingDetailQuery } from "@/features/booking/api/bookingApi"
 import { showErrorToast } from "@/utils/toast";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
+import { CHATBOT_ADDRESS_PICKER_KEY } from "../constants";
 import type { ChatbotCard } from "../types/chatbot";
 
 export function useChatbotCardNavigation() {
@@ -17,8 +18,22 @@ export function useChatbotCardNavigation() {
   }, []);
   const openCard = async (card: ChatbotCard) => {
     if (busy.current) return;
-    if (card.type === "help" && card.action === "OPEN_HELP_ARTICLE" && card.article_id > 0) {
-      router.push({ pathname: "/help/[id]", params: { id: String(card.article_id) } });
+    if (
+      card.type === "help" &&
+      card.action === "OPEN_HELP_ARTICLE" &&
+      card.article_id > 0
+    ) {
+      router.push({
+        pathname: "/help/[id]",
+        params: { id: String(card.article_id) },
+      });
+      return;
+    }
+    if (card.type === "address_map" && card.action === "OPEN_ADDRESS_MAP") {
+      router.push({
+        pathname: "/profile/address/select-location",
+        params: { pickerKey: CHATBOT_ADDRESS_PICKER_KEY },
+      });
       return;
     }
     if (

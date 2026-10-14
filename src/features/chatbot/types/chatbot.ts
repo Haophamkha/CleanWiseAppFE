@@ -8,8 +8,15 @@ export type ChatbotConversation = {
 
 type CardBase = { title: string; label: string };
 export type ChatbotCard =
-  | (CardBase & { type: "help"; action: "OPEN_HELP_ARTICLE"; article_id: number; version: number; effective_from: string })
+  | (CardBase & {
+      type: "help";
+      action: "OPEN_HELP_ARTICLE";
+      article_id: number;
+      version: number;
+      effective_from: string;
+    })
   | (CardBase & { type: "service"; action: "OPEN_SERVICE"; service_id: number })
+  | (CardBase & { type: "address_map"; action: "OPEN_ADDRESS_MAP" })
   | (CardBase & {
       type: "booking";
       action: "OPEN_BOOKING";

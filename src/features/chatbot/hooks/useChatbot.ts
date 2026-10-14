@@ -1,3 +1,5 @@
+import { baseApi } from "@/store/baseApi";
+import { useAppDispatch } from "@/store/hooks";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Crypto from "expo-crypto";
 import { useFocusEffect } from "expo-router";
@@ -14,8 +16,8 @@ import {
 import type {
   ChatbotConversation,
   ChatbotMessage,
-  PendingChatbotMessage,
   DisplayChatbotMessage,
+  PendingChatbotMessage,
 } from "../types/chatbot";
 import {
   chatbotErrorMessage,
@@ -33,11 +35,25 @@ export function useChatbot(userId: number) {
   const [getRun] = useLazyGetChatbotRunQuery();
   const [createConversation] = useCreateChatbotConversationMutation();
   const [sendMessage] = useSendChatbotMessageMutation();
+  const dispatch = useAppDispatch();
+  const invalidateBotData = useCallback(() => {
+    dispatch(
+      baseApi.util.invalidateTags([
+        "Bookings",
+        "Wallet",
+        "WalletTransactions",
+        "Addresses",
+        "MyVouchers",
+      ]),
+    );
+  }, [dispatch]);
   const [conversation, setConversation] = useState<ChatbotConversation | null>(
     null,
   );
   const [messages, setMessages] = useState<ChatbotMessage[]>([]);
-  const [revealingMessageId, setRevealingMessageId] = useState<number | null>(null);
+  const [revealingMessageId, setRevealingMessageId] = useState<number | null>(
+    null,
+  );
   const [pending, setPendingState] = useState<PendingChatbotMessage | null>(
     null,
   );
@@ -129,8 +145,11 @@ export function useChatbot(userId: number) {
         (item) => item.client_message_id === record.client_message_id,
       );
       if (server?.status === "COMPLETED") {
-        const reply = items.find((item) => item.role === "assistant" && item.run_id === server.run_id);
+        const reply = items.find(
+          (item) => item.role === "assistant" && item.run_id === server.run_id,
+        );
         if (reply) setRevealingMessageId(reply.id);
+        invalidateBotData();
         clearPending();
       } else if (
         server?.status === "PROCESSING" &&
@@ -152,7 +171,7 @@ export function useChatbot(userId: number) {
         );
       }
     },
-    [clearPending, setPending, setPhase],
+    [clearPending, invalidateBotData, setPending, setPhase],
   );
 
   const openConversation = useCallback(
@@ -187,7 +206,14 @@ export function useChatbot(userId: number) {
         if (alive.current && version === generation.current) setLoading(false);
       }
     },
-    [clearPending, readLatest, reconcile, setPending, setPhase],
+    [
+      clearPending,
+      invalidateBotData,
+      readLatest,
+      reconcile,
+      setPending,
+      setPhase,
+    ],
   );
 
   const initialize = useCallback(async () => {
@@ -271,7 +297,8 @@ export function useChatbot(userId: number) {
         )
           return;
         if (result.run.status !== "RUNNING") {
-          if (result.assistant_message) setRevealingMessageId(result.assistant_message.id);
+          if (result.assistant_message)
+            setRevealingMessageId(result.assistant_message.id);
           setMessages((current) =>
             mergeChatbotMessages(
               current,
@@ -279,8 +306,10 @@ export function useChatbot(userId: number) {
               result.assistant_message ? [result.assistant_message] : [],
             ),
           );
-          if (result.run.status === "SUCCEEDED") clearPending();
-          else {
+          if (result.run.status === "SUCCEEDED") {
+            invalidateBotData();
+            clearPending();
+          } else {
             setPhase("failed");
             setReplyError(
               chatbotErrorMessage({
@@ -307,6 +336,7 @@ export function useChatbot(userId: number) {
     }
   }, [
     clearPending,
+    invalidateBotData,
     conversation,
     getRun,
     messages,
@@ -344,7 +374,8 @@ export function useChatbot(userId: number) {
         client_message_id: record.client_message_id,
       }).unwrap();
       if (!alive.current) return;
-      if (response.assistant_message) setRevealingMessageId(response.assistant_message.id);
+      if (response.assistant_message)
+        setRevealingMessageId(response.assistant_message.id);
       setMessages((current) =>
         mergeChatbotMessages(
           current,
@@ -411,7 +442,8 @@ export function useChatbot(userId: number) {
             const server = latest.messages.find(
               (item) => item.client_message_id === record.client_message_id,
             );
-            if (server?.status === "COMPLETED") reconcile(latest.messages, record.conversation_id);
+            if (server?.status === "COMPLETED")
+              reconcile(latest.messages, record.conversation_id);
             else if (server?.status === "PROCESSING")
               reconcile(latest.messages, record.conversation_id);
             else {
@@ -509,7 +541,8 @@ export function useChatbot(userId: number) {
     conversation,
     messages: displayMessages,
     revealingMessageId,
-    finishReveal: (id: number | string) => setRevealingMessageId((current) => current === id ? null : current),
+    finishReveal: (id: number | string) =>
+      setRevealingMessageId((current) => (current === id ? null : current)),
     draft,
     setDraft,
     loading,
