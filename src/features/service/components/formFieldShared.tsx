@@ -2,23 +2,23 @@
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { COLORS, SHADOWS } from "@/constants/theme";
 import type {
-    ConditionalOptionGroup,
-    FieldOption,
-    FormField,
-    PricingConfig,
+  ConditionalOptionGroup,
+  FieldOption,
+  FormField,
+  PricingConfig,
 } from "@/features/service/types/Service";
 import { formatVnd } from "@/utils/currency";
 import { Feather } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import {
-    Animated,
-    Image,
-    ScrollView,
-    Switch,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Animated,
+  Image,
+  ScrollView,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 // COLORS giờ lấy từ theme: các file cũ import từ đây vẫn chạy và tự đổi theo theme.
@@ -578,22 +578,24 @@ function TimeWheelPicker({
     { length: maxHour - minHour + 1 },
     (_, i) => minHour + i,
   );
-  const minutes = Array.from({ length: 60 }, (_, i) => i);
 
   const [hh, mm] = value.split(":");
   const parsedHour = Math.min(
     maxHour,
     Math.max(minHour, parseInt(hh, 10) || minHour),
   );
-  const parsedMinute = parseInt(mm, 10) || 0;
+  // Giờ cuối (18) chỉ cho chọn :00, vì giờ bắt đầu tối đa là 18:00
+  const minutes =
+    parsedHour === maxHour ? [0] : Array.from({ length: 60 }, (_, i) => i);
+  const parsedMinute = parsedHour === maxHour ? 0 : parseInt(mm, 10) || 0;
 
   const hourIndex = hours.indexOf(parsedHour);
   const minuteIndex = minutes.indexOf(parsedMinute);
 
   const commit = (hIdx: number, mIdx: number) => {
-    onChange(
-      `${String(hours[hIdx]).padStart(2, "0")}:${String(minutes[mIdx]).padStart(2, "0")}`,
-    );
+    const h = hours[hIdx];
+    const m = h === maxHour ? 0 : mIdx; // danh sách 60 phút thì index = số phút
+    onChange(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
   };
 
   return (

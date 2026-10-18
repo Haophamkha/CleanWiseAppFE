@@ -2,9 +2,10 @@ import { RequireLoginNotice } from "@/components/common/RequireLoginNotice";
 import { TabScreenHeader } from "@/components/common/TabScreenHeader";
 import { EmptyState } from "@/components/ui";
 import { COLORS } from "@/constants/theme";
-import { useAppSelector } from "@/store/hooks";
+import { clearPickedAddress } from "@/features/address/stores/addressPickerSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -17,6 +18,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { CHATBOT_ADDRESS_PICKER_KEY, addressPickedMessage } from "../constants";
 import { useChatbot } from "../hooks/useChatbot";
 import { useChatbotCardNavigation } from "../hooks/useChatbotCardNavigation";
 import type { DisplayChatbotMessage } from "../types/chatbot";
@@ -38,7 +40,12 @@ function CustomerChatbot({ userId }: { userId: number }) {
   const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scrollToLatest = useCallback(() => {
-    if (!followLatest.current || dragging.current || scrollTimer.current !== null) return;
+    if (
+      !followLatest.current ||
+      dragging.current ||
+      scrollTimer.current !== null
+    )
+      return;
     // Coalesce text/card layouts rather than restarting native scrolling for
     // every character. Offset zero is the bottom of this inverted list.
     scrollTimer.current = setTimeout(() => {
@@ -62,18 +69,44 @@ function CustomerChatbot({ userId }: { userId: number }) {
     };
   }, []);
   const unavailable = chat.working || chat.loading;
+  // Khách chọn địa chỉ trên bản đồ từ thẻ của bot: quay lại chat thì tự báo cho bot.
+  const dispatch = useAppDispatch();
+  const pickedAddress = useAppSelector(
+    (state) => state.addressPicker.selections[CHATBOT_ADDRESS_PICKER_KEY],
+  );
+  const [focused, setFocused] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      setFocused(true);
+      return () => setFocused(false);
+    }, []),
+  );
+  const { send } = chat;
+  const canAnnounce =
+    focused &&
+    !chat.loading &&
+    !chat.working &&
+    !chat.pending &&
+    chat.conversation?.status !== "CLOSED";
+  useEffect(() => {
+    if (!pickedAddress || !canAnnounce) return;
+    dispatch(clearPickedAddress(CHATBOT_ADDRESS_PICKER_KEY));
+    void send(addressPickedMessage(pickedAddress));
+  }, [pickedAddress, canAnnounce, send, dispatch]);
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-canvas"
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <KeyboardAvoidingView className="flex-1 bg-canvas" behavior="padding">
       <TabScreenHeader
         title="Trợ lý CleanWise"
         subtitle="Tìm dịch vụ, đặt lịch và tra cứu đơn của bạn"
       >
         <View className="flex-row items-center mt-4" style={{ gap: 8 }}>
-          <TouchableOpacity onPress={() => router.push("/help" as any)} accessibilityRole="button" accessibilityLabel="Mở hướng dẫn sử dụng" className="p-3 rounded-xl border border-line bg-surface">
+          <TouchableOpacity
+            onPress={() => router.push("/help" as any)}
+            accessibilityRole="button"
+            accessibilityLabel="Mở hướng dẫn sử dụng"
+            className="p-3 rounded-xl border border-line bg-surface"
+          >
             <Feather name="book-open" size={18} color={COLORS.primaryDark} />
           </TouchableOpacity>
           <TouchableOpacity
@@ -145,7 +178,11 @@ function CustomerChatbot({ userId }: { userId: number }) {
         <FlatList
           ref={list}
           inverted
-          maintainVisibleContentPosition={chat.revealingMessageId !== null ? undefined : { minIndexForVisible: 0 }}
+          maintainVisibleContentPosition={
+            chat.revealingMessageId !== null
+              ? undefined
+              : { minIndexForVisible: 0 }
+          }
           data={[...chat.messages].reverse()}
           onLayout={scrollToLatest}
           onContentSizeChange={scrollToLatest}
