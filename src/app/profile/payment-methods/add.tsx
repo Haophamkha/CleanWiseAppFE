@@ -2,6 +2,8 @@ import {
     useCreateBankPaymentMethodMutation,
     useGetBankCatalogQuery,
     useGetPaymentMethodOptionsQuery,
+    useStartBankAccountVerificationMutation,
+    useConfirmBankAccountVerificationMutation,
 } from "@/features/payment/api/paymentMethodApi";
 import BankPickerModal from "@/features/payment/components/BankPickerModal";
 import type {
@@ -16,6 +18,7 @@ import {
     ActivityIndicator,
     Alert,
     KeyboardAvoidingView,
+    Modal,
     Platform,
     ScrollView,
     Switch,
@@ -55,6 +58,10 @@ export default function AddCustomerPaymentMethodScreen() {
   const [accountNumber, setAccountNumber] = useState("");
   const [showAccountNumber, setShowAccountNumber] = useState(false);
   const [accountHolderName, setAccountHolderName] = useState("");
+  const [identity, setIdentity] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpMethodId, setOtpMethodId] = useState<number | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [isDefault, setIsDefault] = useState(false);
   const [pickerVisible, setPickerVisible] = useState(false);
@@ -70,6 +77,11 @@ export default function AddCustomerPaymentMethodScreen() {
   } = useGetBankCatalogQuery(undefined, { skip: step !== "bank-form" });
   const [createBankMethod, { isLoading: isSaving }] =
     useCreateBankPaymentMethodMutation();
+  const [startVerification, { isLoading: isStartingVerification }] =
+    useStartBankAccountVerificationMutation();
+  const [confirmVerification, { isLoading: isConfirming }] =
+    useConfirmBankAccountVerificationMutation();
+  const isBusy = isSaving || isStartingVerification || isConfirming;
 
   const visibleOptions = useMemo<PaymentMethodOption[]>(
     () =>
@@ -88,7 +100,7 @@ export default function AddCustomerPaymentMethodScreen() {
   );
 
   const handleBack = () => {
-    if (isSaving) return;
+    if (isBusy) return;
     if (step === "bank-form") {
       setStep("options");
       setError("");
@@ -117,10 +129,16 @@ export default function AddCustomerPaymentMethodScreen() {
     if (accountHolderName.trim().length < 2) {
       return setError("Vui lòng nhập tên chủ tài khoản.");
     }
+    if (!/^\d{9,14}$/.test(identity)) {
+      return setError("CCCD/CMND Sandbox phải gồm từ 9 đến 14 chữ số.");
+    }
+    if (!/^0\d{9}$/.test(mobile)) {
+      return setError("Số điện thoại Sandbox phải gồm 10 chữ số và bắt đầu bằng 0.");
+    }
 
     setError("");
     try {
-      await createBankMethod({
+      const method = await createBankMethod({
         bank_bin: selectedBank.bin,
         bank_code: selectedBank.code,
         bank_name: selectedBank.short_name || selectedBank.name,
@@ -130,9 +148,36 @@ export default function AddCustomerPaymentMethodScreen() {
         is_default: isDefault,
       }).unwrap();
       showSuccessToast("Đã thêm tài khoản ngân hàng");
+      try {
+        const result = await startVerification({ id: method.id, identity, mobile }).unwrap();
+        if (result.requires_otp) {
+          setOtpMethodId(method.id);
+          return;
+        }
+      } catch (verificationError: any) {
+        Alert.alert(
+          "Tài khoản đã được lưu",
+          verificationError?.data?.message ??
+            "Không thể bắt đầu xác minh. Bạn có thể thử lại trong danh sách tài khoản.",
+          [{ text: "Để sau", onPress: () => router.back() }],
+        );
+        return;
+      }
       router.back();
     } catch (requestError) {
       setError(getFirstError(requestError));
+    }
+  };
+
+  const handleConfirmOtp = async () => {
+    if (!otpMethodId) return;
+    try {
+      await confirmVerification({ id: otpMethodId, otp }).unwrap();
+      showSuccessToast("Xác minh Sandbox TINGEE thành công");
+      setOtpMethodId(null);
+      router.back();
+    } catch (verificationError: any) {
+      Alert.alert("OTP chưa hợp lệ", verificationError?.data?.message ?? "Vui lòng thử lại.");
     }
   };
 
@@ -146,7 +191,7 @@ export default function AddCustomerPaymentMethodScreen() {
           <TouchableOpacity
             onPress={handleBack}
             className="w-9 h-9 rounded-full bg-gray-50 items-center justify-center mr-3"
-            disabled={isSaving}
+            disabled={isBusy}
           >
             <Feather name="arrow-left" size={21} color="#111827" />
           </TouchableOpacity>
@@ -221,8 +266,7 @@ export default function AddCustomerPaymentMethodScreen() {
               <View className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 mb-6 flex-row">
                 <Feather name="shield" size={19} color={PRIMARY} />
                 <Text className="flex-1 text-emerald-800 text-sm leading-5 ml-3">
-                  Tài khoản được lưu ở trạng thái chưa xác minh. CleanWise không
-                  yêu cầu mật khẩu hoặc OTP ngân hàng.
+                  Dùng dữ liệu giả lập TINGEE Sandbox và nhập OTP test. Không nhập mật khẩu hoặc OTP ngân hàng thật.
                 </Text>
               </View>
 
@@ -301,6 +345,18 @@ export default function AddCustomerPaymentMethodScreen() {
                 />
               </View>
 
+              <Text className="text-gray-700 font-medium mb-1">CCCD/CMND Sandbox</Text>
+              <View className="flex-row items-center border border-gray-200 bg-gray-50 rounded-2xl px-4 mb-4">
+                <Feather name="user-check" size={18} color="#9CA3AF" />
+                <TextInput className="flex-1 ml-3 py-3.5 text-gray-900" placeholder="Mã định danh trong kịch bản test" value={identity} onChangeText={setIdentity} keyboardType="number-pad" maxLength={14} />
+              </View>
+
+              <Text className="text-gray-700 font-medium mb-1">Số điện thoại Sandbox</Text>
+              <View className="flex-row items-center border border-gray-200 bg-gray-50 rounded-2xl px-4 mb-4">
+                <Feather name="smartphone" size={18} color="#9CA3AF" />
+                <TextInput className="flex-1 ml-3 py-3.5 text-gray-900" placeholder="Số điện thoại trong kịch bản test" value={mobile} onChangeText={setMobile} keyboardType="phone-pad" maxLength={10} />
+              </View>
+
               <Text className="text-gray-700 font-medium mb-1">
                 Tên gợi nhớ (không bắt buộc)
               </Text>
@@ -346,16 +402,16 @@ export default function AddCustomerPaymentMethodScreen() {
             <View className="px-5 pt-3 pb-7 border-t border-gray-100 bg-white">
               <TouchableOpacity
                 className="rounded-2xl py-4 items-center bg-emerald-700"
-                style={{ opacity: isSaving ? 0.6 : 1 }}
+                style={{ opacity: isBusy ? 0.6 : 1 }}
                 onPress={handleSubmit}
-                disabled={isSaving}
+                disabled={isBusy}
                 activeOpacity={0.8}
               >
                 {isSaving ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <Text className="text-white font-bold text-base">
-                    Lưu tài khoản
+                    Lưu và xác minh
                   </Text>
                 )}
               </TouchableOpacity>
@@ -373,6 +429,19 @@ export default function AddCustomerPaymentMethodScreen() {
             setError("");
           }}
         />
+        <Modal visible={otpMethodId !== null} transparent animationType="fade" onRequestClose={() => setOtpMethodId(null)}>
+          <View className="flex-1 bg-black/40 justify-center px-6">
+            <View className="bg-white rounded-3xl p-5">
+              <Text className="text-gray-900 text-lg font-bold">Nhập OTP Sandbox</Text>
+              <Text className="text-gray-500 mt-2 leading-5">Nhập mã OTP giả lập của kịch bản TINGEE.</Text>
+              <TextInput className="border border-gray-200 rounded-2xl px-4 py-3 mt-4 text-gray-900" keyboardType="number-pad" value={otp} onChangeText={(value) => setOtp(value.replace(/\D/g, "").slice(0, 8))} placeholder="Mã OTP" maxLength={8} />
+              <View className="flex-row mt-5">
+                <TouchableOpacity className="flex-1 py-3 items-center" onPress={() => setOtpMethodId(null)}><Text className="text-gray-500 font-semibold">Để sau</Text></TouchableOpacity>
+                <TouchableOpacity className="flex-1 py-3 items-center bg-emerald-700 rounded-xl" onPress={handleConfirmOtp} disabled={isConfirming || otp.length < 4}><Text className="text-white font-bold">{isConfirming ? "Đang kiểm tra..." : "Xác nhận"}</Text></TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

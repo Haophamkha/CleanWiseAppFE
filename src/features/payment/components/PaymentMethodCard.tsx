@@ -9,6 +9,7 @@ type Props = {
   disabled: boolean;
   onSetDefault: (method: PaymentMethod) => void;
   onDelete: (method: PaymentMethod) => void;
+  onVerify: (method: PaymentMethod) => void;
 };
 
 export default function PaymentMethodCard({
@@ -16,14 +17,19 @@ export default function PaymentMethodCard({
   disabled,
   onSetDefault,
   onDelete,
+  onVerify,
 }: Props) {
   const verified = method.verification_status === "VERIFIED";
+  const sandboxVerified = method.verification_status === "SANDBOX_VERIFIED";
   const failed = method.verification_status === "FAILED";
+  const pending = method.verification_status === "PENDING";
   const statusLabel = verified
     ? "Đã xác minh"
+    : sandboxVerified
+      ? "Đã test Sandbox · chưa dùng để rút tiền"
     : failed
       ? "Xác minh thất bại"
-      : "Chưa xác minh";
+      : pending ? "Đang xác minh" : "Chưa xác minh";
   const statusTone = verified ? "success" : failed ? "danger" : "accent";
   const statusIcon = verified ? "check-circle" : failed ? "x-circle" : "clock";
   const statusColor = verified
@@ -91,6 +97,20 @@ export default function PaymentMethodCard({
       </View>
 
       <View className="flex-row mt-4" style={{ gap: 10 }}>
+        {!verified && (
+          <TouchableOpacity
+            className="flex-1 flex-row items-center justify-center h-11 rounded-full bg-primary-light"
+            onPress={() => onVerify(method)}
+            disabled={disabled}
+            activeOpacity={0.8}
+            style={{ opacity: disabled ? 0.5 : 1 }}
+          >
+            <Feather name={pending ? "refresh-cw" : "shield"} size={16} color={COLORS.primaryDark} />
+            <Text className="text-primary-dark font-bold ml-2">
+              {pending ? "Tiếp tục xác minh" : sandboxVerified ? "Test lại Sandbox" : "Xác minh Sandbox TINGEE"}
+            </Text>
+          </TouchableOpacity>
+        )}
         {!method.is_default && (
           <TouchableOpacity
             className="flex-1 flex-row items-center justify-center h-11 rounded-full bg-primary-light"

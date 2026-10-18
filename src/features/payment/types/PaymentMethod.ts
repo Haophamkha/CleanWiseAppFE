@@ -4,6 +4,7 @@ export type PaymentMethodStatus =
   | "UNVERIFIED"
   | "PENDING"
   | "VERIFIED"
+  | "SANDBOX_VERIFIED"
   | "FAILED"
   | "DISCONNECTED";
 

@@ -44,7 +44,7 @@ export function usePushNotifications(enabled: boolean) {
       registeredRef.current = false;
       return;
     }
-    if (registeredRef.current || isExpoGo) return;
+    if (Platform.OS === "web" || registeredRef.current || isExpoGo) return;
 
     const register = async () => {
       try {
@@ -110,7 +110,7 @@ export function usePushNotifications(enabled: boolean) {
 
   // Bấm vào thông báo -> mở đúng màn hình
   useEffect(() => {
-    if (!enabled || isExpoGo) return;
+    if (!enabled || Platform.OS === "web" || isExpoGo) return;
     let cancelled = false;
     let sub: { remove: () => void } | undefined;
 

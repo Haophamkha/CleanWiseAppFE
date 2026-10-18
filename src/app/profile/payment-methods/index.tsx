@@ -1,5 +1,7 @@
 import { useConfirm } from "@/components/common/ConfirmProvider";
 import {
+    useConfirmBankAccountVerificationMutation,
+    useStartBankAccountVerificationMutation,
     useDeletePaymentMethodMutation,
     useGetPaymentMethodsQuery,
     useSetDefaultPaymentMethodMutation,
@@ -9,11 +11,15 @@ import type { PaymentMethod } from "@/features/payment/types/PaymentMethod";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useEffect, useState } from "react";
 import {
+    AppState,
     ActivityIndicator,
     FlatList,
+    Modal,
     RefreshControl,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -38,7 +44,59 @@ export default function CustomerPaymentMethodsScreen() {
     useSetDefaultPaymentMethodMutation();
   const [deleteMethod, { isLoading: isDeleting }] =
     useDeletePaymentMethodMutation();
-  const isMutating = isSettingDefault || isDeleting;
+  const [startVerification, { isLoading: isVerifying }] =
+    useStartBankAccountVerificationMutation();
+  const [confirmVerification, { isLoading: isConfirming }] =
+    useConfirmBankAccountVerificationMutation();
+  const [otpMethodId, setOtpMethodId] = useState<number | null>(null);
+  const [otp, setOtp] = useState("");
+  const [verifyMethodId, setVerifyMethodId] = useState<number | null>(null);
+  const [identity, setIdentity] = useState("");
+  const [mobile, setMobile] = useState("");
+  const isMutating = isSettingDefault || isDeleting || isVerifying || isConfirming;
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") void refetch();
+    });
+    return () => subscription.remove();
+  }, [refetch]);
+
+  const handleVerify = async (method: PaymentMethod) => {
+    setIdentity("");
+    setMobile("");
+    setVerifyMethodId(method.id);
+  };
+
+  const handleStartVerification = async () => {
+    if (!verifyMethodId) return;
+    try {
+      const result = await startVerification({ id: verifyMethodId, identity, mobile }).unwrap();
+      const methodId = verifyMethodId;
+      setVerifyMethodId(null);
+      if (result.requires_otp) setOtpMethodId(methodId);
+      else showSuccessToast("Tài khoản đã được xác minh trên Sandbox TINGEE");
+      await refetch();
+    } catch (error: any) {
+      showErrorToast(
+        "Không thể mở xác minh",
+        error?.data?.message ?? "Vui lòng thử lại sau.",
+      );
+    }
+  };
+
+  const handleConfirmOtp = async () => {
+    if (!otpMethodId) return;
+    try {
+      await confirmVerification({ id: otpMethodId, otp }).unwrap();
+      setOtpMethodId(null);
+      setOtp("");
+      showSuccessToast("Xác minh Sandbox thành công");
+      await refetch();
+    } catch (error: any) {
+      showErrorToast("OTP chưa hợp lệ", error?.data?.message ?? "Vui lòng thử lại.");
+    }
+  };
 
   const handleSetDefault = async (method: PaymentMethod) => {
     try {
@@ -146,8 +204,8 @@ export default function CustomerPaymentMethodsScreen() {
                       <Feather name="shield" size={19} color="#FFFFFF" />
                     </View>
                     <Text className="text-emerald-50 text-xs leading-5 flex-1">
-                      CleanWise chỉ lưu thông tin cần thiết và không bao giờ yêu
-                      cầu mật khẩu hoặc OTP ngân hàng.
+                      CleanWise không nhận mật khẩu hoặc OTP ngân hàng. Nếu xác
+                      minh, bạn sẽ nhập mã OTP mô phỏng của TINGEE Sandbox.
                     </Text>
                   </View>
                 </View>
@@ -163,6 +221,7 @@ export default function CustomerPaymentMethodsScreen() {
               disabled={isMutating}
               onSetDefault={handleSetDefault}
               onDelete={handleDelete}
+              onVerify={handleVerify}
             />
           )}
           ListEmptyComponent={
@@ -199,6 +258,30 @@ export default function CustomerPaymentMethodsScreen() {
           </TouchableOpacity>
         </View>
       )}
+      <Modal visible={otpMethodId !== null || verifyMethodId !== null} transparent animationType="fade" onRequestClose={() => { setOtpMethodId(null); setVerifyMethodId(null); }}>
+        <View className="flex-1 bg-black/40 justify-center px-6">
+          <View className="bg-white rounded-3xl p-5">
+            {verifyMethodId !== null ? <>
+              <Text className="text-gray-900 text-lg font-bold">Thông tin Sandbox</Text>
+              <Text className="text-gray-500 mt-2 leading-5">Nhập CCCD/CMND và điện thoại theo kịch bản test TINGEE.</Text>
+              <TextInput className="border border-gray-200 rounded-2xl px-4 py-3 mt-4 text-gray-900" keyboardType="number-pad" value={identity} onChangeText={(value) => setIdentity(value.replace(/\D/g, "").slice(0, 14))} placeholder="CCCD/CMND test" />
+              <TextInput className="border border-gray-200 rounded-2xl px-4 py-3 mt-3 text-gray-900" keyboardType="phone-pad" value={mobile} onChangeText={(value) => setMobile(value.replace(/\D/g, "").slice(0, 10))} placeholder="Điện thoại test" />
+            </> : <>
+              <Text className="text-gray-900 text-lg font-bold">Nhập OTP Sandbox</Text>
+              <Text className="text-gray-500 mt-2 leading-5">Nhập mã OTP giả lập hiển thị trong luồng test TINGEE.</Text>
+              <TextInput className="border border-gray-200 rounded-2xl px-4 py-3 mt-4 text-gray-900" keyboardType="number-pad" value={otp} onChangeText={(value) => setOtp(value.replace(/\D/g, "").slice(0, 8))} placeholder="Mã OTP" maxLength={8} />
+            </>}
+            <View className="flex-row mt-5">
+              <TouchableOpacity className="flex-1 py-3 items-center" onPress={() => { setOtpMethodId(null); setVerifyMethodId(null); }}>
+                <Text className="text-gray-500 font-semibold">Để sau</Text>
+              </TouchableOpacity>
+              <TouchableOpacity className="flex-1 py-3 items-center bg-emerald-700 rounded-xl" onPress={verifyMethodId !== null ? handleStartVerification : handleConfirmOtp} disabled={isConfirming || isVerifying || (verifyMethodId !== null ? identity.length < 9 || mobile.length !== 10 || !mobile.startsWith("0") : otp.length < 4)}>
+                <Text className="text-white font-bold">{isConfirming || isVerifying ? "Đang kiểm tra..." : verifyMethodId !== null ? "Bắt đầu xác minh" : "Xác nhận OTP"}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
