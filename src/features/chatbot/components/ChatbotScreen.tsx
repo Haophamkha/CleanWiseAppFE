@@ -98,7 +98,7 @@ function CustomerChatbot({ userId }: { userId: number }) {
     <KeyboardAvoidingView className="flex-1 bg-canvas" behavior="padding">
       <TabScreenHeader
         title="Trợ lý CleanWise"
-        subtitle="Tra cứu đơn, hướng dẫn đặt dịch vụ và thanh toán"
+        subtitle="Tìm dịch vụ, đặt lịch và tra cứu đơn của bạn"
       >
         <View className="flex-row items-center mt-4" style={{ gap: 8 }}>
           <TouchableOpacity
