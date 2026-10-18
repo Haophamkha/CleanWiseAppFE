@@ -70,7 +70,7 @@ function CustomerChatbot({ userId }: { userId: number }) {
     >
       <TabScreenHeader
         title="Trợ lý CleanWise"
-        subtitle="Tra cứu đơn, hướng dẫn đặt dịch vụ và thanh toán"
+        subtitle="Tìm dịch vụ, đặt lịch và tra cứu đơn của bạn"
       >
         <View className="flex-row items-center mt-4" style={{ gap: 8 }}>
           <TouchableOpacity onPress={() => router.push("/help" as any)} accessibilityRole="button" accessibilityLabel="Mở hướng dẫn sử dụng" className="p-3 rounded-xl border border-line bg-surface">

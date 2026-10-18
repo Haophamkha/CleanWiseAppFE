@@ -5,6 +5,11 @@ import { Text, TouchableOpacity, View } from "react-native";
 
 const QUESTIONS = [
   {
+    icon: "calendar" as const,
+    title: "Đặt lịch dịch vụ",
+    text: "Tôi muốn đặt lịch dịch vụ.",
+  },
+  {
     icon: "book-open" as const,
     title: "Hướng dẫn đặt dịch vụ",
     text: "Hướng dẫn tôi các bước đặt đơn dịch vụ.",
@@ -66,7 +71,7 @@ export function ChatbotWelcome({
         Tôi có thể giúp gì cho bạn?
       </Text>
       <Text className="text-ink-soft text-sm leading-6 mt-2 mb-5">
-        Tìm dịch vụ, tra đơn và xem hướng dẫn đặt dịch vụ, thanh toán có nguồn tham khảo.
+        Tìm dịch vụ, đặt lịch sau khi xác nhận báo giá, tra đơn và xem hướng dẫn.
       </Text>
       <View style={{ gap: 10 }}>
         {questions.map((question) => (

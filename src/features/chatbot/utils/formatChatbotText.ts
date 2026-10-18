@@ -15,6 +15,8 @@ export function formatChatbotText(value: string): string {
 
   return value
     .replace(/\r\n/g, "\n")
+    // Older saved replies may contain the model's internal card-selection payload.
+    .replace(/\{\s*"references"\s*:\s*\[[\s\S]*?\]\s*\}/g, "")
     .replace(/^[ \t]*```[\w+-]*[ \t]*$/gm, "")
     .replace(/\\\(([\s\S]*?)\\\)/g, (_, body: string) => plainMath(body))
     .replace(/\\\[([\s\S]*?)\\\]/g, (_, body: string) => plainMath(body))
