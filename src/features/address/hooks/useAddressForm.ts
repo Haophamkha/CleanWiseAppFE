@@ -2,6 +2,7 @@
 import type { AddressFormValues } from "@/features/address/components/AddressForm";
 import type { Address, AddressPayload } from "@/features/address/types/Address";
 import { nameKey } from "@/features/address/utils/regionName";
+import { useAppSelector } from "@/store/hooks";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 
@@ -30,6 +31,37 @@ export function useAddressForm(map: MapResultParams) {
   const [longitude, setLongitude] = useState<string | undefined>(undefined);
   const [error, setError] = useState("");
   const [isNavigating, setIsNavigating] = useState(false);
+
+  const user = useAppSelector((s) => s.auth.user);
+  const ownerName =
+    [user?.first_name, user?.last_name].filter(Boolean).join(" ").trim() ||
+    user?.username ||
+    "";
+  const ownerPhone = user?.phone_number ?? "";
+  const [isOther, setIsOther] = useState(false);
+
+  // Thiếu tên hoặc số của chủ tài khoản thì buộc phải hiện ô nhập
+  const canToggle = !!ownerName && !!ownerPhone;
+  const showContact = isOther || !canToggle;
+
+  // Địa chỉ mới: tự điền thông tin của chủ tài khoản
+  useEffect(() => {
+    if (!ownerName && !ownerPhone) return;
+    setValues((prev) =>
+      prev.receiver_name || prev.receiver_phone
+        ? prev
+        : { ...prev, receiver_name: ownerName, receiver_phone: ownerPhone },
+    );
+  }, [ownerName, ownerPhone]);
+
+  const toggleOther = (on: boolean) => {
+    setIsOther(on);
+    setValues((prev) => ({
+      ...prev,
+      receiver_name: on ? "" : ownerName,
+      receiver_phone: on ? "" : ownerPhone,
+    }));
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -80,6 +112,10 @@ export function useAddressForm(map: MapResultParams) {
 
   // Nạp địa chỉ có sẵn (màn sửa). keepLocation: giữ vị trí vừa chọn từ bản đồ
   const fill = (a: Address, keepLocation: boolean) => {
+    setIsOther(
+      (a.receiver_name ?? "") !== ownerName ||
+        (a.receiver_phone ?? "") !== ownerPhone,
+    );
     setValues((prev) => ({
       label: a.label ?? "",
       receiver_name: a.receiver_name ?? "",
@@ -151,5 +187,9 @@ export function useAddressForm(map: MapResultParams) {
     validate,
     buildPayload,
     goToMap,
+    canToggle,
+    showContact,
+    isOther,
+    toggleOther,
   };
 }

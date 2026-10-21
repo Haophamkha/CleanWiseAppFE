@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Platform } from "react-native";
 
 import { STORAGE_KEYS } from "@/config/constants";
+import { getNotificationRoute } from "@/features/notification/utils/notificationMeta";
 import { storage } from "@/utils/storage";
 
 const isExpoGo =
@@ -14,6 +15,7 @@ const handledResponses = new Set<string>();
 
 function openFromPush(response: any) {
   const id = response?.notification?.request?.identifier;
+
   if (id) {
     if (handledResponses.has(id)) return;
     handledResponses.add(id);
@@ -21,16 +23,13 @@ function openFromPush(response: any) {
 
   const data = response?.notification?.request?.content?.data;
 
-  if (data?.booking_id) {
-    router.push({
-      pathname: "/booking/[id]",
-      params: { id: String(data.booking_id) },
-    } as any);
-  } else if (data?.type === "PAYMENT") {
-    router.push("/profile/wallets/wallet" as any);
-  } else {
-    router.push("/notifications" as any);
-  }
+  const route = getNotificationRoute({
+    target: data?.target,
+    type: data?.type,
+    related_booking: data?.booking_id,
+  });
+
+  router.push((route ?? "/notifications") as any);
 }
 
 export function usePushNotifications(enabled: boolean) {
@@ -44,6 +43,7 @@ export function usePushNotifications(enabled: boolean) {
       registeredRef.current = false;
       return;
     }
+
     if (Platform.OS === "web" || registeredRef.current || isExpoGo) return;
 
     const register = async () => {
@@ -90,6 +90,7 @@ export function usePushNotifications(enabled: boolean) {
           projectId,
         });
         const token = tokenResponse.data;
+
         setExpoPushToken(token);
         await storage.setItem(STORAGE_KEYS.PUSH_TOKEN, token);
         registeredRef.current = true;
@@ -106,11 +107,12 @@ export function usePushNotifications(enabled: boolean) {
     };
 
     register();
-  }, [enabled]);
+  }, [enabled, registerToken]);
 
   // Bấm vào thông báo -> mở đúng màn hình
   useEffect(() => {
     if (!enabled || Platform.OS === "web" || isExpoGo) return;
+
     let cancelled = false;
     let sub: { remove: () => void } | undefined;
 

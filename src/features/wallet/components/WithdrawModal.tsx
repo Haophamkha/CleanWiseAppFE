@@ -1,4 +1,5 @@
 import { COLORS } from "@/constants/theme";
+import { OtpInput } from "@/features/auth/components/OtpInput";
 import {
   AmountField,
   ErrorBox,
@@ -104,6 +105,54 @@ export function WithdrawModal({ visible, balance, onClose }: Props) {
           </Text>
         </View>
         <SheetButton label="Đóng" onPress={w.close} variant="soft" />
+      </WalletSheet>
+    );
+  }
+
+  /* ---------- nhập OTP ---------- */
+  if (w.otpStep) {
+    return (
+      <WalletSheet visible={visible} onClose={w.close}>
+        <Text style={{ fontSize: 18, fontWeight: "700", color: COLORS.ink }}>
+          Nhập mã OTP
+        </Text>
+        <Text
+          style={{
+            fontSize: 13,
+            marginTop: 4,
+            marginBottom: 16,
+            color: COLORS.inkMuted,
+          }}
+        >
+          Mã gồm 6 số đã gửi tới email của bạn để xác nhận rút{" "}
+          {formatVnd(w.submittedAmount)}.
+        </Text>
+
+        <OtpInput value={w.otp} onChange={w.setOtp} invalid={!!w.errorText} />
+        <ErrorBox text={w.errorText} />
+
+        <TouchableOpacity
+          onPress={w.resendOtp}
+          disabled={w.cooldown > 0 || w.sendingOtp}
+          style={{ alignSelf: "center", marginBottom: 16 }}
+        >
+          <Text
+            style={{
+              fontSize: 13,
+              fontWeight: "700",
+              color: w.cooldown > 0 ? COLORS.inkMuted : COLORS.primaryDark,
+            }}
+          >
+            {w.cooldown > 0 ? `Gửi lại mã (${w.cooldown}s)` : "Gửi lại mã"}
+          </Text>
+        </TouchableOpacity>
+
+        <SheetButton
+          label={w.uncertain ? "Gửi lại" : "Xác nhận rút tiền"}
+          onPress={w.submit}
+          loading={w.isLoading}
+        />
+        <SheetButton label="Quay lại" onPress={w.backToForm} variant="soft" />
       </WalletSheet>
     );
   }
@@ -232,9 +281,9 @@ export function WithdrawModal({ visible, balance, onClose }: Props) {
       <ErrorBox text={w.errorText} />
 
       <SheetButton
-        label={w.uncertain ? "Gửi lại" : "Gửi yêu cầu"}
+        label="Gửi mã OTP"
         onPress={w.submit}
-        loading={w.isLoading}
+        loading={w.sendingOtp}
       />
     </WalletSheet>
   );

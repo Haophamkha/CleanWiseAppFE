@@ -103,6 +103,24 @@ export function ComplaintDetailModal({
                 </View>
               )}
             </View>
+            <View className="flex-row flex-wrap items-center mt-3">
+              <Text className="text-ink-muted text-[11px] font-bold mr-2">
+                MÃ KHIẾU NẠI
+              </Text>
+              <Text
+                selectable
+                className="text-ink text-[14px] font-extrabold"
+                style={{
+                  fontFamily: Platform.select({
+                    ios: "Menlo",
+                    default: "monospace",
+                  }),
+                  letterSpacing: 0.8,
+                }}
+              >
+                {data.code ?? `#${data.id}`}
+              </Text>
+            </View>
 
             <View
               className="flex-row flex-wrap items-center rounded-xl px-3 py-2.5 mt-3"

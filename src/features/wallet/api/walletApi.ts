@@ -18,6 +18,7 @@ export type Wallet = {
 
 export type WalletTransaction = {
   id: number;
+  code: string | null;
   type: WalletTransactionType;
   type_display: string;
   amount: string;
@@ -100,20 +101,29 @@ export const walletApi = baseApi.injectEndpoints({
         amount: number;
         paymentMethodId?: number | null;
         idempotencyKey: string;
+        otp?: string;
       }
     >({
-      query: ({ idempotencyKey, paymentMethodId, amount }) => ({
+      query: ({ idempotencyKey, paymentMethodId, amount, otp }) => ({
         url: "/api/customer/wallet/withdraw/",
         method: "POST",
         data: {
           amount,
           ...(paymentMethodId ? { payment_method_id: paymentMethodId } : {}),
+          ...(otp ? { otp } : {}),
         },
         headers: { "Idempotency-Key": idempotencyKey },
         timeout: MONEY_TIMEOUT_MS,
       }),
       transformResponse: unwrap,
       invalidatesTags: ["Wallet", "WalletTransactions"],
+    }),
+
+    requestWithdrawOtp: builder.mutation<unknown, void>({
+      query: () => ({
+        url: "/api/customer/wallet/withdraw/otp/",
+        method: "POST",
+      }),
     }),
 
     getWithdraw: builder.query<WithdrawRecord, number>({
@@ -163,6 +173,7 @@ export const {
   useGetWalletQuery,
   useGetWalletTransactionsQuery,
   useRequestWithdrawMutation,
+  useRequestWithdrawOtpMutation,
   useGetWithdrawQuery,
   useCreateTopupMutation,
   useGetTopupQuery,

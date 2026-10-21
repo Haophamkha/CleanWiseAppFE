@@ -1,11 +1,11 @@
 import { Card } from "@/components/ui/Card";
 import { COLORS } from "@/constants/theme";
-import { ScheduleReviewActions } from "@/features/review/components/ScheduleReviewActions";
 import type {
   BookingScheduleDetail,
   BookingStatus,
 } from "@/features/booking/types/Booking";
 import { ComplaintModal } from "@/features/complaint/components/ComplaintModal";
+import { ScheduleReviewActions } from "@/features/review/components/ScheduleReviewActions";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -51,7 +51,7 @@ const STATUS_CONFIG: Record<
     icon: "x-circle",
   },
   MISSED: {
-    label: "Bỏ lỡ",
+    label: "Không có nhân viên nhận",
     bg: COLORS.canvas,
     text: COLORS.inkSoft,
     icon: "alert-triangle",
@@ -288,6 +288,19 @@ export function SingleScheduleSection({
             </Text>
           </View>
         )}
+        {!!schedule.cancel_reason &&
+          (schedule.status === "CANCELLED" || schedule.status === "MISSED") && (
+            <View
+              className="flex-row items-start mt-3 p-3.5 rounded-2xl"
+              style={{ backgroundColor: COLORS.dangerLight }}
+            >
+              <Feather name="info" size={16} color={COLORS.danger} />
+              <Text className="ml-2.5 text-[13.5px] text-ink-soft flex-1 leading-5">
+                <Text className="font-bold">Lý do: </Text>
+                {schedule.cancel_reason}
+              </Text>
+            </View>
+          )}
 
         {worker ? (
           <TouchableOpacity

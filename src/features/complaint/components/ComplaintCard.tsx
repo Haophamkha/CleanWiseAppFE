@@ -1,7 +1,7 @@
 import { COLORS, RADIUS, SHADOWS } from "@/constants/theme";
 import type {
-    ComplaintListItem,
-    ComplaintStatus,
+  ComplaintListItem,
+  ComplaintStatus,
 } from "@/features/complaint/types/Complaint";
 import { formatReviewDate } from "@/features/review/utils/reviewFormat";
 import { Feather } from "@expo/vector-icons";
@@ -74,6 +74,7 @@ export function ComplaintCard({
     icon: "info" as const,
     hint: "",
   };
+
   const dead = item.status === "CANCELLED";
 
   return (
@@ -87,32 +88,32 @@ export function ComplaintCard({
         dead && { opacity: 0.75 },
       ]}
     >
-      {/* Mã đơn + buổi: cùng một khối chữ */}
+      {/* Mã khiếu nại, kèm mã đơn + buổi */}
       <View className="px-4 py-3" style={{ backgroundColor: meta.bg }}>
         <Text
           className="text-[10.5px] font-bold"
           style={{ color: meta.color, letterSpacing: 0.5 }}
         >
-          MÃ ĐƠN
+          MÃ KHIẾU NẠI
         </Text>
+
         <Text
           selectable
           className="text-ink text-[17px] font-extrabold mt-0.5"
           style={{ fontFamily: MONO, letterSpacing: 0.6 }}
         >
-          {item.booking_code}
-          {item.schedule_sequence_no != null && (
-            <Text
-              className="text-[14px] font-bold"
-              style={{
-                color: meta.color,
-                fontFamily: undefined,
-                letterSpacing: 0,
-              }}
-            >
-              {`  ·  Buổi ${item.schedule_sequence_no}`}
-            </Text>
-          )}
+          {item.code ?? `#${item.id}`}
+        </Text>
+
+        <Text
+          className="text-[12.5px] font-semibold mt-1"
+          style={{ color: meta.color }}
+          numberOfLines={1}
+        >
+          Đơn {item.booking_code}
+          {item.schedule_sequence_no != null
+            ? `  ·  Buổi ${item.schedule_sequence_no}`
+            : ""}
         </Text>
       </View>
 
@@ -127,6 +128,7 @@ export function ComplaintCard({
             style={{ backgroundColor: meta.bg }}
           >
             <Feather name={meta.icon} size={11} color={meta.color} />
+
             <Text
               className="text-[11.5px] font-bold ml-1.5"
               style={{ color: meta.color }}
@@ -134,6 +136,7 @@ export function ComplaintCard({
               {meta.label}
             </Text>
           </View>
+
           <Text
             className="text-ink-muted text-[12px] ml-3 flex-1"
             numberOfLines={1}
@@ -155,6 +158,7 @@ export function ComplaintCard({
           >
             {meta.hint}
           </Text>
+
           <Feather name="chevron-right" size={18} color={COLORS.inkMuted} />
         </View>
       </View>

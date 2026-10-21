@@ -7,6 +7,7 @@ import {
   useGetWithdrawQuery,
   useMockConfirmTopupMutation,
   useRequestWithdrawMutation,
+  useRequestWithdrawOtpMutation,
   walletApi,
 } from "@/features/wallet/api/walletApi";
 import { useRefreshControl } from "@/hooks/useRefreshControl";
@@ -101,6 +102,16 @@ export function useWithdraw(balance: number, onClose: () => void) {
 
   const [requestWithdraw, { isLoading }] = useRequestWithdrawMutation();
   const { getKey, resetKey } = useIntentKey();
+  const [otpStep, setOtpStep] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [cooldown, setCooldown] = useState(0);
+  const [sendOtp, { isLoading: sendingOtp }] = useRequestWithdrawOtpMutation();
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
 
   const { data: allMethods = [], isLoading: methodsLoading } =
     useGetPaymentMethodsQuery();
@@ -145,6 +156,9 @@ export function useWithdraw(balance: number, onClose: () => void) {
     setUncertain(false);
     setErrorText("");
     setPollDone(false);
+    setOtpStep(false);
+    setOtp("");
+    setCooldown(0);
   };
 
   const close = () => {
@@ -156,6 +170,28 @@ export function useWithdraw(balance: number, onClose: () => void) {
     }
     reset();
     onClose();
+  };
+
+  const requestOtp = async () => {
+    setErrorText("");
+    try {
+      await sendOtp().unwrap();
+      setOtpStep(true);
+      setOtp("");
+      setCooldown(60);
+    } catch (err: any) {
+      if (err?.status === 429) return; // interceptor đã báo toast
+      setErrorText(
+        getApiErrorMessage(err, "Không gửi được mã OTP, vui lòng thử lại."),
+      );
+    }
+  };
+
+  const backToForm = () => {
+    setOtpStep(false);
+    setOtp("");
+    setCooldown(0);
+    setErrorText("");
   };
 
   const submit = async () => {
@@ -181,11 +217,21 @@ export function useWithdraw(balance: number, onClose: () => void) {
       return;
     }
 
+    if (!otpStep) {
+      await requestOtp();
+      return;
+    }
+    if (otp.length !== 6) {
+      setErrorText("Vui lòng nhập đủ 6 số OTP.");
+      return;
+    }
+
     try {
       const res = await requestWithdraw({
         amount,
         paymentMethodId: selected.id,
         idempotencyKey: getKey(`${amount}:${selected.id}`),
+        otp,
       }).unwrap();
       resetKey(); // lần rút sau dùng key khác
       setUncertain(false);
@@ -204,6 +250,7 @@ export function useWithdraw(balance: number, onClose: () => void) {
         );
       } else {
         resetKey();
+        setOtp("");
         setUncertain(false);
         setErrorText(
           getApiErrorMessage(
@@ -232,6 +279,13 @@ export function useWithdraw(balance: number, onClose: () => void) {
     submitted: withdrawId != null,
     close,
     submit,
+    otpStep,
+    otp,
+    setOtp,
+    cooldown,
+    sendingOtp,
+    resendOtp: requestOtp,
+    backToForm,
   };
 }
 

@@ -1,3 +1,4 @@
+import { useGetAddressesQuery } from "@/features/address/api/addressApi";
 import { clearPickedAddress } from "@/features/address/stores/addressPickerSlice";
 import { setBookingDraft } from "@/features/booking/stores/bookingDraftSlice";
 import { useGetServiceDetailQuery } from "@/features/service/api/serviceApi";
@@ -11,7 +12,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { formatVnd } from "@/utils/currency";
 import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -72,6 +73,24 @@ export default function ServiceDetailScreen() {
       }
     });
   }, [pickedSelections]);
+
+  const { data: savedAddresses } = useGetAddressesQuery();
+  const autoFilled = useRef(false);
+
+  // Tự chọn địa chỉ mặc định (nếu có) cho ô địa chỉ đầu tiên khi mới vào màn.
+  useEffect(() => {
+    if (autoFilled.current) return;
+    if (!savedAddresses?.length || addressEntries.length === 0) return;
+
+    const defaultAddress = savedAddresses.find((a) => a.is_default);
+    if (!defaultAddress) return;
+
+    autoFilled.current = true;
+    const firstKey = addressEntries[0].key;
+    setValues((prev) =>
+      prev[firstKey] ? prev : { ...prev, [firstKey]: defaultAddress },
+    );
+  }, [savedAddresses, addressEntries.length]);
 
   const handleGoToConfirm = () => {
     if (!service) return;

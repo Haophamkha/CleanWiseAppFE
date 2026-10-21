@@ -230,6 +230,17 @@ export function ScheduleItemCard({
         </View>
       )}
 
+      {!!schedule.cancel_reason &&
+        (schedule.status === "CANCELLED" || schedule.status === "MISSED") && (
+          <View className="flex-row items-start mt-2 p-2.5 rounded-xl bg-red-50">
+            <Feather name="info" size={14} color="#991B1B" />
+            <Text className="ml-2 text-[13px] text-gray-600 flex-1">
+              <Text className="font-bold">Lý do: </Text>
+              {schedule.cancel_reason}
+            </Text>
+          </View>
+        )}
+
       {schedule.worker ? (
         <WorkerRow
           worker={schedule.worker}

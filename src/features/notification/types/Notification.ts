@@ -12,6 +12,9 @@ export interface AppNotification {
   type: NotificationType;
   type_display: string;
   related_booking: number | null;
+  related_schedule: number | null;
+  navigation_source?: string;
+  target?: "booking" | "wallet" | "none" | "";
   is_read: boolean;
   read_at: string | null;
   created_at: string;

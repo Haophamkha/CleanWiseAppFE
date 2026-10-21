@@ -140,6 +140,7 @@ function TransactionRow({ tx }: { tx: WalletTransaction }) {
         >
           {tx.type_display}
         </Text>
+
         {!!(tx.note || tx.booking_code) && (
           <Text
             numberOfLines={1}
@@ -148,12 +149,14 @@ function TransactionRow({ tx }: { tx: WalletTransaction }) {
             {tx.note || tx.booking_code}
           </Text>
         )}
+
         <View
           style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}
         >
           <Text style={{ fontSize: 12, color: COLORS.inkMuted }}>
             {fmtTime(tx.created_at)}
           </Text>
+
           {tx.status !== "SUCCESS" && (
             <View
               style={{
@@ -178,6 +181,15 @@ function TransactionRow({ tx }: { tx: WalletTransaction }) {
             </View>
           )}
         </View>
+
+        {!!tx.code && (
+          <Text
+            selectable
+            style={{ marginTop: 3, fontSize: 11, color: COLORS.inkMuted }}
+          >
+            {tx.code}
+          </Text>
+        )}
       </View>
 
       <View style={{ marginLeft: 8, alignItems: "flex-end" }}>
@@ -192,6 +204,7 @@ function TransactionRow({ tx }: { tx: WalletTransaction }) {
           {isCredit ? "+" : "-"}
           {formatVnd(Number(tx.amount))}
         </Text>
+
         {!failed && (
           <Feather
             name={isCredit ? "trending-up" : "trending-down"}

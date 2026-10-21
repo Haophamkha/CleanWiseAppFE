@@ -1,8 +1,7 @@
 // components/address/AddressForm.tsx
 import { Input } from "@/components/ui";
 import type { ReactNode } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
-
+import { Switch, Text, TouchableOpacity, View } from "react-native";
 export type AddressFormValues = {
   label: string;
   receiver_name: string;
@@ -13,6 +12,10 @@ export type AddressFormValues = {
 type Props = {
   values: AddressFormValues;
   onChange: (field: keyof AddressFormValues, value: string) => void;
+  canToggle: boolean;
+  showContact: boolean;
+  isOther: boolean;
+  onToggleOther: (on: boolean) => void;
 };
 
 const LABEL_PRESETS = ["Nhà", "Công ty", "Khác"];
@@ -25,7 +28,14 @@ export function FormSectionTitle({ children }: { children: ReactNode }) {
   );
 }
 
-export default function AddressForm({ values, onChange }: Props) {
+export default function AddressForm({
+  values,
+  onChange,
+  canToggle,
+  showContact,
+  isOther,
+  onToggleOther,
+}: Props) {
   return (
     <View>
       <Text className="text-sm font-medium text-ink mb-2">Nhãn địa chỉ</Text>
@@ -59,22 +69,40 @@ export default function AddressForm({ values, onChange }: Props) {
         onChangeText={(v) => onChange("label", v)}
       />
 
-      <Input
-        label="Tên người nhận"
-        icon="user"
-        placeholder="Nhập tên người nhận"
-        autoCapitalize="words"
-        value={values.receiver_name}
-        onChangeText={(v) => onChange("receiver_name", v)}
-      />
-      <Input
-        label="Số điện thoại"
-        icon="phone"
-        placeholder="Nhập số điện thoại"
-        keyboardType="phone-pad"
-        value={values.receiver_phone}
-        onChangeText={(v) => onChange("receiver_phone", v)}
-      />
+      {canToggle && (
+        <View className="flex-row items-center justify-between rounded-xl bg-canvas px-4 py-3 mb-3">
+          <View className="flex-1 pr-3">
+            <Text className="text-sm font-medium text-ink">
+              Người khác sẽ nhận nhân viên
+            </Text>
+            <Text className="text-xs text-ink-muted mt-0.5">
+              Bật nếu bạn không có mặt tại địa chỉ.
+            </Text>
+          </View>
+          <Switch value={isOther} onValueChange={onToggleOther} />
+        </View>
+      )}
+
+      {showContact && (
+        <>
+          <Input
+            label="Tên liên hệ"
+            icon="user"
+            placeholder="Nhập tên người liên hệ"
+            autoCapitalize="words"
+            value={values.receiver_name}
+            onChangeText={(v) => onChange("receiver_name", v)}
+          />
+          <Input
+            label="Số điện thoại liên hệ"
+            icon="phone"
+            placeholder="Nhân viên sẽ gọi số này khi đến nơi"
+            keyboardType="phone-pad"
+            value={values.receiver_phone}
+            onChangeText={(v) => onChange("receiver_phone", v)}
+          />
+        </>
+      )}
       <Input
         label="Địa chỉ cụ thể"
         icon="home"

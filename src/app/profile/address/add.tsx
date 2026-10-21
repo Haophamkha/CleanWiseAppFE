@@ -3,7 +3,7 @@ import { ScreenHeader } from "@/components/common/ScreenHeader";
 import ScreenContainer from "@/components/ScreenContainer";
 import { Button, ErrorText } from "@/components/ui";
 import AddressForm, {
-    FormSectionTitle,
+  FormSectionTitle,
 } from "@/features/address/components/AddressForm";
 import { MapPickButton } from "@/features/address/components/MapPickButton";
 import ProvinceWardPicker from "@/features/address/components/ProvinceWardPicker";
@@ -36,7 +36,14 @@ export default function AddAddressScreen() {
         />
 
         <FormSectionTitle>Thông tin người nhận</FormSectionTitle>
-        <AddressForm values={a.values} onChange={a.change} />
+        <AddressForm
+          values={a.values}
+          onChange={a.change}
+          canToggle={a.canToggle}
+          showContact={a.showContact}
+          isOther={a.isOther}
+          onToggleOther={a.toggleOther}
+        />
 
         <ErrorText message={a.error} />
       </ScrollView>
