@@ -49,6 +49,7 @@ export type BookingScheduleDetail = {
   actual_end: string | null;
   status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "MISSED";
   note: string | null;
+  cancel_reason?: string | null;
   worker: BookingWorker | null;
   images?: BookingScheduleImage[];
 };

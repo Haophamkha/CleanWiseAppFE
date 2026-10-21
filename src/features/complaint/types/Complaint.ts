@@ -67,6 +67,7 @@ export type CreateComplaintRequest = {
  */
 export type ComplaintListItem = {
   id: number;
+  code?: string | null;
   booking: number;
   booking_code: string;
   schedule_sequence_no: number | null;
@@ -110,6 +111,7 @@ export type ComplaintListResponse = {
  */
 export type ComplaintDetail = {
   id: number;
+  code?: string | null;
 
   reporter: number;
   reporter_role: ComplaintReporterRole;

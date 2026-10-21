@@ -1,6 +1,6 @@
 import { COLORS, SHADOWS } from "@/constants/theme";
 import { AppNotification } from "@/features/notification/types/Notification";
-import { getNotificationTypeMeta } from "@/features/notification/utils/notificationMeta";
+import { getNotificationRoute, getNotificationTypeMeta } from "@/features/notification/utils/notificationMeta";
 import { formatNotificationTime } from "@/utils/formatTime";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -16,6 +16,8 @@ export default function NotificationItem({
 }: NotificationItemProps) {
   const meta = getNotificationTypeMeta(notification.type);
   const isUnread = !notification.is_read;
+
+  const route = getNotificationRoute(notification);
 
   return (
     <TouchableOpacity
@@ -52,6 +54,7 @@ export default function NotificationItem({
           >
             {meta.label}
           </Text>
+
           <Text className="text-[11px] text-ink-muted">
             {formatNotificationTime(notification.created_at)}
           </Text>
@@ -66,6 +69,7 @@ export default function NotificationItem({
           >
             {notification.title}
           </Text>
+
           {isUnread && (
             <View className="w-2.5 h-2.5 rounded-full bg-primary mt-1.5 ml-2" />
           )}
@@ -78,11 +82,12 @@ export default function NotificationItem({
           {notification.message}
         </Text>
 
-        {notification.related_booking ? (
+        {route ? (
           <View className="flex-row items-center mt-2">
             <Text className="text-xs font-semibold text-primary">
-              Xem đơn hàng
+              {route.includes("wallets") ? "Xem ví" : "Xem đơn hàng"}
             </Text>
+
             <Feather name="chevron-right" size={14} color={COLORS.primary} />
           </View>
         ) : null}

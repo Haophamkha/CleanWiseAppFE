@@ -4,7 +4,7 @@ import ScreenContainer from "@/components/ScreenContainer";
 import { Button, EmptyState, ErrorText } from "@/components/ui";
 import { COLORS } from "@/constants/theme";
 import AddressForm, {
-    FormSectionTitle,
+  FormSectionTitle,
 } from "@/features/address/components/AddressForm";
 import DefaultAddressSwitch from "@/features/address/components/DefaultAddressSwitch";
 import { MapPickButton } from "@/features/address/components/MapPickButton";
@@ -13,10 +13,10 @@ import { useEditAddress } from "@/features/address/hooks/useEditAddress";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
-    ActivityIndicator,
-    ScrollView,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  ScrollView,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function EditAddressScreen() {
@@ -79,7 +79,14 @@ export default function EditAddressScreen() {
             />
 
             <FormSectionTitle>Thông tin người nhận</FormSectionTitle>
-            <AddressForm values={e.values} onChange={e.change} />
+            <AddressForm
+              values={e.values}
+              onChange={e.change}
+              canToggle={e.canToggle}
+              showContact={e.showContact}
+              isOther={e.isOther}
+              onToggleOther={e.toggleOther}
+            />
 
             <DefaultAddressSwitch
               isDefault={e.isDefault}

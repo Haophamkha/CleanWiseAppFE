@@ -10,6 +10,30 @@ interface NotificationTypeMeta {
   iconColor: string;
 }
 
+/**
+ * Trả về route tương ứng khi người dùng nhấn vào thông báo.
+ * Tất cả thông báo liên quan đến buổi làm đều mở trang đơn hàng.
+ */
+export function getNotificationRoute(n: {
+  target?: string;
+  type?: string;
+  related_booking?: number | null;
+}): string | null {
+  if (n.target === "wallet") {
+    return "/profile/wallets/wallet";
+  }
+
+  if (n.related_booking) {
+    return `/booking/${n.related_booking}`;
+  }
+
+  if (n.type === "PAYMENT") {
+    return "/profile/wallets/wallet";
+  }
+
+  return null;
+}
+
 const NOTIFICATION_TYPE_MAP: Record<string, NotificationTypeMeta> = {
   BOOKING: {
     label: "Đơn hàng",
