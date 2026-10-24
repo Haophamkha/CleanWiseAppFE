@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 // features/address/hooks/useEditAddress.ts
 import { useConfirm } from "@/components/common/ConfirmProvider";
 import {
@@ -15,6 +17,8 @@ import { useEffect, useState } from "react";
 export type EditAddressStatus = "invalid" | "loading" | "error" | "ready";
 
 export function useEditAddress() {
+  const { t } = useTranslation();
+
   const params = useLocalSearchParams<{
     id?: string;
     latitude?: string;
@@ -76,7 +80,7 @@ export function useEditAddress() {
       router.back();
     } catch (e) {
       form.setError(
-        getApiErrorMessage(e, "Cập nhật thất bại, vui lòng thử lại"),
+        getApiErrorMessage(e, t("Cập nhật thất bại, vui lòng thử lại")),
       );
     }
   };
@@ -84,15 +88,15 @@ export function useEditAddress() {
   const remove = async () => {
     if (address?.is_default) {
       showErrorToast(
-        "Không thể xóa",
-        "Hãy đặt địa chỉ khác làm mặc định trước.",
+        t("Không thể xóa"),
+        t("Hãy đặt địa chỉ khác làm mặc định trước."),
       );
       return;
     }
     const ok = await confirm({
-      title: "Xóa địa chỉ",
-      message: "Bạn có chắc chắn muốn xóa địa chỉ này không?",
-      confirmText: "Xóa",
+      title: t("Xóa địa chỉ"),
+      message: t("Bạn có chắc chắn muốn xóa địa chỉ này không?"),
+      confirmText: t("Xóa"),
       danger: true,
     });
     if (!ok) return;
@@ -101,7 +105,7 @@ export function useEditAddress() {
       router.back();
     } catch (e) {
       form.setError(
-        getApiErrorMessage(e, "Xóa địa chỉ thất bại, vui lòng thử lại"),
+        getApiErrorMessage(e, t("Xóa địa chỉ thất bại, vui lòng thử lại")),
       );
     }
   };

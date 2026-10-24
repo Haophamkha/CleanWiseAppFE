@@ -1,4 +1,5 @@
-import { COLORS } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
 import { Image, View } from "react-native";
@@ -37,6 +38,8 @@ export function ServiceThumb({
   bg: string;
   size?: number;
 }) {
+  const { COLORS } = useAppTheme();
+
   const [failed, setFailed] = useState(false);
   const showImage = !!imageUrl && !failed;
   const icon = guessIcon(serviceName) ?? fallbackIcon;

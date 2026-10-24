@@ -1,6 +1,9 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { COLORS } from "@/constants/theme";
+
 import { BookingBottomBar } from "@/features/booking/components/BookingBottomBar";
 import { BookingCodeCard } from "@/features/booking/components/BookingCodeCard";
 import { BookingHeader } from "@/features/booking/components/BookingHeader";
@@ -29,6 +32,8 @@ function AddressBlock({
   address: BookingData["address"];
   fallbackLabel: string;
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <Card className="mb-4">
       <SectionTitle icon="map-pin">{title}</SectionTitle>
@@ -51,6 +56,10 @@ function AddressBlock({
 }
 
 export default function BookingDetailScreen() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const insets = useSafeAreaInsets();
   const {
     booking,
@@ -85,8 +94,8 @@ export default function BookingDetailScreen() {
       <View className="flex-1 justify-center bg-canvas">
         <EmptyState
           icon="alert-circle"
-          title="Không tải được đơn hàng"
-          actionLabel="Quay lại"
+          title={t("Không tải được đơn hàng")}
+          actionLabel={t("Quay lại")}
           onAction={() => router.back()}
         />
       </View>
@@ -115,7 +124,7 @@ export default function BookingDetailScreen() {
 
         {!!booking.cancel_reason && (
           <Card className="mb-4">
-            <SectionTitle icon="info">Lý do hủy</SectionTitle>
+            <SectionTitle icon="info">{t("Lý do hủy")}</SectionTitle>
             <Text className="text-[14px] leading-5 text-ink-soft">
               {booking.cancel_reason}
             </Text>
@@ -149,21 +158,21 @@ export default function BookingDetailScreen() {
         )}
 
         <AddressBlock
-          title={booking.delivery_address ? "Địa chỉ chuyển đi" : "Địa chỉ"}
+          title={booking.delivery_address ? t("Địa chỉ chuyển đi") : t("Địa chỉ")}
           address={booking.address}
-          fallbackLabel="Địa chỉ thực hiện dịch vụ"
+          fallbackLabel={t("Địa chỉ thực hiện dịch vụ")}
         />
 
         {booking.delivery_address && (
           <AddressBlock
-            title="Địa chỉ chuyển đến"
+            title={t("Địa chỉ chuyển đến")}
             address={booking.delivery_address}
-            fallbackLabel="Địa chỉ chuyển đến"
+            fallbackLabel={t("Địa chỉ chuyển đến")}
           />
         )}
 
         <Card className="mb-4">
-          <SectionTitle icon="clipboard">Chi tiết dịch vụ</SectionTitle>
+          <SectionTitle icon="clipboard">{t("Chi tiết dịch vụ")}</SectionTitle>
           <ServiceOptionsSummary
             fields={booking.form_schema?.fields ?? []}
             values={booking.service_data}
@@ -175,7 +184,7 @@ export default function BookingDetailScreen() {
 
         {!!booking.note && (
           <Card className="mt-4">
-            <SectionTitle icon="file-text">Ghi chú</SectionTitle>
+            <SectionTitle icon="file-text">{t("Ghi chú")}</SectionTitle>
             <Text className="text-[14px] leading-5 text-ink-soft">
               {booking.note}
             </Text>
@@ -201,11 +210,11 @@ export default function BookingDetailScreen() {
         visible={!!cancelTarget}
         loading={isCancellingSchedule}
         title={
-          cancelTarget ? `Hủy buổi ${cancelTarget.sequence_no}` : "Hủy buổi"
+          cancelTarget ? t("Hủy buổi {{value0}}", { value0: cancelTarget.sequence_no }) : t("Hủy buổi")
         }
         refundNote={
           isPaidOnline
-            ? "Số tiền của buổi này sẽ được hoàn ngay vào ví của bạn."
+            ? t("Số tiền của buổi này sẽ được hoàn ngay vào ví của bạn.")
             : undefined
         }
         onClose={closeCancelSchedule}

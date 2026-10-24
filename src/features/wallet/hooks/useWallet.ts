@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+import { getLocale } from "@/features/language/i18n";
 import { useGetPaymentMethodsQuery } from "@/features/payment/api/paymentMethodApi";
 import {
   useCreateTopupMutation,
@@ -93,6 +95,8 @@ export function useWallet() {
 /* ============================ rút tiền ============================ */
 
 export function useWithdraw(balance: number, onClose: () => void) {
+  const { t } = useTranslation();
+
   const dispatch = useDispatch();
   const [amountText, setAmountText] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -117,7 +121,7 @@ export function useWithdraw(balance: number, onClose: () => void) {
     useGetPaymentMethodsQuery();
   const methods = useMemo(
     () => allMethods.filter((m) => m.method_type === "BANK_ACCOUNT"),
-    [allMethods],
+    [allMethods, t],
   );
   const selected =
     methods.find((m) => m.id === selectedId) ??
@@ -164,8 +168,8 @@ export function useWithdraw(balance: number, onClose: () => void) {
   const close = () => {
     if (uncertain) {
       Alert.alert(
-        "Chưa rõ kết quả",
-        "Yêu cầu rút trước đó có thể đã được gửi. Hãy kiểm tra lịch sử giao dịch trước khi rút lại.",
+        t("Chưa rõ kết quả"),
+        t("Yêu cầu rút trước đó có thể đã được gửi. Hãy kiểm tra lịch sử giao dịch trước khi rút lại."),
       );
     }
     reset();
@@ -182,7 +186,7 @@ export function useWithdraw(balance: number, onClose: () => void) {
     } catch (err: any) {
       if (err?.status === 429) return; // interceptor đã báo toast
       setErrorText(
-        getApiErrorMessage(err, "Không gửi được mã OTP, vui lòng thử lại."),
+        getApiErrorMessage(err, t("Không gửi được mã OTP, vui lòng thử lại.")),
       );
     }
   };
@@ -197,23 +201,23 @@ export function useWithdraw(balance: number, onClose: () => void) {
   const submit = async () => {
     setErrorText("");
     if (!selected) {
-      setErrorText("Vui lòng thêm tài khoản ngân hàng để nhận tiền.");
+      setErrorText(t("Vui lòng thêm tài khoản ngân hàng để nhận tiền."));
       return;
     }
     if (!amount || amount < WITHDRAW_MIN) {
       setErrorText(
-        `Số tiền rút tối thiểu là ${WITHDRAW_MIN.toLocaleString("vi-VN")}đ.`,
+        t("Số tiền rút tối thiểu là {{value0}}đ.", { value0: WITHDRAW_MIN.toLocaleString(getLocale()) }),
       );
       return;
     }
     if (amount > WITHDRAW_MAX) {
       setErrorText(
-        `Mỗi lần rút tối đa ${WITHDRAW_MAX.toLocaleString("vi-VN")}đ.`,
+        t("Mỗi lần rút tối đa {{value0}}đ.", { value0: WITHDRAW_MAX.toLocaleString(getLocale()) }),
       );
       return;
     }
     if (amount > balance) {
-      setErrorText("Số tiền rút vượt quá số dư trong ví.");
+      setErrorText(t("Số tiền rút vượt quá số dư trong ví."));
       return;
     }
 
@@ -222,7 +226,7 @@ export function useWithdraw(balance: number, onClose: () => void) {
       return;
     }
     if (otp.length !== 6) {
-      setErrorText("Vui lòng nhập đủ 6 số OTP.");
+      setErrorText(t("Vui lòng nhập đủ 6 số OTP."));
       return;
     }
 
@@ -245,8 +249,8 @@ export function useWithdraw(balance: number, onClose: () => void) {
         setUncertain(true);
         setErrorText(
           err?.status === 503
-            ? "Hệ thống tạm thời chưa xử lý được. Bấm Gửi lại sau ít giây, bạn sẽ không bị rút trùng."
-            : "Chưa rõ yêu cầu đã được gửi chưa. Bấm Gửi lại, bạn sẽ không bị rút trùng.",
+            ? t("Hệ thống tạm thời chưa xử lý được. Bấm Gửi lại sau ít giây, bạn sẽ không bị rút trùng.")
+            : t("Chưa rõ yêu cầu đã được gửi chưa. Bấm Gửi lại, bạn sẽ không bị rút trùng."),
         );
       } else {
         resetKey();
@@ -255,7 +259,7 @@ export function useWithdraw(balance: number, onClose: () => void) {
         setErrorText(
           getApiErrorMessage(
             err,
-            "Không thể gửi yêu cầu rút tiền, vui lòng thử lại.",
+            t("Không thể gửi yêu cầu rút tiền, vui lòng thử lại."),
           ),
         );
       }
@@ -292,6 +296,8 @@ export function useWithdraw(balance: number, onClose: () => void) {
 /* ============================ nạp tiền ============================ */
 
 export function useTopup(onClose: () => void) {
+  const { t } = useTranslation();
+
   const dispatch = useDispatch();
   const [amountText, setAmountText] = useState("");
   const [topupId, setTopupId] = useState<number | null>(null);
@@ -361,7 +367,7 @@ export function useTopup(onClose: () => void) {
     const link = target ?? url;
     if (!link) return;
     Linking.openURL(link).catch(() =>
-      Alert.alert("Không mở được trang thanh toán", "Vui lòng thử lại."),
+      Alert.alert(t("Không mở được trang thanh toán"), t("Vui lòng thử lại.")),
     );
   };
 
@@ -369,12 +375,12 @@ export function useTopup(onClose: () => void) {
     setErrorText("");
     if (!amount || amount < TOPUP_MIN) {
       setErrorText(
-        `Số tiền nạp tối thiểu là ${TOPUP_MIN.toLocaleString("vi-VN")}đ.`,
+        t("Số tiền nạp tối thiểu là {{value0}}đ.", { value0: TOPUP_MIN.toLocaleString(getLocale()) }),
       );
       return;
     }
     if (amount > TOPUP_MAX) {
-      setErrorText(`Mỗi lần nạp tối đa ${TOPUP_MAX.toLocaleString("vi-VN")}đ.`);
+      setErrorText(t("Mỗi lần nạp tối đa {{value0}}đ.", { value0: TOPUP_MAX.toLocaleString(getLocale()) }));
       return;
     }
     try {
@@ -394,7 +400,7 @@ export function useTopup(onClose: () => void) {
       if (isUncertain(err)) {
         setUncertain(true);
         setErrorText(
-          "Chưa rõ yêu cầu đã được tạo chưa. Bấm thử lại, bạn sẽ không bị tạo trùng.",
+          t("Chưa rõ yêu cầu đã được tạo chưa. Bấm thử lại, bạn sẽ không bị tạo trùng."),
         );
       } else {
         resetKey();
@@ -402,7 +408,7 @@ export function useTopup(onClose: () => void) {
         setErrorText(
           getApiErrorMessage(
             err,
-            "Không thể tạo liên kết nạp tiền, vui lòng thử lại.",
+            t("Không thể tạo liên kết nạp tiền, vui lòng thử lại."),
           ),
         );
       }
@@ -415,7 +421,7 @@ export function useTopup(onClose: () => void) {
       await mockConfirm(topupId).unwrap();
       refetch();
     } catch (err: any) {
-      setErrorText(getApiErrorMessage(err, "Giả lập thanh toán thất bại."));
+      setErrorText(getApiErrorMessage(err, t("Giả lập thanh toán thất bại.")));
     }
   };
 

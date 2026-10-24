@@ -1,4 +1,7 @@
-import { COLORS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { OtpInput } from "@/features/auth/components/OtpInput";
 import {
   AmountField,
@@ -24,6 +27,10 @@ type Props = {
 };
 
 export function WithdrawModal({ visible, balance, onClose }: Props) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const w = useWithdraw(balance, onClose);
 
   /* ---------- kết quả ---------- */
@@ -64,10 +71,10 @@ export function WithdrawModal({ visible, balance, onClose }: Props) {
             }}
           >
             {processing
-              ? "Đang xử lý yêu cầu rút"
+              ? t("Đang xử lý yêu cầu rút")
               : success
-                ? "Rút tiền thành công"
-                : "Rút tiền thất bại"}
+                ? t("Rút tiền thành công")
+                : t("Rút tiền thất bại")}
           </Text>
           <Text
             style={{
@@ -97,14 +104,14 @@ export function WithdrawModal({ visible, balance, onClose }: Props) {
             }}
           >
             {processing
-              ? "Tiền sẽ về tài khoản trong ít phút. Bạn có thể đóng cửa sổ này, trạng thái sẽ cập nhật trong lịch sử giao dịch."
+              ? t("Tiền sẽ về tài khoản trong ít phút. Bạn có thể đóng cửa sổ này, trạng thái sẽ cập nhật trong lịch sử giao dịch.")
               : success
-                ? "Tiền đã được chuyển về tài khoản ngân hàng của bạn."
+                ? t("Tiền đã được chuyển về tài khoản ngân hàng của bạn.")
                 : w.record?.failure_reason ||
-                  "Giao dịch không thành công. Tiền đã được hoàn vào ví."}
+                  t("Giao dịch không thành công. Tiền đã được hoàn vào ví.")}
           </Text>
         </View>
-        <SheetButton label="Đóng" onPress={w.close} variant="soft" />
+        <SheetButton label={t("Đóng")} onPress={w.close} variant="soft" />
       </WalletSheet>
     );
   }
@@ -114,8 +121,7 @@ export function WithdrawModal({ visible, balance, onClose }: Props) {
     return (
       <WalletSheet visible={visible} onClose={w.close}>
         <Text style={{ fontSize: 18, fontWeight: "700", color: COLORS.ink }}>
-          Nhập mã OTP
-        </Text>
+          {t("Nhập mã OTP")}</Text>
         <Text
           style={{
             fontSize: 13,
@@ -124,7 +130,7 @@ export function WithdrawModal({ visible, balance, onClose }: Props) {
             color: COLORS.inkMuted,
           }}
         >
-          Mã gồm 6 số đã gửi tới email của bạn để xác nhận rút{" "}
+          {t("Mã gồm 6 số đã gửi tới email của bạn để xác nhận rút")}{" "}
           {formatVnd(w.submittedAmount)}.
         </Text>
 
@@ -143,16 +149,16 @@ export function WithdrawModal({ visible, balance, onClose }: Props) {
               color: w.cooldown > 0 ? COLORS.inkMuted : COLORS.primaryDark,
             }}
           >
-            {w.cooldown > 0 ? `Gửi lại mã (${w.cooldown}s)` : "Gửi lại mã"}
+            {w.cooldown > 0 ? t("Gửi lại mã ({{value0}}s)", { value0: w.cooldown }) : t("Gửi lại mã")}
           </Text>
         </TouchableOpacity>
 
         <SheetButton
-          label={w.uncertain ? "Gửi lại" : "Xác nhận rút tiền"}
+          label={w.uncertain ? t("Gửi lại") : t("Xác nhận rút tiền")}
           onPress={w.submit}
           loading={w.isLoading}
         />
-        <SheetButton label="Quay lại" onPress={w.backToForm} variant="soft" />
+        <SheetButton label={t("Quay lại")} onPress={w.backToForm} variant="soft" />
       </WalletSheet>
     );
   }
@@ -161,8 +167,7 @@ export function WithdrawModal({ visible, balance, onClose }: Props) {
   return (
     <WalletSheet visible={visible} onClose={w.close}>
       <Text style={{ fontSize: 18, fontWeight: "700", color: COLORS.ink }}>
-        Rút tiền về tài khoản
-      </Text>
+        {t("Rút tiền về tài khoản")}</Text>
       <Text
         style={{
           fontSize: 13,
@@ -171,9 +176,8 @@ export function WithdrawModal({ visible, balance, onClose }: Props) {
           color: COLORS.inkMuted,
         }}
       >
-        Số dư khả dụng {formatVnd(balance)} · Tối thiểu{" "}
-        {formatVnd(WITHDRAW_MIN)}, tối đa {formatVnd(WITHDRAW_MAX)}/lần
-      </Text>
+        {t("Số dư khả dụng")}{" "}{formatVnd(balance)}  {t("· Tối thiểu")}{" "}
+        {formatVnd(WITHDRAW_MIN)}{t(", tối đa")} {formatVnd(WITHDRAW_MAX)}{t("/lần")}</Text>
 
       {/* tài khoản nhận */}
       <Text
@@ -184,8 +188,7 @@ export function WithdrawModal({ visible, balance, onClose }: Props) {
           color: COLORS.inkSoft,
         }}
       >
-        Tài khoản nhận tiền
-      </Text>
+        {t("Tài khoản nhận tiền")}</Text>
       {w.methodsLoading ? (
         <ActivityIndicator
           color={COLORS.primary}
@@ -209,11 +212,9 @@ export function WithdrawModal({ visible, balance, onClose }: Props) {
           }}
         >
           <Text style={{ fontWeight: "700", color: COLORS.primaryDark }}>
-            + Thêm tài khoản ngân hàng
-          </Text>
+            {t("+ Thêm tài khoản ngân hàng")}</Text>
           <Text style={{ fontSize: 12, marginTop: 2, color: COLORS.inkSoft }}>
-            Bạn cần có tài khoản ngân hàng để rút tiền.
-          </Text>
+            {t("Bạn cần có tài khoản ngân hàng để rút tiền.")}</Text>
         </TouchableOpacity>
       ) : (
         <View style={{ marginBottom: 16, gap: 8 }}>
@@ -250,7 +251,7 @@ export function WithdrawModal({ visible, balance, onClose }: Props) {
                     numberOfLines={1}
                   >
                     {m.account_holder_name}
-                    {m.is_default ? " · Mặc định" : ""}
+                    {m.is_default ? t(" · Mặc định") : ""}
                   </Text>
                 </View>
                 {active && (
@@ -281,7 +282,7 @@ export function WithdrawModal({ visible, balance, onClose }: Props) {
       <ErrorBox text={w.errorText} />
 
       <SheetButton
-        label="Gửi mã OTP"
+        label={t("Gửi mã OTP")}
         onPress={w.submit}
         loading={w.sendingOtp}
       />

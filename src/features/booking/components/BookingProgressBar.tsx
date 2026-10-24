@@ -1,9 +1,16 @@
-import { COLORS, SHADOWS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { SHADOWS } from "@/constants/theme";
 import { Feather } from "@expo/vector-icons";
 import { Text, View } from "react-native";
-import { PROGRESS_STEPS, STATUS_INDEX } from "../types/bookingStatus";
+import { getLocalizedProgressSteps, STATUS_INDEX } from "../types/bookingStatus";
 
 function TerminalBanner({ status }: { status: "CANCELLED" | "EXPIRED" }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const cancelled = status === "CANCELLED";
   const bg = cancelled ? COLORS.dangerLight : COLORS.accentLight;
   const tint = cancelled ? COLORS.danger : COLORS.accentDark;
@@ -13,7 +20,7 @@ function TerminalBanner({ status }: { status: "CANCELLED" | "EXPIRED" }) {
       className="rounded-3xl p-4 mb-5 flex-row items-center"
       style={{ backgroundColor: bg }}
     >
-      <View className="w-12 h-12 rounded-full bg-white/70 items-center justify-center mr-3">
+      <View className="w-12 h-12 rounded-full bg-surface/70 items-center justify-center mr-3">
         <Feather
           name={cancelled ? "x-circle" : "clock"}
           size={22}
@@ -22,12 +29,12 @@ function TerminalBanner({ status }: { status: "CANCELLED" | "EXPIRED" }) {
       </View>
       <View className="flex-1">
         <Text className="font-bold text-[15px]" style={{ color: tint }}>
-          {cancelled ? "Đơn hàng đã hủy" : "Đơn hàng đã hết hạn"}
+          {cancelled ? t("Đơn hàng đã hủy") : t("Đơn hàng đã hết hạn")}
         </Text>
         <Text className="text-[13px] mt-0.5 text-ink-soft">
           {cancelled
-            ? "Đơn hàng này không còn được xử lý."
-            : "Đơn hàng đã hết thời gian chờ nhận việc."}
+            ? t("Đơn hàng này không còn được xử lý.")
+            : t("Đơn hàng đã hết thời gian chờ nhận việc.")}
         </Text>
       </View>
     </View>
@@ -35,12 +42,16 @@ function TerminalBanner({ status }: { status: "CANCELLED" | "EXPIRED" }) {
 }
 
 export function BookingProgressBar({ status }: { status: string }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   if (status === "CANCELLED" || status === "EXPIRED") {
     return <TerminalBanner status={status} />;
   }
 
   const currentIndex = STATUS_INDEX[status] ?? 0;
-  const total = PROGRESS_STEPS.length;
+  const total = getLocalizedProgressSteps().length;
 
   return (
     <View
@@ -48,16 +59,16 @@ export function BookingProgressBar({ status }: { status: string }) {
       style={SHADOWS.card}
     >
       <View className="flex-row items-center justify-between mb-4">
-        <Text className="font-bold text-[15px] text-ink">Tiến độ đơn hàng</Text>
+        <Text className="font-bold text-[15px] text-ink">{t("Tiến độ đơn hàng")}</Text>
         <View className="px-2.5 py-1 rounded-full bg-primary-light">
           <Text className="text-[11px] font-bold text-primary-dark">
-            Bước {Math.min(currentIndex + 1, total)}/{total}
+            {t("Bước")}{" "}{Math.min(currentIndex + 1, total)}/{total}
           </Text>
         </View>
       </View>
 
       <View className="flex-row">
-        {PROGRESS_STEPS.map((step, index) => {
+        {getLocalizedProgressSteps().map((step, index) => {
           const completed = index < currentIndex;
           const active = index === currentIndex;
           const reached = completed || active;
@@ -72,7 +83,7 @@ export function BookingProgressBar({ status }: { status: string }) {
                     isFirst
                       ? "bg-transparent"
                       : reached
-                        ? "bg-primary"
+                        ? "bg-primary-fill"
                         : "bg-line"
                   }`}
                 />
@@ -83,7 +94,7 @@ export function BookingProgressBar({ status }: { status: string }) {
                 >
                   <View
                     className={`w-8 h-8 rounded-full items-center justify-center ${
-                      reached ? "bg-primary" : "bg-canvas border border-line"
+                      reached ? "bg-primary-fill" : "bg-canvas border border-line"
                     }`}
                   >
                     <Feather
@@ -98,7 +109,7 @@ export function BookingProgressBar({ status }: { status: string }) {
                     isLast
                       ? "bg-transparent"
                       : completed
-                        ? "bg-primary"
+                        ? "bg-primary-fill"
                         : "bg-line"
                   }`}
                 />

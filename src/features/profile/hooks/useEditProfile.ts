@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 // features/profile/hooks/useEditProfile.ts
 import { ROUTES } from "@/config/constants";
 import {
@@ -26,6 +28,8 @@ const EMPTY_FORM: Record<EditProfileKey, string> = {
 const KEYS = Object.keys(EMPTY_FORM) as EditProfileKey[];
 
 export function useEditProfile() {
+  const { t } = useTranslation();
+
   const {
     data: profile,
     isLoading,
@@ -86,13 +90,13 @@ export function useEditProfile() {
             }
           : {}),
       }).unwrap();
-      showSuccessToast("Đã cập nhật", "Thông tin cá nhân đã được lưu");
+      showSuccessToast(t("Đã cập nhật"), t("Thông tin cá nhân đã được lưu"));
       goBack();
     } catch (e) {
       setError(
         getApiErrorMessage(
           e,
-          "Không thể cập nhật thông tin. Vui lòng thử lại.",
+          t("Không thể cập nhật thông tin. Vui lòng thử lại."),
         ),
       );
     }

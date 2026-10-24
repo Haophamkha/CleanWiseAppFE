@@ -1,4 +1,5 @@
-import { COLORS } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { View, ViewProps } from "react-native";
 
 export function Card({
@@ -6,19 +7,12 @@ export function Card({
   className = "",
   ...rest
 }: ViewProps & { className?: string }) {
+  const { SHADOWS } = useAppTheme();
+
   return (
     <View
       className={`bg-surface rounded-xl border border-line p-4 ${className}`}
-      style={[
-        {
-          shadowColor: COLORS.ink,
-          shadowOpacity: 0.06,
-          shadowOffset: { width: 0, height: 4 },
-          shadowRadius: 12,
-          elevation: 2,
-        },
-        style,
-      ]}
+      style={[SHADOWS.card, style]}
       {...rest}
     />
   );

@@ -1,4 +1,7 @@
-import { COLORS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { Feather } from "@expo/vector-icons";
 import { Pressable, View } from "react-native";
 
@@ -11,15 +14,19 @@ export function ReviewStars({
   onChange?: (rating: number) => void;
   disabled?: boolean;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   return (
-    <View className="flex-row" accessibilityLabel={`${rating} trên 5 sao`}>
+    <View className="flex-row" accessibilityLabel={t("{{value0}} trên 5 sao", { value0: rating })}>
       {[1, 2, 3, 4, 5].map((value) => (
         <Pressable
           key={value}
           disabled={!onChange || disabled}
           onPress={() => onChange?.(value)}
           accessibilityRole={onChange ? "button" : undefined}
-          accessibilityLabel={`${value} sao`}
+          accessibilityLabel={t("{{value0}} sao", { value0: value, count: value })}
           accessibilityState={{ selected: value === rating, disabled }}
           className={onChange ? "p-2" : "mr-1"}
         >

@@ -1,3 +1,6 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 // src/components/service/RepeatableCategoryGroupField.tsx
 import type { FormField } from "@/features/service/types/Service";
 import {
@@ -8,13 +11,7 @@ import { formatVnd } from "@/utils/currency";
 import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
-import {
-    COLORS,
-    FieldControl,
-    TabBar,
-    Values,
-    resolveOptions,
-} from "./formFieldShared";
+import { FieldControl, TabBar, Values, resolveOptions } from "./formFieldShared";
 
 type Props = {
   field: FormField;
@@ -29,6 +26,10 @@ export function RepeatableCategoryGroupField({
   pricingConfig,
   onChange,
 }: Props) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const items = Array.isArray(value) ? value : [];
   const itemFields = field.item_fields ?? [];
 
@@ -94,7 +95,7 @@ export function RepeatableCategoryGroupField({
       style={{
         borderWidth: 1,
         borderColor: COLORS.border,
-        backgroundColor: "#FAFAFA",
+        backgroundColor: COLORS.canvas,
       }}
     >
       {!!categoryField && (
@@ -199,7 +200,7 @@ export function RepeatableCategoryGroupField({
 
                 {/* Thêm mô tả nếu có (như Ảnh 2) */}
                 {!!opt.description && (
-                  <Text className="text-[13px] mt-0.5 text-gray-600">
+                  <Text className="text-[13px] mt-0.5 text-ink-soft">
                     {opt.description}
                   </Text>
                 )}
@@ -209,7 +210,7 @@ export function RepeatableCategoryGroupField({
                     className="text-[12px] mt-0.5"
                     style={{ color: COLORS.textMuted }}
                   >
-                    Đơn giá {formatVnd(unitPrice)}
+                    {t("Đơn giá")}{" "}{formatVnd(unitPrice)}
                   </Text>
                 )}
               </View>
@@ -222,7 +223,7 @@ export function RepeatableCategoryGroupField({
                 </TouchableOpacity>
                 <View
                   className="w-6 h-6 rounded-full items-center justify-center"
-                  style={{ backgroundColor: COLORS.primary }}
+                  style={{ backgroundColor: COLORS.primaryFill }}
                 >
                   <Feather name="check" size={14} color="#fff" />
                 </View>
@@ -257,8 +258,7 @@ export function RepeatableCategoryGroupField({
                     className="text-[12px] font-bold uppercase"
                     style={{ color: COLORS.textMuted, letterSpacing: 0.5 }}
                   >
-                    Số lượng
-                  </Text>
+                    {t("Số lượng")}</Text>
                   {subtotal != null && (
                     <Text
                       className="text-[15px] font-bold"

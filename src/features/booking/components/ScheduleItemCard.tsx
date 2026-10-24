@@ -1,5 +1,8 @@
+import { useTranslation } from "react-i18next";
+import { translate as t, getLocale } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import type { BookingScheduleDetail } from "@/features/booking/types/Booking";
-import { COLORS } from "@/features/service/components/formFieldShared";
+
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Image, Text, TouchableOpacity, View } from "react-native";
@@ -12,49 +15,56 @@ const canCancelSchedule = (startIso: string) =>
   new Date(startIso).getTime() - Date.now() >=
   CUSTOMER_MIN_CANCEL_HOURS * 60 * 60 * 1000;
 
-const WEEKDAY_LABELS = [
-  "Chủ nhật",
-  "Thứ 2",
-  "Thứ 3",
-  "Thứ 4",
-  "Thứ 5",
-  "Thứ 6",
-  "Thứ 7",
-];
+function getLocalizedWeekdayLabels() {
+  return [
+    t("Chủ nhật"),
+    t("Thứ 2"),
+    t("Thứ 3"),
+    t("Thứ 4"),
+    t("Thứ 5"),
+    t("Thứ 6"),
+    t("Thứ 7"),
+  ];
+}
 
 // Khớp với BookingSchedule.Status bên BE (models.py)
-const STATUS_CONFIG: Record<
+
+
+function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+  const STATUS_CONFIG: Record<
   string,
   { label: string; bg: string; text: string }
 > = {
   PENDING: {
-    label: "Chờ thực hiện",
-    bg: "#FEF3C7",
-    text: "#92400E",
+    label: t("Chờ thực hiện"),
+    bg: COLORS.accentLight,
+    text: COLORS.accentDark,
   },
   IN_PROGRESS: {
-    label: "Đang làm buổi này",
-    bg: "#DBEAFE",
-    text: "#1E40AF",
+    label: t("Đang làm buổi này"),
+    bg: COLORS.infoLight,
+    text: COLORS.infoDark,
   },
   COMPLETED: {
-    label: "Đã hoàn thành",
-    bg: "#D1FAE5",
-    text: "#065F46",
+    label: t("Đã hoàn thành"),
+    bg: COLORS.successLight,
+    text: COLORS.success,
   },
   CANCELLED: {
-    label: "Đã hủy",
-    bg: "#FEE2E2",
-    text: "#991B1B",
+    label: t("Đã hủy"),
+    bg: COLORS.dangerLight,
+    text: COLORS.danger,
   },
   MISSED: {
-    label: "Không có nhân viên nhận",
-    bg: "#F3F4F6",
-    text: "#6B7280",
+    label: t("Không có nhân viên nhận"),
+    bg: COLORS.surfaceMuted,
+    text: COLORS.inkSoft,
   },
 };
 
-function StatusBadge({ status }: { status: string }) {
   const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.PENDING;
 
   return (
@@ -73,17 +83,17 @@ function formatDateRange(startIso: string, endIso: string) {
   const start = new Date(startIso);
   const end = new Date(endIso);
 
-  const weekday = WEEKDAY_LABELS[start.getDay()];
-  const dateStr = start.toLocaleDateString("vi-VN", {
+  const weekday = getLocalizedWeekdayLabels()[start.getDay()];
+  const dateStr = start.toLocaleDateString(getLocale(), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
-  const startTime = start.toLocaleTimeString("vi-VN", {
+  const startTime = start.toLocaleTimeString(getLocale(), {
     hour: "2-digit",
     minute: "2-digit",
   });
-  const endTime = end.toLocaleTimeString("vi-VN", {
+  const endTime = end.toLocaleTimeString(getLocale(), {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -98,12 +108,16 @@ function WorkerRow({
   worker: Worker;
   assignmentId: number | null;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const fullName =
     `${worker.last_name ?? ""} ${worker.first_name ?? ""}`.trim() ||
-    "Nhân viên";
+    t("Nhân viên");
 
   const content = (
-    <View className="flex-row items-center mt-3 pt-3 border-t border-gray-100">
+    <View className="flex-row items-center mt-3 pt-3 border-t border-line">
       {worker.avatar ? (
         <Image
           source={{ uri: worker.avatar }}
@@ -117,18 +131,17 @@ function WorkerRow({
 
       <View className="flex-1 ml-3">
         <Text
-          className="font-semibold text-[16px] text-gray-900"
+          className="font-semibold text-[16px] text-ink"
           numberOfLines={1}
         >
           {fullName}
         </Text>
-        <Text className="text-[13px] text-gray-500 mt-0.5">
-          Nhân viên thực hiện
-        </Text>
+        <Text className="text-[13px] text-ink-soft mt-0.5">
+          {t("Nhân viên thực hiện")}</Text>
       </View>
 
       {!!assignmentId && (
-        <Feather name="chevron-right" size={20} color="#9CA3AF" />
+        <Feather name="chevron-right" size={20} color={COLORS.inkMuted} />
       )}
     </View>
   );
@@ -157,19 +170,21 @@ function WorkerRow({
 }
 
 function NoWorkerRow() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   return (
-    <View className="flex-row items-center mt-3 pt-3 border-t border-gray-100">
-      <View className="w-16 h-16 rounded-full bg-gray-100 items-center justify-center">
-        <Feather name="user" size={24} color="#9CA3AF" />
+    <View className="flex-row items-center mt-3 pt-3 border-t border-line">
+      <View className="w-16 h-16 rounded-full bg-canvas items-center justify-center">
+        <Feather name="user" size={24} color={COLORS.inkMuted} />
       </View>
 
       <View className="flex-1 ml-3">
-        <Text className="font-semibold text-[16px] text-gray-700">
-          Chưa có nhân viên
-        </Text>
-        <Text className="text-[13px] text-gray-500 mt-0.5">
-          Đang chờ nhân viên nhận việc
-        </Text>
+        <Text className="font-semibold text-[16px] text-ink">
+          {t("Chưa có nhân viên")}</Text>
+        <Text className="text-[13px] text-ink-soft mt-0.5">
+          {t("Đang chờ nhân viên nhận việc")}</Text>
       </View>
     </View>
   );
@@ -184,6 +199,10 @@ export function ScheduleItemCard({
   onPress?: (schedule: BookingScheduleDetail) => void;
   onCancel?: (schedule: BookingScheduleDetail) => void;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const { weekday, dateStr, startTime, endTime } = formatDateRange(
     schedule.scheduled_start,
     schedule.scheduled_end,
@@ -195,36 +214,36 @@ export function ScheduleItemCard({
       onPress={onPress ? () => onPress(schedule) : undefined}
       className="rounded-2xl p-4"
       style={{
-        backgroundColor: "#FFFFFF",
+        backgroundColor: COLORS.surface,
         borderWidth: 1,
-        borderColor: "#E5E7EB",
+        borderColor: COLORS.line,
       }}
     >
       <View className="flex-row items-center justify-between mb-2">
-        <Text className="font-bold text-[15px] text-gray-500">
-          Buổi {schedule.sequence_no}
+        <Text className="font-bold text-[15px] text-ink-soft">
+          {t("Buổi")}{" "}{schedule.sequence_no}
         </Text>
         <StatusBadge status={schedule.status} />
       </View>
 
       <View className="flex-row items-center mt-1.5">
         <Feather name="calendar" size={18} color={COLORS.primary} />
-        <Text className="ml-2 text-[16px] font-semibold text-gray-900">
+        <Text className="ml-2 text-[16px] font-semibold text-ink">
           {weekday}, {dateStr}
         </Text>
       </View>
 
       <View className="flex-row items-center mt-2">
         <Feather name="clock" size={18} color={COLORS.primary} />
-        <Text className="ml-2 text-[15px] text-gray-600">
+        <Text className="ml-2 text-[15px] text-ink-soft">
           {startTime} - {endTime}
         </Text>
       </View>
 
       {!!schedule.note && (
         <View className="flex-row items-start mt-1.5">
-          <Feather name="file-text" size={15} color="#9CA3AF" />
-          <Text className="ml-2 text-[13px] text-gray-500 flex-1">
+          <Feather name="file-text" size={15} color={COLORS.inkMuted} />
+          <Text className="ml-2 text-[13px] text-ink-soft flex-1">
             {schedule.note}
           </Text>
         </View>
@@ -233,9 +252,9 @@ export function ScheduleItemCard({
       {!!schedule.cancel_reason &&
         (schedule.status === "CANCELLED" || schedule.status === "MISSED") && (
           <View className="flex-row items-start mt-2 p-2.5 rounded-xl bg-red-50">
-            <Feather name="info" size={14} color="#991B1B" />
-            <Text className="ml-2 text-[13px] text-gray-600 flex-1">
-              <Text className="font-bold">Lý do: </Text>
+            <Feather name="info" size={14} color={COLORS.danger} />
+            <Text className="ml-2 text-[13px] text-ink-soft flex-1">
+              <Text className="font-bold">{t("Lý do:")} </Text>
               {schedule.cancel_reason}
             </Text>
           </View>
@@ -261,14 +280,12 @@ export function ScheduleItemCard({
           >
             <Feather name="x-circle" size={15} color="#DC2626" />
             <Text className="ml-1.5 text-[13px] font-bold text-danger">
-              Hủy buổi này
-            </Text>
+              {t("Hủy buổi này")}</Text>
           </TouchableOpacity>
         ) : (
-          <Text className="text-[12px] text-gray-500 text-center mt-3">
-            Chỉ hủy được trước giờ bắt đầu ít nhất {CUSTOMER_MIN_CANCEL_HOURS}{" "}
-            giờ.
-          </Text>
+          <Text className="text-[12px] text-ink-soft text-center mt-3">
+            {t("Chỉ hủy được trước giờ bắt đầu ít nhất")}{" "}{CUSTOMER_MIN_CANCEL_HOURS}{" "}
+            {t("giờ.")}</Text>
         ))}
     </TouchableOpacity>
   );

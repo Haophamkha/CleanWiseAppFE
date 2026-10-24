@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import type { BookingScheduleDetail } from "@/features/booking/types/Booking";
 import { useLazyGetAssignmentConversationQuery } from "@/features/chat/api/chatApi";
 import {
@@ -21,6 +23,8 @@ export type WorkerProfileData = (
 };
 
 export function useWorkerProfile() {
+  const { t } = useTranslation();
+
   const { id, data, assignmentId } = useLocalSearchParams<{
     id: string;
     data?: string;
@@ -34,7 +38,7 @@ export function useWorkerProfile() {
     } catch {
       return null;
     }
-  }, [data]);
+  }, [data, t]);
 
   const {
     data: fetchedWorker,
@@ -68,8 +72,8 @@ export function useWorkerProfile() {
     const selectedAssignment = Number(assignmentId);
     if (!Number.isInteger(selectedAssignment) || selectedAssignment <= 0) {
       Alert.alert(
-        "Chưa thể nhắn tin",
-        "Hãy mở hồ sơ từ lịch đã được phân công.",
+        t("Chưa thể nhắn tin"),
+        t("Hãy mở hồ sơ từ lịch đã được phân công."),
       );
       return;
     }
@@ -84,8 +88,8 @@ export function useWorkerProfile() {
       });
     } catch {
       Alert.alert(
-        "Không mở được trò chuyện",
-        "Vui lòng kiểm tra lịch phân công và thử lại.",
+        t("Không mở được trò chuyện"),
+        t("Vui lòng kiểm tra lịch phân công và thử lại."),
       );
     }
   };
@@ -100,11 +104,11 @@ export function useWorkerProfile() {
     const showSuccess = () => {
       if (nextLiked) {
         showSuccessToast(
-          "Đã thêm vào yêu thích",
-          "Bạn có thể xem lại trong mục Tài khoản.",
+          t("Đã thêm vào yêu thích"),
+          t("Bạn có thể xem lại trong mục Tài khoản."),
         );
       } else {
-        showSuccessToast("Đã bỏ yêu thích");
+        showSuccessToast(t("Đã bỏ yêu thích"));
       }
     };
 
@@ -146,8 +150,8 @@ export function useWorkerProfile() {
 
       setFavoriteOverride(null);
       showErrorToast(
-        "Không thể cập nhật",
-        error?.data?.message ?? "Vui lòng kiểm tra kết nối và thử lại.",
+        t("Không thể cập nhật"),
+        error?.data?.message ?? t("Vui lòng kiểm tra kết nối và thử lại."),
       );
     }
   };
@@ -155,7 +159,7 @@ export function useWorkerProfile() {
   // Dữ liệu hiển thị đã tính sẵn để UI chỉ việc render
   const fullName = worker
     ? `${worker.first_name ?? ""} ${worker.last_name ?? ""}`.trim() ||
-      "Nhân viên"
+      t("Nhân viên")
     : "";
   const rating = Number(worker?.average_rating ?? 0);
   const experienceYears = worker?.experience_years ?? 0;

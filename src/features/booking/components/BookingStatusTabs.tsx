@@ -1,6 +1,7 @@
+import { useTranslation } from "react-i18next";
 import { SHADOWS } from "@/constants/theme";
 import type { BookingTab } from "@/features/booking/hooks/useBookingList";
-import { BOOKING_STATUS_TABS } from "@/features/booking/utils/bookingStatus";
+import { getLocalizedBookingStatusTabs } from "@/features/booking/utils/bookingStatus";
 import { ScrollView, Text, TouchableOpacity } from "react-native";
 
 export function BookingStatusTabs({
@@ -10,6 +11,8 @@ export function BookingStatusTabs({
   value: BookingTab;
   onChange: (tab: BookingTab) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <ScrollView
       horizontal
@@ -22,7 +25,7 @@ export function BookingStatusTabs({
         alignItems: "center",
       }}
     >
-      {BOOKING_STATUS_TABS.map((tab) => {
+      {getLocalizedBookingStatusTabs().map((tab) => {
         const selected = value === tab.key;
         return (
           <TouchableOpacity
@@ -30,7 +33,7 @@ export function BookingStatusTabs({
             onPress={() => onChange(tab.key)}
             activeOpacity={0.85}
             className={`h-10 px-5 rounded-full border items-center justify-center ${
-              selected ? "bg-primary border-primary" : "bg-surface border-line"
+              selected ? "bg-primary-fill border-primary" : "bg-surface border-line"
             }`}
             style={selected ? SHADOWS.float : undefined}
           >

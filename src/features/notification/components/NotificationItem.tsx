@@ -1,4 +1,7 @@
-import { COLORS, SHADOWS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { SHADOWS } from "@/constants/theme";
 import { AppNotification } from "@/features/notification/types/Notification";
 import { getNotificationRoute, getNotificationTypeMeta } from "@/features/notification/utils/notificationMeta";
 import { formatNotificationTime } from "@/utils/formatTime";
@@ -14,7 +17,11 @@ export default function NotificationItem({
   notification,
   onPress,
 }: NotificationItemProps) {
-  const meta = getNotificationTypeMeta(notification.type);
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
+  const meta = getNotificationTypeMeta(notification.type, COLORS);
   const isUnread = !notification.is_read;
 
   const route = getNotificationRoute(notification);
@@ -71,7 +78,7 @@ export default function NotificationItem({
           </Text>
 
           {isUnread && (
-            <View className="w-2.5 h-2.5 rounded-full bg-primary mt-1.5 ml-2" />
+            <View className="w-2.5 h-2.5 rounded-full bg-primary-fill mt-1.5 ml-2" />
           )}
         </View>
 
@@ -85,7 +92,7 @@ export default function NotificationItem({
         {route ? (
           <View className="flex-row items-center mt-2">
             <Text className="text-xs font-semibold text-primary">
-              {route.includes("wallets") ? "Xem ví" : "Xem đơn hàng"}
+              {route.includes("wallets") ? t("Xem ví") : t("Xem đơn hàng")}
             </Text>
 
             <Feather name="chevron-right" size={14} color={COLORS.primary} />

@@ -1,5 +1,8 @@
+import { useTranslation } from "react-i18next";
+import { translate as t, getLocale } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { LoadingOverlay } from "@/components/common/LoadingOverlay";
-import { COLORS, SHADOWS, TREND } from "@/constants/theme";
+import { SHADOWS } from "@/constants/theme";
 import type { WalletTransaction } from "@/features/wallet/api/walletApi";
 import { TopupModal } from "@/features/wallet/components/TopupModal";
 import { WalletHero } from "@/features/wallet/components/WalletHero";
@@ -20,14 +23,16 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Filter = "ALL" | "CREDIT" | "DEBIT";
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: "ALL", label: "Tất cả" },
-  { key: "CREDIT", label: "Tiền vào" },
-  { key: "DEBIT", label: "Tiền ra" },
-];
+function getLocalizedFilters(): { key: Filter; label: string }[] {
+  return [
+    { key: "ALL", label: t("Tất cả") },
+    { key: "CREDIT", label: t("Tiền vào") },
+    { key: "DEBIT", label: t("Tiền ra") },
+  ];
+}
 
 const fmtTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString("vi-VN", {
+  new Date(iso).toLocaleTimeString(getLocale(), {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -37,9 +42,9 @@ const dayLabel = (iso: string) => {
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
-  if (d.toDateString() === today.toDateString()) return "Hôm nay";
-  if (d.toDateString() === yesterday.toDateString()) return "Hôm qua";
-  return d.toLocaleDateString("vi-VN", {
+  if (d.toDateString() === today.toDateString()) return t("Hôm nay");
+  if (d.toDateString() === yesterday.toDateString()) return t("Hôm qua");
+  return d.toLocaleDateString(getLocale(), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -66,6 +71,8 @@ function Chip({
   active: boolean;
   onPress: () => void;
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -75,7 +82,7 @@ function Chip({
         paddingHorizontal: 18,
         paddingVertical: 10,
         borderRadius: 999,
-        backgroundColor: active ? COLORS.primary : COLORS.surface,
+        backgroundColor: active ? COLORS.primaryFill : COLORS.surface,
         borderWidth: 1,
         borderColor: active ? COLORS.primary : COLORS.line,
       }}
@@ -94,6 +101,8 @@ function Chip({
 }
 
 function TransactionRow({ tx }: { tx: WalletTransaction }) {
+  const { COLORS, TREND } = useAppTheme();
+
   const isCredit = tx.direction === "CREDIT";
   const failed = tx.status === "FAILED";
   const tone = isCredit ? TREND.up : TREND.down;
@@ -219,6 +228,10 @@ function TransactionRow({ tx }: { tx: WalletTransaction }) {
 }
 
 export function Wallet() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const w = useWallet();
   const insets = useSafeAreaInsets();
   const [filter, setFilter] = useState<Filter>("ALL");
@@ -244,7 +257,7 @@ export function Wallet() {
             refreshing={w.refreshing}
             onRefresh={w.onRefresh}
             tintColor={COLORS.primary}
-            colors={[COLORS.primary]}
+            colors={[COLORS.primaryFill]}
           />
         }
       >
@@ -266,11 +279,10 @@ export function Wallet() {
               color: COLORS.ink,
             }}
           >
-            Lịch sử giao dịch
-          </Text>
+            {t("Lịch sử giao dịch")}</Text>
 
           <View style={{ flexDirection: "row", marginTop: 14 }}>
-            {FILTERS.map((f) => (
+            {getLocalizedFilters().map((f) => (
               <Chip
                 key={f.key}
                 label={f.label}
@@ -320,13 +332,11 @@ export function Wallet() {
                   color: COLORS.ink,
                 }}
               >
-                Chưa có giao dịch nào
-              </Text>
+                {t("Chưa có giao dịch nào")}</Text>
               <Text
                 style={{ marginTop: 4, fontSize: 13, color: COLORS.inkMuted }}
               >
-                Nạp tiền để thanh toán đơn nhanh hơn.
-              </Text>
+                {t("Nạp tiền để thanh toán đơn nhanh hơn.")}</Text>
             </View>
           ) : (
             groups.map((g) => (
@@ -361,7 +371,7 @@ export function Wallet() {
       <LoadingOverlay
         visible={w.isInitialLoading}
         fullscreen
-        text="Đang tải ví của bạn..."
+        text={t("Đang tải ví của bạn...")}
       />
     </View>
   );

@@ -1,4 +1,7 @@
-import { COLORS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+import { getLocale } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Linking, Text, View } from "react-native";
 import { useChatbotReveal } from "../hooks/useChatbotReveal";
@@ -19,6 +22,10 @@ export function ChatbotMessageBubble({
   animate?: boolean;
   onRevealComplete?: () => void;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const URL_RE = /(https?:\/\/[^\s]*[^\s.,;:!?)])/g;
   const linkify = (text: string) =>
     text.split(URL_RE).map((part, i) =>
@@ -52,22 +59,22 @@ export function ChatbotMessageBubble({
   const cardIntroduction = onlyAddressMap
     ? ""
     : cardTypes.size === 1 && cardTypes.has("help")
-      ? "Nguồn hướng dẫn tham khảo:"
+      ? t("Nguồn hướng dẫn tham khảo:")
       : cardTypes.size !== 1
-        ? "Bạn có thể xem chi tiết các thông tin vừa tra cứu bên dưới:"
+        ? t("Bạn có thể xem chi tiết các thông tin vừa tra cứu bên dưới:")
         : cardTypes.has("booking")
           ? singleCard
-            ? "Bạn có thể xem chi tiết đơn hàng này bên dưới:"
-            : "Dưới đây là các đơn hàng gần đây của bạn:"
+            ? t("Bạn có thể xem chi tiết đơn hàng này bên dưới:")
+            : t("Dưới đây là các đơn hàng gần đây của bạn:")
           : cardTypes.has("schedule")
             ? singleCard
-              ? "Bạn có thể xem chi tiết buổi dịch vụ này bên dưới:"
-              : "Dưới đây là các buổi dịch vụ vừa tra cứu của bạn:"
+              ? t("Bạn có thể xem chi tiết buổi dịch vụ này bên dưới:")
+              : t("Dưới đây là các buổi dịch vụ vừa tra cứu của bạn:")
             : singleCard
-              ? "Bạn có thể xem chi tiết dịch vụ này bên dưới:"
-              : "Dưới đây là các dịch vụ vừa tra cứu:";
+              ? t("Bạn có thể xem chi tiết dịch vụ này bên dưới:")
+              : t("Dưới đây là các dịch vụ vừa tra cứu:");
 
-  const time = new Date(message.created_at).toLocaleTimeString("vi-VN", {
+  const time = new Date(message.created_at).toLocaleTimeString(getLocale(), {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -89,12 +96,11 @@ export function ChatbotMessageBubble({
       <View style={{ maxWidth: mine ? "86%" : "88%", flexShrink: 1 }}>
         {!mine && (
           <Text className="text-primary-dark font-bold text-[11px] mb-1.5 ml-1">
-            Trợ lý CleanWise
-          </Text>
+            {t("Trợ lý CleanWise")}</Text>
         )}
 
         <View
-          className={`px-4 py-3 rounded-3xl ${mine ? "bg-primary rounded-tr-md" : "bg-surface border border-line rounded-tl-md"}`}
+          className={`px-4 py-3 rounded-3xl ${mine ? "bg-primary-fill rounded-tr-md" : "bg-surface border border-line rounded-tl-md"}`}
         >
           <Text
             selectable
@@ -151,8 +157,8 @@ export function ChatbotMessageBubble({
                   className={`text-[10px] ml-1 ${message.status === "FAILED" ? "text-danger" : "text-ink-muted"}`}
                 >
                   {message.status === "FAILED"
-                    ? "Chưa có câu trả lời"
-                    : "Đang xử lý"}
+                    ? t("Chưa có câu trả lời")
+                    : t("Đang xử lý")}
                 </Text>
               )}
             </>

@@ -1,11 +1,7 @@
-import {
-  COLORS,
-  GRADIENTS,
-  ON_DARK,
-  RADIUS,
-  SHADOWS,
-  TREND,
-} from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+import { getLocale } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { ON_DARK, RADIUS } from "@/constants/theme";
 import { formatVnd } from "@/utils/currency";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -94,6 +90,8 @@ function Sparkline({ series }: { series: number[] }) {
 }
 
 function TrendBadge({ net }: { net: number }) {
+  const { COLORS, TREND, isDark } = useAppTheme();
+
   const up = net >= 0;
   const color = up ? TREND.up : TREND.down;
   return (
@@ -104,7 +102,7 @@ function TrendBadge({ net }: { net: number }) {
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 999,
-        backgroundColor: COLORS.white,
+        backgroundColor: isDark ? (up ? TREND.upBg : TREND.downBg) : COLORS.white,
       }}
     >
       <Feather
@@ -129,6 +127,8 @@ function Tile({
   label: string;
   onPress: () => void;
 }) {
+  const { COLORS, SHADOWS, isDark } = useAppTheme();
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -153,10 +153,10 @@ function Tile({
           borderRadius: 23,
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: COLORS.primaryLight,
+          backgroundColor: isDark ? COLORS.surfaceMuted : COLORS.primaryLight,
         }}
       >
-        <Feather name={icon} size={20} color={COLORS.primaryDark} />
+        <Feather name={icon} size={20} color={isDark ? COLORS.inkSoft : COLORS.primaryDark} />
       </View>
       <Text
         style={{
@@ -180,6 +180,10 @@ export function WalletHero({
   onWithdraw,
   onTopup,
 }: Props) {
+  const { t } = useTranslation();
+
+  const { COLORS, GRADIENTS, SHADOWS } = useAppTheme();
+
   const insets = useSafeAreaInsets();
   const trend = useTrend(transactions);
 
@@ -214,8 +218,7 @@ export function WalletHero({
             color: COLORS.ink,
           }}
         >
-          Ví của tôi
-        </Text>
+          {t("Ví của tôi")}</Text>
         {isBackgroundFetching && (
           <ActivityIndicator color={COLORS.primary} size="small" />
         )}
@@ -237,8 +240,7 @@ export function WalletHero({
               color: ON_DARK.textSoft,
             }}
           >
-            Số dư khả dụng
-          </Text>
+            {t("Số dư khả dụng")}</Text>
           {trend.hasData && <TrendBadge net={trend.net} />}
         </View>
 
@@ -262,7 +264,7 @@ export function WalletHero({
                 color: ON_DARK.text,
               }}
             >
-              {balance.toLocaleString("vi-VN")}
+              {balance.toLocaleString(getLocale())}
             </Text>
             <Text
               style={{
@@ -272,8 +274,7 @@ export function WalletHero({
                 color: ON_DARK.textSoft,
               }}
             >
-              đ
-            </Text>
+              {t("đ")}</Text>
           </View>
         )}
 
@@ -287,8 +288,7 @@ export function WalletHero({
             }}
           >
             <Text style={{ fontSize: 12.5, color: ON_DARK.textSoft }}>
-              Biến động {DAYS} ngày qua
-            </Text>
+              {t("Biến động")}{" "}{DAYS} {t("ngày qua")}</Text>
             <Sparkline series={trend.series} />
           </View>
         )}
@@ -296,13 +296,13 @@ export function WalletHero({
 
       {/* 3 nút riêng */}
       <View style={{ flexDirection: "row", gap: 10, marginTop: 14 }}>
-        <Tile icon="plus" label="Nạp tiền" onPress={onTopup} />
+        <Tile icon="plus" label={t("Nạp tiền")} onPress={onTopup} />
         {onWithdraw && (
-          <Tile icon="arrow-up-right" label="Rút tiền" onPress={onWithdraw} />
+          <Tile icon="arrow-up-right" label={t("Rút tiền")} onPress={onWithdraw} />
         )}
         <Tile
           icon="credit-card"
-          label="Ngân hàng"
+          label={t("Ngân hàng")}
           onPress={() => router.push("/profile/payment-methods" as any)}
         />
       </View>

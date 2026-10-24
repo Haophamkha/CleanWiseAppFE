@@ -1,4 +1,7 @@
-import { COLORS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+import { getLocale } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { Feather } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { Alert, Linking, Text, TouchableOpacity, View } from "react-native";
@@ -43,6 +46,10 @@ const FALLBACK_BANK_CODE_BY_BIN: Record<string, string> = {
 const q = (v: string | number) => encodeURIComponent(String(v));
 
 export function OpenBankAppButtons({ info }: { info: BankTransferInfo }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const [receiverCode, setReceiverCode] = useState<string | null>(
     info.bank_bin ? (FALLBACK_BANK_CODE_BY_BIN[info.bank_bin] ?? null) : null,
   );
@@ -71,8 +78,8 @@ export function OpenBankAppButtons({ info }: { info: BankTransferInfo }) {
 
     if (!receiverCode) {
       Alert.alert(
-        "Chưa mở được",
-        "Hãy bấm “Mở trang thanh toán” hoặc quét mã QR.",
+        t("Chưa mở được"),
+        t("Hãy bấm “Mở trang thanh toán” hoặc quét mã QR."),
       );
       return;
     }
@@ -92,8 +99,8 @@ export function OpenBankAppButtons({ info }: { info: BankTransferInfo }) {
     } catch (e) {
       console.log("[BANKAPP] openURL FAIL", e);
       Alert.alert(
-        "Không mở được ứng dụng",
-        "Hãy bấm “Mở trang thanh toán” hoặc quét mã QR.",
+        t("Không mở được ứng dụng"),
+        t("Hãy bấm “Mở trang thanh toán” hoặc quét mã QR."),
       );
     }
   };
@@ -101,8 +108,7 @@ export function OpenBankAppButtons({ info }: { info: BankTransferInfo }) {
   return (
     <View className="w-full mt-5">
       <Text className="font-bold text-[14px] text-ink mb-2">
-        Hoặc mở thẳng app ngân hàng
-      </Text>
+        {t("Hoặc mở thẳng app ngân hàng")}</Text>
 
       {BANK_APPS.map((b) => (
         <TouchableOpacity
@@ -117,8 +123,7 @@ export function OpenBankAppButtons({ info }: { info: BankTransferInfo }) {
           {b.autofill && (
             <View className="px-2 py-0.5 rounded-full bg-primary-light mr-2">
               <Text className="text-[10px] font-bold text-primary-dark">
-                Tự điền sẵn
-              </Text>
+                {t("Tự điền sẵn")}</Text>
             </View>
           )}
           <Feather name="chevron-right" size={18} color={COLORS.inkMuted} />
@@ -127,17 +132,15 @@ export function OpenBankAppButtons({ info }: { info: BankTransferInfo }) {
 
       <View className="rounded-2xl bg-canvas border border-line px-4 py-3 mt-1">
         <Text className="text-[11px] text-ink-muted mb-2">
-          Nếu app không tự điền, nhập đúng thông tin sau:
-        </Text>
-        <Text className="text-[12px] text-ink-soft">Số tài khoản</Text>
+          {t("Nếu app không tự điền, nhập đúng thông tin sau:")}</Text>
+        <Text className="text-[12px] text-ink-soft">{t("Số tài khoản")}</Text>
         <Text selectable className="text-[14px] font-bold text-ink mb-1.5">
           {info.account_number}
         </Text>
-        <Text className="text-[12px] text-ink-soft">Số tiền</Text>
+        <Text className="text-[12px] text-ink-soft">{t("Số tiền")}</Text>
         <Text selectable className="text-[14px] font-bold text-ink mb-1.5">
-          {info.amount.toLocaleString("vi-VN")}đ
-        </Text>
-        <Text className="text-[12px] text-ink-soft">Nội dung chuyển khoản</Text>
+          {info.amount.toLocaleString(getLocale())}{t("đ")}</Text>
+        <Text className="text-[12px] text-ink-soft">{t("Nội dung chuyển khoản")}</Text>
         <Text selectable className="text-[14px] font-bold text-ink">
           {info.transfer_content}
         </Text>

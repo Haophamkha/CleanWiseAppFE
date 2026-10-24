@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 // features/address/hooks/useAddressList.ts
 import { useGetAddressesQuery } from "@/features/address/api/addressApi";
 import { setPickedAddress } from "@/features/address/stores/addressPickerSlice";
@@ -6,6 +8,8 @@ import { useAppDispatch } from "@/store/hooks";
 import { router, useLocalSearchParams } from "expo-router";
 
 export function useAddressList() {
+  const { t } = useTranslation();
+
   const { pickerKey, title } = useLocalSearchParams<{
     pickerKey?: string;
     title?: string;
@@ -34,7 +38,7 @@ export function useAddressList() {
     });
 
   return {
-    title: title || (isPicking ? "Chọn địa chỉ" : "Danh sách địa chỉ đã lưu"),
+    title: title || (isPicking ? t("Chọn địa chỉ") : t("Danh sách địa chỉ đã lưu")),
     addresses: data ?? [],
     isPicking,
     isLoading,

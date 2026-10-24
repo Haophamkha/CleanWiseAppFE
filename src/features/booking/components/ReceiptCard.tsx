@@ -1,5 +1,8 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Card } from "@/components/ui/Card";
-import { COLORS } from "@/constants/theme";
+
 import type { BookingDetail } from "@/features/booking/types/Booking";
 import { formatVnd } from "@/utils/currency";
 import { Feather } from "@expo/vector-icons";
@@ -30,20 +33,23 @@ function LineRow({
 }
 
 export function ReceiptCard({ booking }: { booking: BookingDetail }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const payment = booking.payment;
-  const paymentStatus = getPaymentStatusMeta(booking.payment_status);
+  const paymentStatus = getPaymentStatusMeta(booking.payment_status, COLORS);
   const discount = Number(booking.discount_amount);
   const refunded = Number(booking.refunded_amount ?? 0);
 
   const methodLabel =
-    payment?.method_display ??
     (payment?.method === "BANK_TRANSFER"
-      ? "Chuyển khoản"
+      ? t("Chuyển khoản")
       : payment?.method === "CASH"
-        ? "Tiền mặt"
+        ? t("Tiền mặt")
         : payment?.method === "WALLET"
-          ? "Ví CleanWise"
-          : "Chưa xác định");
+          ? t("Ví CleanWise")
+          : payment?.method_display ? t(payment.method_display) : t("Chưa xác định"));
 
   return (
     <Card className="mb-5 rounded-3xl">
@@ -52,7 +58,7 @@ export function ReceiptCard({ booking }: { booking: BookingDetail }) {
           <Feather name="credit-card" size={19} color={COLORS.primaryDark} />
         </View>
         <View className="flex-1">
-          <Text className="font-bold text-[15px] text-ink">Thanh toán</Text>
+          <Text className="font-bold text-[15px] text-ink">{t("Thanh toán")}</Text>
           <Text className="text-[12px] mt-0.5 text-ink-muted">
             {methodLabel}
           </Text>
@@ -91,27 +97,27 @@ export function ReceiptCard({ booking }: { booking: BookingDetail }) {
 
       <View className="mt-4 pt-3 border-t border-dashed border-line">
         <LineRow
-          label="Giá dịch vụ"
+          label={t("Giá dịch vụ")}
           value={
             booking.subtotal_amount
               ? formatVnd(Number(booking.subtotal_amount))
-              : "Chờ báo giá"
+              : t("Chờ báo giá")
           }
         />
         {discount > 0 && (
-          <LineRow label="Giảm giá" value={`-${formatVnd(discount)}`} accent />
+          <LineRow label={t("Giảm giá")} value={`-${formatVnd(discount)}`} accent />
         )}
         {refunded > 0 && (
-          <LineRow label="Đã hoàn vào ví" value={formatVnd(refunded)} accent />
+          <LineRow label={t("Đã hoàn vào ví")} value={formatVnd(refunded)} accent />
         )}
       </View>
 
       <View className="flex-row items-center justify-between rounded-2xl bg-primary-soft border border-primary-border px-4 py-3 mt-3">
-        <Text className="font-bold text-[14px] text-ink">Tổng thanh toán</Text>
+        <Text className="font-bold text-[14px] text-ink">{t("Tổng thanh toán")}</Text>
         <Text className="font-extrabold text-xl text-primary">
           {booking.total_amount
             ? formatVnd(Number(booking.total_amount))
-            : "Chờ báo giá"}
+            : t("Chờ báo giá")}
         </Text>
       </View>
     </Card>

@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import { useLazyGetBookingDetailQuery } from "@/features/booking/api/bookingApi";
 import { showErrorToast } from "@/utils/toast";
 import { router } from "expo-router";
@@ -6,6 +8,8 @@ import { CHATBOT_ADDRESS_PICKER_KEY } from "../constants";
 import type { ChatbotCard } from "../types/chatbot";
 
 export function useChatbotCardNavigation() {
+  const { t } = useTranslation();
+
   const [getBooking] = useLazyGetBookingDetailQuery();
   const [opening, setOpening] = useState<string | null>(null);
   const busy = useRef(false);
@@ -25,7 +29,7 @@ export function useChatbotCardNavigation() {
     ) {
       router.push({
         pathname: "/help/[id]",
-        params: { id: String(card.article_id) },
+        params: { id: String(card.article_id), ...(card.section_id ? { section: card.section_id } : {}) },
       });
       return;
     }
@@ -83,8 +87,8 @@ export function useChatbotCardNavigation() {
       } catch {
         if (mounted.current) {
           showErrorToast(
-            "Không mở được buổi dịch vụ",
-            "Vui lòng kiểm tra kết nối và thử lại.",
+            t("Không mở được buổi dịch vụ"),
+            t("Vui lòng kiểm tra kết nối và thử lại."),
           );
         }
       } finally {

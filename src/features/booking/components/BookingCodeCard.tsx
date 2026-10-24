@@ -1,4 +1,7 @@
-import { COLORS, SHADOWS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { SHADOWS } from "@/constants/theme";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { Feather } from "@expo/vector-icons";
 import { Platform, Text, TouchableOpacity, View } from "react-native";
@@ -12,6 +15,10 @@ const MONO = Platform.select({
 });
 
 export function BookingCodeCard({ code, large }: Props) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const { copied, copy } = useCopyToClipboard();
 
   const copyButton = (
@@ -20,7 +27,7 @@ export function BookingCodeCard({ code, large }: Props) {
       activeOpacity={0.7}
       hitSlop={8}
       accessibilityRole="button"
-      accessibilityLabel="Sao chép mã đơn"
+      accessibilityLabel={t("Sao chép mã đơn")}
       className="items-center justify-center rounded-full"
       style={{
         width: 40,
@@ -43,8 +50,7 @@ export function BookingCodeCard({ code, large }: Props) {
       <View className="flex-row items-center justify-between">
         <View className="flex-1 mr-3">
           <Text className="text-[11px] font-bold uppercase tracking-wide text-ink-muted">
-            Mã đơn hàng
-          </Text>
+            {t("Mã đơn hàng")}</Text>
           <Text
             selectable
             className="font-extrabold mt-0.5 text-base text-ink"
@@ -71,8 +77,7 @@ export function BookingCodeCard({ code, large }: Props) {
           className="text-[11px] font-bold uppercase text-ink-muted"
           style={{ letterSpacing: 1 }}
         >
-          Mã đơn hàng
-        </Text>
+          {t("Mã đơn hàng")}</Text>
         <Text
           selectable
           className="text-[19px] font-extrabold text-ink mt-0.5"

@@ -1,4 +1,7 @@
-import { COLORS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import {
   AuthScreen,
   PillButton,
@@ -22,33 +25,39 @@ type FieldConfig = {
   autoCapitalize?: "none" | "words";
 };
 
-const CONTACT_FIELDS: FieldConfig[] = [
-  {
-    key: "username",
-    icon: "at-sign",
-    placeholder: "Tên đăng nhập",
-    autoCapitalize: "none",
-  },
-  {
-    key: "email",
-    icon: "mail",
-    placeholder: "Email",
-    keyboardType: "email-address",
-    autoCapitalize: "none",
-  },
-  {
-    key: "phone_number",
-    icon: "phone",
-    placeholder: "Số điện thoại",
-    keyboardType: "phone-pad",
-  },
-];
+function getLocalizedContactFields(): FieldConfig[] {
+  return [
+    {
+      key: "username",
+      icon: "at-sign",
+      placeholder: t("Tên đăng nhập"),
+      autoCapitalize: "none",
+    },
+    {
+      key: "email",
+      icon: "mail",
+      placeholder: "Email",
+      keyboardType: "email-address",
+      autoCapitalize: "none",
+    },
+    {
+      key: "phone_number",
+      icon: "phone",
+      placeholder: t("Số điện thoại"),
+      keyboardType: "phone-pad",
+    },
+  ];
+}
 
 function PasswordRules({ password }: { password: string }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   if (!password) return null;
   const rules = [
-    { label: "Tối thiểu 8 ký tự", ok: password.length >= 8 },
-    { label: "Không toàn là chữ số", ok: !/^\d+$/.test(password) },
+    { label: t("Tối thiểu 8 ký tự"), ok: password.length >= 8 },
+    { label: t("Không toàn là chữ số"), ok: !/^\d+$/.test(password) },
   ];
   return (
     <View
@@ -91,6 +100,10 @@ function PasswordRules({ password }: { password: string }) {
 }
 
 export default function RegisterScreen() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const { form, update, agree, toggleAgree, error, isLoading, submit } =
     useRegister();
 
@@ -100,8 +113,8 @@ export default function RegisterScreen() {
   return (
     <AuthScreen
       icon="user-plus"
-      title="Tạo tài khoản"
-      subtitle="Chỉ mất một phút để bắt đầu đặt lịch dọn dẹp."
+      title={t("Tạo tài khoản")}
+      subtitle={t("Chỉ mất một phút để bắt đầu đặt lịch dọn dẹp.")}
       onBack={() => router.back()}
       footer={
         <View
@@ -112,14 +125,13 @@ export default function RegisterScreen() {
           }}
         >
           <Text style={{ fontSize: 14, color: COLORS.inkSoft }}>
-            Đã có tài khoản?{" "}
+            {t("Đã có tài khoản?")}{" "}
           </Text>
           <Link href="/(auth)/login">
             <Text
               style={{ fontSize: 14, fontWeight: "700", color: COLORS.primary }}
             >
-              Đăng nhập
-            </Text>
+              {t("Đăng nhập")}</Text>
           </Link>
         </View>
       }
@@ -128,7 +140,7 @@ export default function RegisterScreen() {
         <View style={{ flex: 1, marginRight: 10 }}>
           <PillInput
             icon="user"
-            placeholder="Họ và tên đệm"
+            placeholder={t("Họ và tên đệm")}
             autoCapitalize="words"
             value={form.last_name}
             onChangeText={(v) => update("last_name", v)}
@@ -136,7 +148,7 @@ export default function RegisterScreen() {
         </View>
         <View style={{ flex: 1 }}>
           <PillInput
-            placeholder="Tên"
+            placeholder={t("Tên")}
             autoCapitalize="words"
             value={form.first_name}
             onChangeText={(v) => update("first_name", v)}
@@ -144,7 +156,7 @@ export default function RegisterScreen() {
         </View>
       </View>
 
-      {CONTACT_FIELDS.map((f) => (
+      {getLocalizedContactFields().map((f) => (
         <PillInput
           key={f.key}
           icon={f.icon}
@@ -158,7 +170,7 @@ export default function RegisterScreen() {
 
       <PillInput
         icon="lock"
-        placeholder="Mật khẩu"
+        placeholder={t("Mật khẩu")}
         password
         autoCapitalize="none"
         value={form.password}
@@ -168,7 +180,7 @@ export default function RegisterScreen() {
 
       <PillInput
         icon="lock"
-        placeholder="Xác nhận mật khẩu"
+        placeholder={t("Xác nhận mật khẩu")}
         password
         autoCapitalize="none"
         invalid={mismatch}
@@ -185,8 +197,7 @@ export default function RegisterScreen() {
             color: COLORS.danger,
           }}
         >
-          Mật khẩu xác nhận chưa khớp
-        </Text>
+          {t("Mật khẩu xác nhận chưa khớp")}</Text>
       )}
 
       <TouchableOpacity
@@ -210,7 +221,7 @@ export default function RegisterScreen() {
             justifyContent: "center",
             borderWidth: 1.5,
             borderColor: agree ? COLORS.primary : COLORS.line,
-            backgroundColor: agree ? COLORS.primary : COLORS.surface,
+            backgroundColor: agree ? COLORS.primaryFill : COLORS.surface,
           }}
         >
           {agree && <Feather name="check" size={12} color={COLORS.white} />}
@@ -223,14 +234,12 @@ export default function RegisterScreen() {
             color: COLORS.inkSoft,
           }}
         >
-          Tôi đồng ý với{" "}
+          {t("Tôi đồng ý với")}{" "}
           <Text style={{ fontWeight: "600", color: COLORS.primary }}>
-            Điều khoản
-          </Text>{" "}
-          và{" "}
+            {t("Điều khoản")}</Text>{" "}
+          {t("và")}{" "}
           <Text style={{ fontWeight: "600", color: COLORS.primary }}>
-            Chính sách bảo mật
-          </Text>
+            {t("Chính sách bảo mật")}</Text>
         </Text>
       </TouchableOpacity>
 
@@ -249,7 +258,7 @@ export default function RegisterScreen() {
 
       <View style={{ marginTop: 12 }}>
         <PillButton
-          title={isLoading ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
+          title={isLoading ? t("Đang tạo tài khoản...") : t("Tạo tài khoản")}
           onPress={submit}
           loading={isLoading}
         />

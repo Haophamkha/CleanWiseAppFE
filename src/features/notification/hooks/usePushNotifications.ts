@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import { useRegisterPushTokenMutation } from "@/features/notification/api/notificationApi";
 import Constants, { ExecutionEnvironment } from "expo-constants";
 import { router } from "expo-router";
@@ -33,6 +35,8 @@ function openFromPush(response: any) {
 }
 
 export function usePushNotifications(enabled: boolean) {
+  const { t } = useTranslation();
+
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const [registerToken] = useRegisterPushTokenMutation();
   const registeredRef = useRef(false);
@@ -64,7 +68,7 @@ export function usePushNotifications(enabled: boolean) {
         // Tạo channel TRƯỚC khi xin quyền / lấy token (Android 13+ yêu cầu)
         if (Platform.OS === "android") {
           await Notifications.setNotificationChannelAsync("default", {
-            name: "Thông báo chung",
+            name: t("Thông báo chung"),
             importance: Notifications.AndroidImportance.MAX,
             vibrationPattern: [0, 250, 250, 250],
             lightColor: "#208AEF",
@@ -107,7 +111,7 @@ export function usePushNotifications(enabled: boolean) {
     };
 
     register();
-  }, [enabled, registerToken]);
+  }, [enabled, registerToken, t]);
 
   // Bấm vào thông báo -> mở đúng màn hình
   useEffect(() => {

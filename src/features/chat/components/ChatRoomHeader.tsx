@@ -1,5 +1,8 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Avatar } from "@/components/ui";
-import { COLORS } from "@/constants/theme";
+
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -12,6 +15,10 @@ export function ChatRoomHeader({
   name: string;
   avatar?: string | null;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const insets = useSafeAreaInsets();
   return (
     <View
@@ -41,13 +48,12 @@ export function ChatRoomHeader({
       <View style={{ flex: 1 }}>
         <Text
           numberOfLines={1}
-          style={{ fontSize: 17, fontWeight: "600", color: "#000" }}
+          style={{ fontSize: 17, fontWeight: "600", color: COLORS.ink }}
         >
           {name}
         </Text>
-        <Text numberOfLines={1} style={{ fontSize: 13, color: "#000" }}>
-          Nhân viên phụ trách
-        </Text>
+        <Text numberOfLines={1} style={{ fontSize: 13, color: COLORS.ink }}>
+          {t("Nhân viên phụ trách")}</Text>
       </View>
     </View>
   );

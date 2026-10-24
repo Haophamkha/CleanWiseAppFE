@@ -1,5 +1,8 @@
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { EmptyState } from "@/components/ui";
-import { COLORS } from "@/constants/theme";
+
 import { ComplaintCard } from "@/features/complaint/components/ComplaintCard";
 import { ComplaintDetailModal } from "@/features/complaint/components/ComplaintDetailModal";
 import {
@@ -15,16 +18,22 @@ import {
     View,
 } from "react-native";
 
-const FILTERS: { key: ComplaintFilter; label: string }[] = [
-  { key: "ALL", label: "Tất cả" },
-  { key: "PENDING", label: "Chờ xử lý" },
-  { key: "IN_REVIEW", label: "Đang xem xét" },
-  { key: "RESOLVED", label: "Đã giải quyết" },
-  { key: "REJECTED", label: "Bị từ chối" },
-  { key: "CANCELLED", label: "Đã hủy" },
-];
+function getLocalizedFilters(): { key: ComplaintFilter; label: string }[] {
+  return [
+    { key: "ALL", label: t("Tất cả") },
+    { key: "PENDING", label: t("Chờ xử lý") },
+    { key: "IN_REVIEW", label: t("Đang xem xét") },
+    { key: "RESOLVED", label: t("Đã giải quyết") },
+    { key: "REJECTED", label: t("Bị từ chối") },
+    { key: "CANCELLED", label: t("Đã hủy") },
+  ];
+}
 
 export function MyComplaints() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const c = useMyComplaints();
 
   return (
@@ -40,7 +49,7 @@ export function MyComplaints() {
             gap: 8,
           }}
         >
-          {FILTERS.map((f) => {
+          {getLocalizedFilters().map((f) => {
             const selected = c.filter === f.key;
             const n = c.counts[f.key] ?? 0;
             return (
@@ -50,7 +59,7 @@ export function MyComplaints() {
                 activeOpacity={0.85}
                 className={`h-9 px-4 rounded-full border flex-row items-center ${
                   selected
-                    ? "bg-primary border-primary"
+                    ? "bg-primary-fill border-primary"
                     : "bg-surface border-line"
                 }`}
               >
@@ -75,8 +84,8 @@ export function MyComplaints() {
       ) : c.isError && c.items.length === 0 ? (
         <EmptyState
           icon="wifi-off"
-          title="Không tải được khiếu nại"
-          actionLabel="Thử lại"
+          title={t("Không tải được khiếu nại")}
+          actionLabel={t("Thử lại")}
           onAction={c.refresh}
         />
       ) : (
@@ -95,8 +104,8 @@ export function MyComplaints() {
               icon="message-square"
               title={
                 c.filter === "ALL"
-                  ? "Bạn chưa gửi khiếu nại nào. Bạn có thể khiếu nại từ chi tiết buổi làm."
-                  : "Không có khiếu nại ở trạng thái này."
+                  ? t("Bạn chưa gửi khiếu nại nào. Bạn có thể khiếu nại từ chi tiết buổi làm.")
+                  : t("Không có khiếu nại ở trạng thái này.")
               }
             />
           }

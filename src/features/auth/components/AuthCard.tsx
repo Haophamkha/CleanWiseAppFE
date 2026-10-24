@@ -1,5 +1,6 @@
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import ScreenContainer from "@/components/ScreenContainer";
-import { COLORS } from "@/constants/theme";
+
 import { Feather } from "@expo/vector-icons";
 import { ReactNode } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -11,6 +12,8 @@ export function AuthCard({
   children: ReactNode;
   onBack?: () => void;
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <ScreenContainer>
       <ScrollView

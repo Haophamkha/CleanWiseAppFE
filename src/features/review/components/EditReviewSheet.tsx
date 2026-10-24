@@ -1,6 +1,9 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Button, Input } from "@/components/ui";
 import { BottomSheet } from "@/components/ui/BottomSheet";
-import { COLORS } from "@/constants/theme";
+
 import { useEditReview } from "@/features/review/hooks/useEditReview";
 import { useReviewEditability } from "@/features/review/hooks/useReviewEditability";
 import type { Review } from "@/features/review/types/Review";
@@ -19,6 +22,10 @@ export function EditReviewSheet({
   review: Review;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const e = useEditReview(review, onClose);
   const editable = useReviewEditability(review);
   const busy = e.isSaving || e.isPicking || !editable;
@@ -26,12 +33,12 @@ export function EditReviewSheet({
     <BottomSheet visible onClose={e.close}>
       <View className="px-5 pt-3 pb-4">
         <View className="flex-row items-center justify-between">
-          <Text className="text-xl font-bold text-ink">Chỉnh sửa đánh giá</Text>
+          <Text className="text-xl font-bold text-ink">{t("Chỉnh sửa đánh giá")}</Text>
           <Pressable
             onPress={e.close}
             disabled={e.isSaving}
             hitSlop={10}
-            accessibilityLabel="Đóng"
+            accessibilityLabel={t("Đóng")}
           >
             <Feather name="x" size={22} color={COLORS.inkSoft} />
           </Pressable>
@@ -51,13 +58,13 @@ export function EditReviewSheet({
             onChange={e.setRating}
             disabled={busy}
           />
-          <Text className="text-ink-soft text-sm">{e.rating}/5 sao</Text>
+          <Text className="text-ink-soft text-sm">{e.rating}{t("/5 sao")}</Text>
         </View>
         <Input
-          label="Nội dung đánh giá"
+          label={t("Nội dung đánh giá")}
           value={e.comment}
           onChangeText={e.setComment}
-          placeholder="Chia sẻ trải nghiệm của bạn..."
+          placeholder={t("Chia sẻ trải nghiệm của bạn...")}
           multiline
           maxLength={3000}
           editable={!busy}
@@ -68,7 +75,7 @@ export function EditReviewSheet({
           {e.comment.length}/3000
         </Text>
         <Text className="text-ink font-semibold text-sm mb-3">
-          Ảnh đánh giá ({e.imageCount}/{review.max_images})
+          {t("Ảnh đánh giá (")}{e.imageCount}/{review.max_images})
         </Text>
         <View className="flex-row flex-wrap">
           {[
@@ -91,7 +98,7 @@ export function EditReviewSheet({
               <Pressable
                 onPress={image.remove}
                 disabled={busy}
-                accessibilityLabel="Bỏ ảnh"
+                accessibilityLabel={t("Bỏ ảnh")}
                 className="absolute right-1 top-1 bg-surface rounded-full p-1"
               >
                 <Feather name="x" size={14} color={COLORS.danger} />
@@ -101,7 +108,7 @@ export function EditReviewSheet({
         </View>
         {e.imageCount < review.max_images && (
           <Button
-            title={e.isPicking ? "Đang chọn ảnh..." : "Thêm ảnh"}
+            title={e.isPicking ? t("Đang chọn ảnh...") : t("Thêm ảnh")}
             icon="image"
             variant="outline"
             onPress={e.addImage}
@@ -109,9 +116,7 @@ export function EditReviewSheet({
           />
         )}
         <Text className="text-ink-muted text-xs leading-4 mt-4">
-          Hạn chỉnh sửa: {formatReviewDate(review.edit_deadline)}. Thời hạn được
-          tính từ lần gửi đầu tiên.
-        </Text>
+          {t("Hạn chỉnh sửa:")}{" "}{formatReviewDate(review.edit_deadline)}{t(". Thời hạn được tính từ lần gửi đầu tiên.")}</Text>
         {!!e.error && (
           <Text accessibilityRole="alert" className="text-danger text-sm mt-3">
             {e.error}
@@ -119,13 +124,12 @@ export function EditReviewSheet({
         )}
         {!editable && !e.error && (
           <Text accessibilityRole="alert" className="text-danger text-sm mt-3">
-            Đã hết thời hạn chỉnh sửa đánh giá.
-          </Text>
+            {t("Đã hết thời hạn chỉnh sửa đánh giá.")}</Text>
         )}
       </ScrollView>
       <View className="px-5 pb-3 pt-3 border-t border-line">
         <Button
-          title="Lưu thay đổi"
+          title={t("Lưu thay đổi")}
           onPress={e.save}
           loading={e.isSaving}
           disabled={e.isPicking || !editable}

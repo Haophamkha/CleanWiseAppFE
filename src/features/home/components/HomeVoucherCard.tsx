@@ -1,4 +1,7 @@
-import { COLORS, GRADIENTS, ON_DARK, SHADOWS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { ON_DARK } from "@/constants/theme";
 import type { Voucher } from "@/features/voucher/types/Voucher";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -31,7 +34,7 @@ const shortDate = (iso: string) => {
 const expiry = (iso: string) => {
   const ms = new Date(iso).getTime() - Date.now();
   const days = Math.ceil(ms / 86400000);
-  if (ms > 0 && days <= 3) return { text: `Còn ${days} ngày`, urgent: true };
+  if (ms > 0 && days <= 3) return { text: t("Còn {{value0}} ngày", { value0: days , count: days}), urgent: true };
   return { text: `HSD ${shortDate(iso)}`, urgent: false };
 };
 
@@ -42,6 +45,10 @@ export function HomeVoucherCard({
   voucher: Voucher;
   onPress: () => void;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS, GRADIENTS, SHADOWS } = useAppTheme();
+
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -54,11 +61,11 @@ export function HomeVoucherCard({
 
   const parts: string[] = [
     Number(voucher.min_order_amount) > 0
-      ? `Đơn từ ${compactMoney(voucher.min_order_amount)}`
-      : "Áp dụng mọi đơn",
+      ? t("Đơn từ {{value0}}", { value0: compactMoney(voucher.min_order_amount) })
+      : t("Áp dụng mọi đơn"),
   ];
   if (isPercent && Number(voucher.max_discount_amount) > 0) {
-    parts.push(`Tối đa ${compactMoney(voucher.max_discount_amount!)}`);
+    parts.push(t("Tối đa {{value0}}", { value0: compactMoney(voucher.max_discount_amount!) }));
   }
   const condition = parts.join(" · ");
 
@@ -171,8 +178,7 @@ export function HomeVoucherCard({
                 letterSpacing: 2.5,
               }}
             >
-              GIẢM
-            </Text>
+              {t("GIẢM")}</Text>
             <Text
               style={{
                 color: ON_DARK.text,
@@ -321,8 +327,7 @@ export function HomeVoucherCard({
                     fontWeight: "800",
                   }}
                 >
-                  Dùng ngay
-                </Text>
+                  {t("Dùng ngay")}</Text>
                 <Ionicons
                   name="chevron-forward"
                   size={12}
@@ -341,7 +346,7 @@ export function HomeVoucherCard({
                 position: "absolute",
                 top: 0,
                 right: 0,
-                backgroundColor: COLORS.danger,
+                backgroundColor: COLORS.dangerFill,
                 paddingHorizontal: 9,
                 paddingVertical: 3,
                 borderBottomLeftRadius: 12,
@@ -355,8 +360,7 @@ export function HomeVoucherCard({
                   letterSpacing: 0.5,
                 }}
               >
-                SẮP HẾT HẠN
-              </Text>
+                {t("SẮP HẾT HẠN")}</Text>
             </View>
           )}
         </View>

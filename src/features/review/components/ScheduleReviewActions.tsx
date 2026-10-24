@@ -1,5 +1,8 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { BottomSheet } from "@/components/ui/BottomSheet";
-import { COLORS } from "@/constants/theme";
+
 import { ReviewFeedbackButtons } from "@/features/booking/components/ReviewFeedbackButtons";
 import { useScheduleReview } from "@/features/review/hooks/useScheduleReview";
 import { Feather } from "@expo/vector-icons";
@@ -25,6 +28,10 @@ export function ScheduleReviewActions({
   onFeedback?: () => void;
   style?: object;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const r = useScheduleReview(assignmentId, completed);
   const { height } = useWindowDimensions();
   return (
@@ -54,8 +61,8 @@ export function ScheduleReviewActions({
       {r.mode === "view" && r.review && (
         <BottomSheet visible onClose={r.close}>
           <View className="px-5 py-3 flex-row justify-between items-center">
-            <Text className="text-xl font-bold text-ink">Đánh giá của bạn</Text>
-            <Pressable onPress={r.close} hitSlop={10} accessibilityLabel="Đóng">
+            <Text className="text-xl font-bold text-ink">{t("Đánh giá của bạn")}</Text>
+            <Pressable onPress={r.close} hitSlop={10} accessibilityLabel={t("Đóng")}>
               <Feather name="x" size={22} color={COLORS.inkSoft} />
             </Pressable>
           </View>

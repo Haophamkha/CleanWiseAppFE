@@ -1,3 +1,4 @@
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { ServiceIcon } from "@/features/service/components/ServiceIcon";
 import { getServiceGridVisual } from "@/features/service/utils/serviceVisuals";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -17,7 +18,9 @@ export function ServiceGridItem({
   icon,
   onPress,
 }: Props) {
-  const visual = getServiceGridVisual(code, sectionCode);
+  const { COLORS } = useAppTheme();
+
+  const visual = getServiceGridVisual(code, sectionCode, COLORS);
 
   return (
     <TouchableOpacity
@@ -38,7 +41,7 @@ export function ServiceGridItem({
         />
       </View>
       <Text
-        className="text-gray-700 text-xs text-center font-medium"
+        className="text-ink text-xs text-center font-medium"
         numberOfLines={2}
       >
         {name}

@@ -1,6 +1,9 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Button, Input } from "@/components/ui";
 import { BottomSheet } from "@/components/ui/BottomSheet";
-import { COLORS } from "@/constants/theme";
+
 import { useCreateReview } from "@/features/review/hooks/useCreateReview";
 import type {
   AssignmentReviewState,
@@ -27,6 +30,10 @@ export function CreateReviewSheet({
   onClose: () => void;
   onCreated: (review: Review) => void;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const r = useCreateReview(state, onCreated, onClose);
   const busy = r.isSaving || r.isPicking;
   const { height } = useWindowDimensions();
@@ -34,12 +41,12 @@ export function CreateReviewSheet({
   return (
     <BottomSheet visible onClose={r.close}>
       <View className="px-5 py-3 flex-row items-center justify-between">
-        <Text className="text-xl font-bold text-ink">Đánh giá buổi làm</Text>
+        <Text className="text-xl font-bold text-ink">{t("Đánh giá buổi làm")}</Text>
         <Pressable
           onPress={r.close}
           disabled={r.isSaving}
           hitSlop={10}
-          accessibilityLabel="Đóng"
+          accessibilityLabel={t("Đóng")}
         >
           <Feather name="x" size={22} color={COLORS.inkSoft} />
         </Pressable>
@@ -57,7 +64,7 @@ export function CreateReviewSheet({
             a.worker.username}
         </Text>
         <Text className="text-ink-soft text-xs mt-1 mb-4">
-          {a.booking_code} · Buổi {a.schedule.sequence_no} ·{" "}
+          {a.booking_code}  {t("· Buổi")} {a.schedule.sequence_no} ·{" "}
           {formatReviewDate(a.schedule.scheduled_start)}
         </Text>
         <View className="items-center mb-4">
@@ -68,13 +75,13 @@ export function CreateReviewSheet({
           />
           <Text className="text-ink-soft text-sm">
             {r.rating
-              ? `${r.rating}/5 sao`
-              : "Chọn số sao cho trải nghiệm của bạn"}
+              ? `${r.rating}${t("/5 sao")}`
+              : t("Chọn số sao cho trải nghiệm của bạn")}
           </Text>
         </View>
         <Input
-          label="Nội dung đánh giá"
-          placeholder="Chia sẻ trải nghiệm của bạn..."
+          label={t("Nội dung đánh giá")}
+          placeholder={t("Chia sẻ trải nghiệm của bạn...")}
           multiline
           textAlignVertical="top"
           style={{ minHeight: 100 }}
@@ -87,7 +94,7 @@ export function CreateReviewSheet({
           {r.comment.length}/3000
         </Text>
         <Text className="text-ink font-semibold text-sm mb-3">
-          Ảnh đánh giá ({r.images.length}/{state.max_images})
+          {t("Ảnh đánh giá (")}{r.images.length}/{state.max_images})
         </Text>
         <View className="flex-row flex-wrap">
           {r.images.map((image, index) => (
@@ -99,7 +106,7 @@ export function CreateReviewSheet({
               <Pressable
                 onPress={() => r.removeImage(index)}
                 disabled={busy}
-                accessibilityLabel="Bỏ ảnh"
+                accessibilityLabel={t("Bỏ ảnh")}
                 className="absolute right-1 top-1 bg-surface rounded-full p-1"
               >
                 <Feather name="x" size={14} color={COLORS.danger} />
@@ -109,7 +116,7 @@ export function CreateReviewSheet({
         </View>
         {r.images.length < state.max_images && (
           <Button
-            title={r.isPicking ? "Đang chọn ảnh..." : "Thêm ảnh"}
+            title={r.isPicking ? t("Đang chọn ảnh...") : t("Thêm ảnh")}
             icon="image"
             variant="outline"
             onPress={r.addImage}
@@ -117,9 +124,7 @@ export function CreateReviewSheet({
           />
         )}
         <Text className="text-ink-muted text-xs leading-4 mt-4">
-          Mỗi buổi chỉ được đánh giá một lần. Bạn có thể chỉnh sửa trong 30 ngày
-          sau khi gửi; không thể xóa đánh giá.
-        </Text>
+          {t("Mỗi buổi chỉ được đánh giá một lần. Bạn có thể chỉnh sửa trong 30 ngày sau khi gửi; không thể xóa đánh giá.")}</Text>
         {!!r.error && (
           <Text accessibilityRole="alert" className="text-danger text-sm mt-3">
             {r.error}
@@ -128,7 +133,7 @@ export function CreateReviewSheet({
       </ScrollView>
       <View className="px-5 pt-3 border-t border-line">
         <Button
-          title="Gửi đánh giá"
+          title={t("Gửi đánh giá")}
           onPress={r.submit}
           loading={r.isSaving}
           disabled={r.isPicking}

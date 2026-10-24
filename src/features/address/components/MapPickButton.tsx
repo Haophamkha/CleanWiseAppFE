@@ -1,5 +1,6 @@
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 // components/address/MapPickButton.tsx
-import { COLORS } from "@/constants/theme";
+
 import { Feather } from "@expo/vector-icons";
 import { Text, TouchableOpacity } from "react-native";
 
@@ -12,6 +13,8 @@ export function MapPickButton({
   onPress: () => void;
   disabled?: boolean;
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <TouchableOpacity
       onPress={onPress}

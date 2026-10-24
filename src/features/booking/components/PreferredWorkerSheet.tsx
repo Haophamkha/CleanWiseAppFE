@@ -1,4 +1,7 @@
-import { COLORS, RADIUS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { RADIUS } from "@/constants/theme";
 import { Feather } from "@expo/vector-icons";
 import {
   Image,
@@ -20,7 +23,7 @@ export const workerName = (w: any) => {
     [x?.last_name, x?.first_name].filter(Boolean).join(" ").trim() ||
     x?.full_name ||
     x?.name ||
-    "Nhân viên"
+    t("Nhân viên")
   );
 };
 
@@ -32,6 +35,10 @@ export function PreferredWorkerInfoModal({
   visible: boolean;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   return (
     <Modal
       visible={visible}
@@ -58,31 +65,24 @@ export function PreferredWorkerInfoModal({
               width: 56,
               height: 56,
               borderRadius: 28,
-              backgroundColor: "#FEF3C7",
+              backgroundColor: COLORS.accentLight,
             }}
           >
             <Feather name="help-circle" size={28} color={AMBER} />
           </View>
           <Text className="font-bold text-base text-ink text-center">
-            Chọn 1 nhân viên yêu thích để gửi yêu cầu riêng
-          </Text>
+            {t("Chọn 1 nhân viên yêu thích để gửi yêu cầu riêng")}</Text>
           <Text className="text-ink-soft text-[13px] text-center mt-3 leading-5">
-            Đơn của bạn sẽ được ưu tiên gửi riêng cho nhân viên bạn chọn trong
-            khoảng 1 giờ (hoặc đến trước giờ làm 30 phút nếu gần giờ hơn). Nếu
-            nhân viên không nhận hoặc từ chối, đơn sẽ tự động mở cho tất cả nhân
-            viên phù hợp.
-          </Text>
+            {t("Đơn của bạn sẽ được ưu tiên gửi riêng cho nhân viên bạn chọn trong khoảng 1 giờ (hoặc đến trước giờ làm 30 phút nếu gần giờ hơn). Nếu nhân viên không nhận hoặc từ chối, đơn sẽ tự động mở cho tất cả nhân viên phù hợp.")}</Text>
           <Text className="text-ink-muted text-xs text-center mt-3">
-            Bước này không bắt buộc. Danh sách chỉ gồm nhân viên phù hợp với
-            dịch vụ và khu vực của bạn.
-          </Text>
+            {t("Bước này không bắt buộc. Danh sách chỉ gồm nhân viên phù hợp với dịch vụ và khu vực của bạn.")}</Text>
           <TouchableOpacity
             onPress={onClose}
             activeOpacity={0.85}
-            className="bg-primary rounded-2xl items-center justify-center mt-5 self-stretch"
+            className="bg-primary-fill rounded-2xl items-center justify-center mt-5 self-stretch"
             style={{ height: 46 }}
           >
-            <Text className="text-white font-bold">Đã hiểu</Text>
+            <Text className="text-white font-bold">{t("Đã hiểu")}</Text>
           </TouchableOpacity>
         </Pressable>
       </Pressable>
@@ -106,6 +106,10 @@ export function PreferredWorkerSheet({
   onSelect,
   onClose,
 }: Props) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   return (
     <Modal
       visible={visible}
@@ -134,11 +138,9 @@ export function PreferredWorkerSheet({
           <View className="flex-row items-center px-5 pt-5 pb-3">
             <View className="flex-1 pr-3">
               <Text className="font-bold text-lg text-ink">
-                Nhân viên yêu thích
-              </Text>
+                {t("Nhân viên yêu thích")}</Text>
               <Text className="text-ink-muted text-xs mt-0.5">
-                Chọn 1 nhân viên để gửi yêu cầu riêng
-              </Text>
+                {t("Chọn 1 nhân viên để gửi yêu cầu riêng")}</Text>
             </View>
             <TouchableOpacity onPress={onClose} hitSlop={10}>
               <Feather name="x" size={22} color={COLORS.inkMuted} />
@@ -199,16 +201,14 @@ export function PreferredWorkerSheet({
                     <View className="flex-row items-center mt-1">
                       <Feather name="star" size={12} color={AMBER} />
                       <Text className="text-xs font-semibold text-ink ml-1">
-                        {rating > 0 ? rating.toFixed(1) : "Mới"}
+                        {rating > 0 ? rating.toFixed(1) : t("Mới")}
                       </Text>
                       <Text className="text-xs text-ink-muted ml-2">
-                        {x?.total_completed_jobs ?? 0} đơn
-                      </Text>
+                        {x?.total_completed_jobs ?? 0} {t("đơn")}</Text>
                     </View>
                     {x?.experience_years != null && (
                       <Text className="text-xs text-ink-muted mt-0.5">
-                        {x.experience_years} năm kinh nghiệm
-                      </Text>
+                        {x.experience_years} {t("năm kinh nghiệm")}</Text>
                     )}
                   </View>
 
@@ -221,7 +221,7 @@ export function PreferredWorkerSheet({
                       borderWidth: 2,
                       borderColor: selected ? COLORS.primary : COLORS.line,
                       backgroundColor: selected
-                        ? COLORS.primary
+                        ? COLORS.primaryFill
                         : "transparent",
                     }}
                   >

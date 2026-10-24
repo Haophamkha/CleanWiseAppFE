@@ -1,4 +1,5 @@
-import { COLORS } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { useEffect, useRef, useState } from "react";
 import {
   Image,
@@ -15,6 +16,8 @@ const H_PADDING = 20;
 const ASPECT = 2;
 
 export function BannerCarousel() {
+  const { COLORS } = useAppTheme();
+
   const { width } = useWindowDimensions();
   const itemWidth = width - H_PADDING * 2;
   const itemHeight = itemWidth / ASPECT;
@@ -85,7 +88,7 @@ export function BannerCarousel() {
                 height: 6,
                 width: i === index ? 18 : 6,
                 borderRadius: 3,
-                backgroundColor: i === index ? COLORS.primary : COLORS.line,
+                backgroundColor: i === index ? COLORS.primaryFill : COLORS.line,
               }}
             />
           ))}

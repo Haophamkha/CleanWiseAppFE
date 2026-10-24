@@ -1,29 +1,38 @@
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Card } from "@/components/ui/Card";
-import { COLORS } from "@/constants/theme";
+
 import { Feather } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 
-const WEEKDAYS = [
-  "Chủ nhật",
-  "Thứ hai",
-  "Thứ ba",
-  "Thứ tư",
-  "Thứ năm",
-  "Thứ sáu",
-  "Thứ bảy",
-];
+function getLocalizedWeekdays() {
+  return [
+    t("Chủ nhật"),
+    t("Thứ hai"),
+    t("Thứ ba"),
+    t("Thứ tư"),
+    t("Thứ năm"),
+    t("Thứ sáu"),
+    t("Thứ bảy"),
+  ];
+}
 const pad = (n: number) => String(n).padStart(2, "0");
 const fmtTime = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
 function formatDuration(mins: number) {
   const h = Math.floor(mins / 60);
   const m = mins % 60;
-  if (h && m) return `${h} giờ ${m} phút`;
-  if (h) return `${h} giờ`;
-  return `${m} phút`;
+  if (h && m) return t("{{value0}} giờ {{value1}} phút", { value0: h, value1: m });
+  if (h) return t("{{value0}} giờ", { value0: h });
+  return t("{{value0}} phút", { value0: m });
 }
 
 export function ScheduleCard({ start, end }: { start: string; end: string }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const s = new Date(start);
   const e = new Date(end);
   const duration = Math.max(0, Math.round((e.getTime() - s.getTime()) / 60000));
@@ -34,7 +43,7 @@ export function ScheduleCard({ start, end }: { start: string; end: string }) {
         <View className="w-8 h-8 rounded-full bg-primary-light items-center justify-center mr-2">
           <Feather name="calendar" size={15} color={COLORS.primaryDark} />
         </View>
-        <Text className="text-ink font-bold text-[15px]">Lịch làm việc</Text>
+        <Text className="text-ink font-bold text-[15px]">{t("Lịch làm việc")}</Text>
       </View>
 
       <View className="flex-row items-stretch">
@@ -46,7 +55,7 @@ export function ScheduleCard({ start, end }: { start: string; end: string }) {
             className="text-[11px] font-bold uppercase text-primary-dark"
             style={{ letterSpacing: 1 }}
           >
-            Tháng {s.getMonth() + 1}
+            {t("Tháng")}{" "}{s.getMonth() + 1}
           </Text>
           <Text
             className="text-[34px] font-extrabold text-primary-dark"
@@ -59,7 +68,7 @@ export function ScheduleCard({ start, end }: { start: string; end: string }) {
 
         <View className="flex-1 justify-center">
           <Text className="text-ink font-bold text-[16px]">
-            {WEEKDAYS[s.getDay()]}
+            {getLocalizedWeekdays()[s.getDay()]}
           </Text>
 
           <View className="flex-row items-center mt-2 self-start rounded-full bg-canvas px-3 py-1.5">
@@ -70,7 +79,7 @@ export function ScheduleCard({ start, end }: { start: string; end: string }) {
           </View>
 
           <Text className="text-ink-muted text-[12.5px] mt-2">
-            Thời lượng dự kiến {formatDuration(duration)}
+            {t("Thời lượng dự kiến")}{" "}{formatDuration(duration)}
           </Text>
         </View>
       </View>

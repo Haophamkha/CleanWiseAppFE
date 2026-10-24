@@ -1,4 +1,7 @@
-import { COLORS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import {
   AuthScreen,
   OrDivider,
@@ -11,6 +14,10 @@ import { Link, router } from "expo-router";
 import { Image, Text, View } from "react-native";
 
 export default function LoginScreen() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const {
     phone,
     setPhone,
@@ -27,8 +34,8 @@ export default function LoginScreen() {
   return (
     <AuthScreen
       icon="home"
-      title="Đăng nhập"
-      subtitle="Đăng nhập để tiếp tục đặt lịch dọn dẹp cho nhà bạn."
+      title={t("Đăng nhập")}
+      subtitle={t("Đăng nhập để tiếp tục đặt lịch dọn dẹp cho nhà bạn.")}
       onBack={() => router.replace("/")}
       footer={
         <View
@@ -40,28 +47,27 @@ export default function LoginScreen() {
           }}
         >
           <Text style={{ fontSize: 16, color: COLORS.inkSoft }}>
-            Chưa có tài khoản?{" "}
+            {t("Chưa có tài khoản?")}{" "}
           </Text>
           <Link href="/(auth)/register">
             <Text
               style={{ fontSize: 16, fontWeight: "800", color: COLORS.primary }}
             >
-              Đăng ký
-            </Text>
+              {t("Đăng ký")}</Text>
           </Link>
         </View>
       }
     >
       <PillInput
         icon="phone"
-        placeholder="Số điện thoại"
+        placeholder={t("Số điện thoại")}
         keyboardType="phone-pad"
         value={phone}
         onChangeText={setPhone}
       />
       <PillInput
         icon="lock"
-        placeholder="Mật khẩu"
+        placeholder={t("Mật khẩu")}
         password
         autoCapitalize="none"
         value={password}
@@ -77,8 +83,7 @@ export default function LoginScreen() {
               color: "#F59E0B",
             }}
           >
-            Quên mật khẩu?
-          </Text>
+            {t("Quên mật khẩu?")}</Text>
         </Link>
       </View>
 
@@ -96,7 +101,7 @@ export default function LoginScreen() {
       ) : null}
 
       <PillButton
-        title={isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
+        title={isLoading ? t("Đang đăng nhập...") : t("Đăng nhập")}
         onPress={submit}
         loading={isLoading}
       />
@@ -105,7 +110,7 @@ export default function LoginScreen() {
 
       <PillButton
         variant="outline"
-        title="Đăng nhập với Google"
+        title={t("Đăng nhập với Google")}
         onPress={submitGoogle}
         disabled={!googleReady}
         loading={isGoogleLoading}

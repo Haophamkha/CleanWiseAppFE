@@ -1,4 +1,7 @@
-import { COLORS, SHADOWS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+import { translate as t, getLocale } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { SHADOWS } from "@/constants/theme";
 import type { UserVoucher, Voucher } from "@/features/voucher/types/Voucher";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -20,11 +23,11 @@ type Props = {
 
 export const formatVoucherMoney = (value?: string | null) => {
   const amount = Number(value ?? 0);
-  return `${new Intl.NumberFormat("vi-VN").format(amount)}đ`;
+  return t("{{value0}}đ", { value0: new Intl.NumberFormat(getLocale()).format(amount) });
 };
 
 export const formatVoucherDate = (value: string) =>
-  new Date(value).toLocaleDateString("vi-VN", {
+  new Date(value).toLocaleDateString(getLocale(), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -34,42 +37,44 @@ export const formatVoucherDate = (value: string) =>
 export const getVoucherDaysLeft = (value: string) =>
   Math.ceil((new Date(value).getTime() - Date.now()) / 86_400_000);
 
-export const voucherSourceLabel: Record<UserVoucher["source"], string> = {
-  PUBLIC: "Voucher công khai",
-  CODE: "Nhận bằng mã",
-  ADMIN: "Được tặng riêng",
-  CAMPAIGN: "Quà từ chiến dịch",
-};
+export function getLocalizedVoucherSourceLabel(): Record<UserVoucher["source"], string> {
+  return {
+    PUBLIC: t("Voucher công khai"),
+    CODE: t("Nhận bằng mã"),
+    ADMIN: t("Được tặng riêng"),
+    CAMPAIGN: t("Quà từ chiến dịch"),
+  };
+}
 
-const getWalletStatus = (item: UserVoucher) => {
+const getWalletStatus = (item: UserVoucher, COLORS: import("@/constants/theme").ThemeColors) => {
   if (item.is_usable) {
     return {
-      label: "Có thể dùng",
+      label: t("Có thể dùng"),
       color: COLORS.primaryDark,
       bg: COLORS.primaryLight,
     };
   }
   if (item.status === "USED") {
-    return { label: "Đã sử dụng", color: COLORS.inkSoft, bg: COLORS.canvas };
+    return { label: t("Đã sử dụng"), color: COLORS.inkSoft, bg: COLORS.canvas };
   }
   if (item.status === "RESERVED") {
     return {
-      label: "Đang được giữ",
+      label: t("Đang được giữ"),
       color: COLORS.accentDark,
       bg: COLORS.accentLight,
     };
   }
   if (item.status === "REVOKED") {
     return {
-      label: "Đã thu hồi",
+      label: t("Đã thu hồi"),
       color: COLORS.danger,
       bg: COLORS.dangerLight,
     };
   }
   if (item.voucher.lifecycle_status === "EXPIRED") {
-    return { label: "Đã hết hạn", color: COLORS.inkSoft, bg: COLORS.canvas };
+    return { label: t("Đã hết hạn"), color: COLORS.inkSoft, bg: COLORS.canvas };
   }
-  return { label: "Không khả dụng", color: COLORS.inkSoft, bg: COLORS.canvas };
+  return { label: t("Không khả dụng"), color: COLORS.inkSoft, bg: COLORS.canvas };
 };
 
 const LEFT = 104;
@@ -77,6 +82,8 @@ const NOTCH = 18;
 
 /** Nửa hình tròn khuyết ở mép thẻ (card có overflow hidden nên chỉ lộ nửa trong). */
 function Notch({ side }: { side: "left" | "right" }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       pointerEvents="none"
@@ -96,6 +103,8 @@ function Notch({ side }: { side: "left" | "right" }) {
 }
 
 function DashedLine() {
+  const { COLORS } = useAppTheme();
+
   // Mẹo: bọc trong view cao 1px + overflow hidden để dashed hiển thị đúng trên Android
   return (
     <View style={{ flex: 1, height: 1, overflow: "hidden" }}>
@@ -118,8 +127,12 @@ export function VoucherCard({
   onPress,
   isClaiming,
 }: Props) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const isPercent = voucher.discount_type === "PERCENT";
-  const status = walletVoucher ? getWalletStatus(walletVoucher) : null;
+  const status = walletVoucher ? getWalletStatus(walletVoucher, COLORS) : null;
   const dimmed = !!walletVoucher && !walletVoucher.is_usable;
   const daysLeft = getVoucherDaysLeft(voucher.end_at);
   const urgent = !dimmed && daysLeft <= 3 && daysLeft >= 0;
@@ -147,7 +160,7 @@ export function VoucherCard({
           colors={
             dimmed
               ? [COLORS.inkMuted, COLORS.inkSoft]
-              : [COLORS.primary, COLORS.primaryDark]
+              : [COLORS.primaryFill, COLORS.primaryFillDark]
           }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -215,8 +228,7 @@ export function VoucherCard({
               color: "rgba(255,255,255,0.85)",
             }}
           >
-            GIẢM
-          </Text>
+            {t("GIẢM")}</Text>
         </LinearGradient>
 
         <View style={{ flex: 1, padding: 14 }}>
@@ -321,8 +333,8 @@ export function VoucherCard({
             >
               {urgent
                 ? daysLeft === 0
-                  ? "Hết hạn hôm nay"
-                  : `Còn ${daysLeft} ngày`
+                  ? t("Hết hạn hôm nay")
+                  : t("Còn {{value0}} ngày", { value0: daysLeft , count: daysLeft})
                 : `HSD ${formatVoucherDate(voucher.end_at)}`}
             </Text>
           </View>
@@ -366,7 +378,7 @@ export function VoucherCard({
                 color: COLORS.inkSoft,
               }}
             >
-              Đơn từ {formatVoucherMoney(voucher.min_order_amount)}
+              {t("Đơn từ")}{" "}{formatVoucherMoney(voucher.min_order_amount)}
             </Text>
           </View>
           {isPercent && !!voucher.max_discount_amount && (
@@ -381,7 +393,7 @@ export function VoucherCard({
               <Text
                 style={{ marginLeft: 6, fontSize: 11, color: COLORS.inkMuted }}
               >
-                Giảm tối đa {formatVoucherMoney(voucher.max_discount_amount)}
+                {t("Giảm tối đa")}{" "}{formatVoucherMoney(voucher.max_discount_amount)}
               </Text>
             </View>
           )}
@@ -399,7 +411,7 @@ export function VoucherCard({
             <Text
               style={{ fontSize: 11, fontWeight: "600", color: COLORS.inkSoft }}
             >
-              {voucherSourceLabel[walletVoucher.source]}
+              {getLocalizedVoucherSourceLabel()[walletVoucher.source]}
             </Text>
           </View>
         ) : (
@@ -415,7 +427,7 @@ export function VoucherCard({
               paddingVertical: 10,
               alignItems: "center",
               borderRadius: 14,
-              backgroundColor: COLORS.primary,
+              backgroundColor: COLORS.primaryFill,
               opacity: isClaiming ? 0.8 : 1,
             }}
           >
@@ -425,8 +437,7 @@ export function VoucherCard({
               <Text
                 style={{ fontSize: 13, fontWeight: "800", color: COLORS.white }}
               >
-                Nhận ngay
-              </Text>
+                {t("Nhận ngay")}</Text>
             )}
           </TouchableOpacity>
         )}

@@ -1,3 +1,4 @@
+import { getLocale } from "@/features/language/i18n";
 import type { ChatMessage } from "@/features/chat/types/chat";
 
 export type UiChatMessage = ChatMessage & {
@@ -24,6 +25,9 @@ export function mergeMessages(
         const elapsedMs =
           new Date(message.created_at).getTime() -
           new Date(item.created_at).getTime();
+        if (message.client_message_id && item.client_message_id) {
+          return message.client_message_id === item.client_message_id && item.sender_id === message.sender_id;
+        }
         return (
           item.sender_id === message.sender_id &&
           item.message === message.message &&
@@ -50,23 +54,23 @@ export function mergeMessages(
 export function formatConversationTime(iso: string) {
   const d = new Date(iso);
   if (d.toDateString() === new Date().toDateString()) {
-    return d.toLocaleTimeString("vi-VN", {
+    return d.toLocaleTimeString(getLocale(), {
       hour: "2-digit",
       minute: "2-digit",
     });
   }
-  return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+  return d.toLocaleDateString(getLocale(), { day: "2-digit", month: "2-digit" });
 }
 
 export function formatMessageTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("vi-VN", {
+  return new Date(iso).toLocaleTimeString(getLocale(), {
     hour: "2-digit",
     minute: "2-digit",
   });
 }
 
 export function formatFullDateTime(iso: string) {
-  return new Date(iso).toLocaleString("vi-VN", {
+  return new Date(iso).toLocaleString(getLocale(), {
     hour: "2-digit",
     minute: "2-digit",
     day: "2-digit",

@@ -1,4 +1,7 @@
-import { COLORS, OVERLAY, RADIUS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { OVERLAY, RADIUS } from "@/constants/theme";
 import {
     getUnavailableReason,
     useBookingVoucher,
@@ -55,6 +58,8 @@ const estimateSaving = (item: UserVoucher, subtotal: number) => {
 };
 
 function Notch({ position }: { position: "top" | "bottom" }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       pointerEvents="none"
@@ -84,6 +89,10 @@ function VoucherOption({
   best: boolean;
   onPress: () => void;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const voucher = item.voucher;
   const unavailableReason = getUnavailableReason(item, subtotalAmount);
   const disabled = unavailableReason !== null;
@@ -117,7 +126,7 @@ function VoucherOption({
           colors={
             disabled
               ? [COLORS.line, COLORS.line]
-              : [COLORS.primary, COLORS.primaryDark]
+              : [COLORS.primaryFill, COLORS.primaryFillDark]
           }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -179,8 +188,7 @@ function VoucherOption({
                       color: COLORS.accentDark,
                     }}
                   >
-                    Tiết kiệm nhất
-                  </Text>
+                    {t("Tiết kiệm nhất")}</Text>
                 </View>
               )}
               <Text
@@ -198,9 +206,7 @@ function VoucherOption({
                     color: COLORS.primaryDark,
                   }}
                 >
-                  Giảm {formatVoucherMoney(String(Math.round(saving)))} cho đơn
-                  này
-                </Text>
+                  {t("Giảm")}{" "}{formatVoucherMoney(String(Math.round(saving)))} {t("cho đơn này")}</Text>
               )}
             </View>
 
@@ -213,7 +219,7 @@ function VoucherOption({
                 alignItems: "center",
                 justifyContent: "center",
                 borderColor: selected ? COLORS.primary : COLORS.line,
-                backgroundColor: selected ? COLORS.primary : COLORS.surface,
+                backgroundColor: selected ? COLORS.primaryFill : COLORS.surface,
               }}
             >
               {selected && (
@@ -259,16 +265,16 @@ function VoucherOption({
             >
               {urgent
                 ? daysLeft === 0
-                  ? "Hết hạn hôm nay"
-                  : `Còn ${daysLeft} ngày`
+                  ? t("Hết hạn hôm nay")
+                  : t("Còn {{value0}} ngày", { value0: daysLeft , count: daysLeft})
                 : `HSD ${formatVoucherDate(voucher.end_at)}`}
             </Text>
           </View>
 
           <Text style={{ marginTop: 6, fontSize: 11.5, color: COLORS.inkSoft }}>
-            Đơn tối thiểu {formatVoucherMoney(voucher.min_order_amount)}
+            {t("Đơn tối thiểu")}{" "}{formatVoucherMoney(voucher.min_order_amount)}
             {isPercent && voucher.max_discount_amount
-              ? ` · Tối đa ${formatVoucherMoney(voucher.max_discount_amount)}`
+              ? t(" · Tối đa {{value0}}", { value0: formatVoucherMoney(voucher.max_discount_amount) })
               : ""}
           </Text>
 
@@ -321,6 +327,8 @@ function StateBlock({
   subtitle?: string;
   action?: { label: string; onPress: () => void };
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       style={{
@@ -385,6 +393,10 @@ function StateBlock({
 }
 
 export function BookingVoucherModal(props: Props) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const { visible, subtotalAmount, selectedVoucherId, onClose } = props;
   const b = useBookingVoucher(props);
   const insets = useSafeAreaInsets();
@@ -463,8 +475,7 @@ export function BookingVoucherModal(props: Props) {
               <Text
                 style={{ fontSize: 19, fontWeight: "800", color: COLORS.ink }}
               >
-                Chọn voucher
-              </Text>
+                {t("Chọn voucher")}</Text>
               <View
                 style={{
                   flexDirection: "row",
@@ -484,7 +495,7 @@ export function BookingVoucherModal(props: Props) {
                     color: COLORS.inkMuted,
                   }}
                 >
-                  Giá trị đơn hàng{" "}
+                  {t("Giá trị đơn hàng")}{" "}
                   <Text style={{ fontWeight: "700", color: COLORS.inkSoft }}>
                     {formatVoucherMoney(String(subtotalAmount))}
                   </Text>
@@ -525,25 +536,24 @@ export function BookingVoucherModal(props: Props) {
                     color: COLORS.inkMuted,
                   }}
                 >
-                  Đang tải voucher...
-                </Text>
+                  {t("Đang tải voucher...")}</Text>
               </View>
             ) : b.isError ? (
               <StateBlock
                 icon="wifi-off"
                 tint={COLORS.dangerLight}
                 iconColor={COLORS.danger}
-                title="Không thể tải ví voucher"
-                subtitle="Kiểm tra kết nối và thử lại nhé."
-                action={{ label: "Thử lại", onPress: () => b.refetch() }}
+                title={t("Không thể tải ví voucher")}
+                subtitle={t("Kiểm tra kết nối và thử lại nhé.")}
+                action={{ label: t("Thử lại"), onPress: () => b.refetch() }}
               />
             ) : b.sortedVouchers.length === 0 ? (
               <StateBlock
                 icon="inbox"
                 tint={COLORS.primaryLight}
                 iconColor={COLORS.primaryDark}
-                title="Bạn chưa có voucher"
-                subtitle="Hãy nhận voucher trong mục Khuyến mãi để sử dụng."
+                title={t("Bạn chưa có voucher")}
+                subtitle={t("Hãy nhận voucher trong mục Khuyến mãi để sử dụng.")}
               />
             ) : (
               b.sortedVouchers.map((item) => (
@@ -596,8 +606,7 @@ export function BookingVoucherModal(props: Props) {
                       color: COLORS.primaryDark,
                     }}
                   >
-                    Tiết kiệm ước tính
-                  </Text>
+                    {t("Tiết kiệm ước tính")}</Text>
                 </View>
                 <Text
                   style={{
@@ -628,8 +637,7 @@ export function BookingVoucherModal(props: Props) {
                     color: COLORS.inkSoft,
                   }}
                 >
-                  Không sử dụng voucher
-                </Text>
+                  {t("Không sử dụng voucher")}</Text>
               </TouchableOpacity>
             )}
 
@@ -641,7 +649,7 @@ export function BookingVoucherModal(props: Props) {
                 paddingVertical: 15,
                 alignItems: "center",
                 borderRadius: 16,
-                backgroundColor: COLORS.primary,
+                backgroundColor: COLORS.primaryFill,
                 opacity: b.blocked ? 0.5 : 1,
               }}
             >
@@ -656,8 +664,8 @@ export function BookingVoucherModal(props: Props) {
                   }}
                 >
                   {b.pendingVoucherId == null
-                    ? "Tiếp tục không dùng voucher"
-                    : "Áp dụng voucher"}
+                    ? t("Tiếp tục không dùng voucher")
+                    : t("Áp dụng voucher")}
                 </Text>
               )}
             </TouchableOpacity>

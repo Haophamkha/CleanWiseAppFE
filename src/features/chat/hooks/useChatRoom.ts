@@ -1,3 +1,6 @@
+import { useTranslation } from "react-i18next";
+import { getLocale } from "@/features/language/i18n";
+import type { ChatModerationStatus } from "@/features/chat/types/chat";
 import {
     useGetConversationQuery,
     useListChatMessagesMutation,
@@ -7,6 +10,7 @@ import {
 import { useChatSocket } from "@/features/chat/hooks/useChatSocket";
 import {
     getChatBlockedMessage,
+    getChatModerationStatus,
     restoreBlockedDraft,
 } from "@/features/chat/utils/chatModeration";
 import {
@@ -17,9 +21,11 @@ import { useAppSelector } from "@/store/hooks";
 import { showErrorToast } from "@/utils/toast";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, FlatList, Keyboard, Platform } from "react-native";
+import { Alert, AppState, FlatList, Keyboard, Platform } from "react-native";
 
 export function useChatRoom(id: number) {
+  const { t } = useTranslation();
+
   const user = useAppSelector((state) => state.auth.user);
   const { data, isLoading, isError, refetch } = useGetConversationQuery(id, {
     skip: !Number.isFinite(id),
@@ -51,9 +57,33 @@ export function useChatRoom(id: number) {
   const otherTypingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const localSequence = useRef(0);
   const inFlight = useRef(new Set<number>());
+  const requestKeys = useRef(new Map<number, string>());
 
+  const [localModeration, setLocalModeration] = useState<ChatModerationStatus | null>(null);
   const conversation = data?.conversation;
-  const displayMessages = useMemo(() => [...messages].reverse(), [messages]);
+  const moderation = localModeration ?? conversation?.moderation;
+  const canSend = !!conversation?.can_send && !moderation?.is_locked;
+  const restrictionNotice = moderation?.is_locked && moderation.locked_until
+    ? t("Bạn bị tạm khóa gửi chat đến {{value0}}. Bạn vẫn có thể đọc, nhận tin và liên hệ hỗ trợ.", { value0: new Date(moderation.locked_until).toLocaleString(getLocale()) })
+    : undefined;
+  const moderationNotice = !moderation?.is_locked && moderation?.violation_count
+    ? t("Bạn đã vi phạm {{value0}} lần trong {{value1}} ngày. Không chia sẻ SĐT, email hoặc liên kết ngoài ứng dụng.", { value0: moderation.violation_count, value1: moderation.window_days })
+    : undefined;
+
+  useEffect(() => { setLocalModeration(null); }, [data]);
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") refetch();
+    });
+    return () => subscription.remove();
+  }, [refetch]);
+  useEffect(() => {
+    if (!moderation?.locked_until) return;
+    const delay = Math.max(1000, new Date(moderation.locked_until).getTime() - Date.now() + 500);
+    const timer = setTimeout(() => { refetch(); }, Math.min(delay, 2147483647));
+    return () => clearTimeout(timer);
+  }, [moderation?.locked_until, refetch]);
+  const displayMessages = useMemo(() => [...messages].reverse(), [messages, t]);
   const latestSentId = displayMessages.find(
     (message) =>
       message.message_type !== "SYSTEM" && message.sender_id === user?.id,
@@ -80,7 +110,7 @@ export function useChatRoom(id: number) {
     requestAnimationFrame(() =>
       list.current?.scrollToOffset({ offset: 0, animated }),
     );
-  }, []);
+  }, [t]);
 
   const reload = useCallback(async () => {
     try {
@@ -96,7 +126,7 @@ export function useChatRoom(id: number) {
       setLoaded(true);
       setMessageError(true);
     }
-  }, [id, listMessages]);
+  }, [id, listMessages, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -108,13 +138,13 @@ export function useChatRoom(id: number) {
       return () => {
         focusedRef.current = false;
       };
-    }, [id, markRead, refetch, reload, scrollToLatest]),
+    }, [id, markRead, refetch, reload, scrollToLatest, t]),
   );
 
   const { sendTyping } = useChatSocket(
     !!user && Number.isFinite(id),
     (event) => {
-      if (event.type === "conversation.updated" && event.conversation_id === id) {
+      if (event.type === "moderation.updated" || (event.type === "conversation.updated" && event.conversation_id === id)) {
         refetch();
         return;
       }
@@ -154,6 +184,7 @@ export function useChatRoom(id: number) {
       }
     },
     () => {
+      refetch();
       reload();
       if (focusedRef.current) markRead({ conversation_id: id });
     },
@@ -165,7 +196,7 @@ export function useChatRoom(id: number) {
     if (typingActiveRef.current) sendTyping(id, false);
     typingActiveRef.current = false;
     lastTypingSentRef.current = 0;
-  }, [id, sendTyping]);
+  }, [id, sendTyping, t]);
 
   const updateDraft = (value: string) => {
     draftRef.current = value;
@@ -192,7 +223,7 @@ export function useChatRoom(id: number) {
     [stopTyping],
   );
 
-  useFocusEffect(useCallback(() => () => stopTyping(), [stopTyping]));
+  useFocusEffect(useCallback(() => () => stopTyping(), [stopTyping, t]));
 
   const loadOlder = async () => {
     if (!cursor || loadingMessages) return;
@@ -206,17 +237,19 @@ export function useChatRoom(id: number) {
       setMessages((previous) => mergeMessages(previous, page.results));
       setCursor(page.next_cursor);
     } catch {
-      Alert.alert("Lỗi", "Không tải được tin nhắn cũ.");
+      Alert.alert(t("Lỗi"), t("Không tải được tin nhắn cũ."));
     }
   };
 
   const submit = async (text: string, retryId?: number) => {
-    if (!text || !conversation?.can_send || !user?.id) return;
+    if (!text || !canSend || !user?.id) return;
     stopTyping();
     const localId =
       retryId ?? Date.now() * 1000 + (++localSequence.current % 1000);
     if (inFlight.current.has(localId)) return;
     inFlight.current.add(localId);
+    const clientMessageId = requestKeys.current.get(localId) ?? `${user.id}_${id}_${localId}_${Math.random().toString(36).slice(2)}`;
+    requestKeys.current.set(localId, clientMessageId);
     if (retryId) {
       setMessages((previous) =>
         previous.map((item) =>
@@ -236,6 +269,7 @@ export function useChatRoom(id: number) {
         is_read: false,
         created_at: new Date().toISOString(),
         localStatus: "sending",
+        client_message_id: clientMessageId,
       };
       setMessages((previous) => [...previous, optimistic]);
       draftRef.current = "";
@@ -246,6 +280,7 @@ export function useChatRoom(id: number) {
       const saved = await sendMessage({
         conversation_id: id,
         message: text,
+        client_message_id: clientMessageId,
       }).unwrap();
       setMessages((previous) =>
         mergeMessages(
@@ -253,14 +288,23 @@ export function useChatRoom(id: number) {
           [saved],
         ),
       );
+      requestKeys.current.delete(localId);
+      if (saved.moderation) {
+        setLocalModeration(saved.moderation);
+        Alert.alert(t("Cảnh báo chat"), saved.moderation.message);
+      }
       scrollToLatest();
     } catch (error) {
       const blockedMessage = getChatBlockedMessage(error);
       if (blockedMessage) {
+        requestKeys.current.delete(localId);
+        const status = getChatModerationStatus(error);
+        if (status) setLocalModeration(status);
+        refetch();
         setMessages((previous) => previous.filter((item) => item.id !== localId));
         draftRef.current = restoreBlockedDraft(text, draftRef.current);
         setDraft(draftRef.current);
-        showErrorToast("Không thể gửi tin nhắn", blockedMessage);
+        showErrorToast(t("Không thể gửi tin nhắn"), blockedMessage);
         return;
       }
       setMessages((previous) =>
@@ -289,6 +333,9 @@ export function useChatRoom(id: number) {
   return {
     user,
     conversation,
+    restrictionNotice,
+    moderationNotice,
+    canSend,
     assignments: data?.assignments ?? [],
     isInitialLoading: isLoading && !data,
     hasError: isError || !conversation,

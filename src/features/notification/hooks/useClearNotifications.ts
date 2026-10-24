@@ -1,29 +1,33 @@
+import { useTranslation } from "react-i18next";
+
 import { useClearAllNotificationsMutation } from "@/features/notification/api/notificationApi";
 import { getApiErrorMessage } from "@/utils/apiError";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import { Alert } from "react-native";
 
 export function useClearNotifications(onDone?: () => void) {
+  const { t } = useTranslation();
+
   const [clearAll, { isLoading }] = useClearAllNotificationsMutation();
 
   const confirmClear = () =>
     Alert.alert(
-      "Xoá tất cả thông báo",
-      "Toàn bộ thông báo sẽ bị xoá vĩnh viễn và không thể khôi phục.",
+      t("Xoá tất cả thông báo"),
+      t("Toàn bộ thông báo sẽ bị xoá vĩnh viễn và không thể khôi phục."),
       [
-        { text: "Huỷ", style: "cancel" },
+        { text: t("Huỷ"), style: "cancel" },
         {
-          text: "Xoá tất cả",
+          text: t("Xoá tất cả"),
           style: "destructive",
           onPress: async () => {
             try {
               await clearAll().unwrap();
-              showSuccessToast("Đã xoá tất cả thông báo");
+              showSuccessToast(t("Đã xoá tất cả thông báo"));
               onDone?.();
             } catch (e) {
               showErrorToast(
-                "Không thể xoá thông báo",
-                getApiErrorMessage(e, "Vui lòng thử lại."),
+                t("Không thể xoá thông báo"),
+                getApiErrorMessage(e, t("Vui lòng thử lại.")),
               );
             }
           },

@@ -1,7 +1,10 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { RequireLoginNotice } from "@/components/common/RequireLoginNotice";
 import { TabScreenHeader } from "@/components/common/TabScreenHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { COLORS } from "@/constants/theme";
+
 import { BookingCard } from "@/features/booking/components/BookingCard";
 import { BookingStatusTabs } from "@/features/booking/components/BookingStatusTabs";
 import { useBookingList } from "@/features/booking/hooks/useBookingList";
@@ -26,6 +29,12 @@ const normalize = (s: string) =>
     .toLowerCase();
 
 export default function BookingScreen() {
+  const { t } = useTranslation();
+
+  const { mode: themeMode } = useAppTheme();
+
+  const { COLORS } = useAppTheme();
+
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
@@ -52,16 +61,16 @@ export default function BookingScreen() {
               normalize(i.service_name).includes(q),
           )
         : items,
-    [items, q],
+    [items, q, t],
   );
 
   return (
     <View className="flex-1 bg-canvas">
-      <TabScreenHeader title="Đơn dịch vụ của tôi" />
+      <TabScreenHeader title={t("Đơn dịch vụ của tôi")} />
 
       {!isAuthenticated ? (
         <View className="flex-1 justify-center px-5 pb-16">
-          <RequireLoginNotice message="Đăng nhập để xem và quản lý các đơn hàng dịch vụ của bạn" />
+          <RequireLoginNotice message={t("Đăng nhập để xem và quản lý các đơn hàng dịch vụ của bạn")} />
         </View>
       ) : (
         <View className="flex-1">
@@ -83,12 +92,12 @@ export default function BookingScreen() {
                   size={18}
                   color={focused ? COLORS.primary : COLORS.inkMuted}
                 />
-                <TextInput
+                <TextInput keyboardAppearance={themeMode}
                   value={query}
                   onChangeText={setQuery}
                   onFocus={() => setFocused(true)}
                   onBlur={() => setFocused(false)}
-                  placeholder="Tìm theo mã đơn hoặc tên dịch vụ"
+                  placeholder={t("Tìm theo mã đơn hoặc tên dịch vụ")}
                   placeholderTextColor={COLORS.inkMuted}
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -121,8 +130,8 @@ export default function BookingScreen() {
             <View className="flex-1 justify-center">
               <EmptyState
                 icon="alert-triangle"
-                title="Không tải được danh sách đơn hàng"
-                actionLabel="Thử lại"
+                title={t("Không tải được danh sách đơn hàng")}
+                actionLabel={t("Thử lại")}
                 onAction={refresh}
               />
             </View>
@@ -142,7 +151,7 @@ export default function BookingScreen() {
                   refreshing={refreshing}
                   onRefresh={refresh}
                   tintColor={COLORS.primary}
-                  colors={[COLORS.primary]}
+                  colors={[COLORS.primaryFill]}
                 />
               }
               onEndReached={loadMore}
@@ -159,8 +168,8 @@ export default function BookingScreen() {
                     icon={q ? "search" : "clipboard"}
                     title={
                       q
-                        ? "Không tìm thấy đơn phù hợp"
-                        : "Chưa có đơn hàng nào. Các đơn dịch vụ bạn đặt sẽ hiển thị ở đây."
+                        ? t("Không tìm thấy đơn phù hợp")
+                        : t("Chưa có đơn hàng nào. Các đơn dịch vụ bạn đặt sẽ hiển thị ở đây.")
                     }
                   />
                 </View>

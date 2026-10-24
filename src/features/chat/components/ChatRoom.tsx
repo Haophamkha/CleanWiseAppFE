@@ -1,5 +1,8 @@
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { EmptyState } from "@/components/ui";
-import { CHAT_BG, COLORS } from "@/constants/theme";
+
 import { ChatComposer } from "@/features/chat/components/ChatComposer";
 import { ChatRoomHeader } from "@/features/chat/components/ChatRoomHeader";
 import { MessageBubble, hhmm } from "@/features/chat/components/MessageBubble";
@@ -23,15 +26,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 function dayLabel(iso?: string | null) {
   if (!iso) return "";
   const d = new Date(iso);
-  const t = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  const time = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   const today = new Date();
   const yest = new Date();
   yest.setDate(today.getDate() - 1);
-  if (d.toDateString() === today.toDateString()) return `${t} Hôm nay`;
-  if (d.toDateString() === yest.toDateString()) return `${t} Hôm qua`;
+  if (d.toDateString() === today.toDateString()) return t("{{value0}} Hôm nay", { value0: time });
+  if (d.toDateString() === yest.toDateString()) return t("{{value0}} Hôm qua", { value0: time });
   const dd = String(d.getDate()).padStart(2, "0");
   const mm = String(d.getMonth() + 1).padStart(2, "0");
-  return `${t} ${dd}/${mm}/${d.getFullYear()}`;
+  return `${time} ${dd}/${mm}/${d.getFullYear()}`;
 }
 
 function DaySeparator({ iso }: { iso?: string | null }) {
@@ -52,6 +55,10 @@ function DaySeparator({ iso }: { iso?: string | null }) {
 }
 
 export function ChatRoom({ id }: { id: number; assignmentId?: number }) {
+  const { t } = useTranslation();
+
+  const { CHAT_BG, COLORS } = useAppTheme();
+
   const insets = useSafeAreaInsets();
   const r = useChatRoom(id);
   const bottomPadding = r.keyboardVisible ? 4 : Math.max(insets.bottom, 6);
@@ -78,8 +85,8 @@ export function ChatRoom({ id }: { id: number; assignmentId?: number }) {
       >
         <EmptyState
           icon="alert-circle"
-          title="Không mở được cuộc trò chuyện"
-          actionLabel="Quay lại"
+          title={t("Không mở được cuộc trò chuyện")}
+          actionLabel={t("Quay lại")}
           onAction={() => router.back()}
         />
       </View>
@@ -205,7 +212,7 @@ export function ChatRoom({ id }: { id: number; assignmentId?: number }) {
                     paddingHorizontal: 14,
                     paddingVertical: 6,
                     borderRadius: 16,
-                    backgroundColor: "rgba(255,255,255,0.85)",
+                    backgroundColor: COLORS.surface,
                   }}
                 >
                   {r.loadingOlder && (
@@ -222,7 +229,7 @@ export function ChatRoom({ id }: { id: number; assignmentId?: number }) {
                       color: COLORS.primary,
                     }}
                   >
-                    {r.loadingOlder ? "Đang tải..." : "Xem tin nhắn cũ"}
+                    {r.loadingOlder ? t("Đang tải...") : t("Xem tin nhắn cũ")}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -241,10 +248,10 @@ export function ChatRoom({ id }: { id: number; assignmentId?: number }) {
                   icon="message-circle"
                   title={
                     r.messageError
-                      ? "Không tải được tin nhắn"
-                      : "Chưa có tin nhắn. Hãy gửi lời chào để bắt đầu trò chuyện!"
+                      ? t("Không tải được tin nhắn")
+                      : t("Chưa có tin nhắn. Hãy gửi lời chào để bắt đầu trò chuyện!")
                   }
-                  actionLabel={r.messageError ? "Thử lại" : undefined}
+                  actionLabel={r.messageError ? t("Thử lại") : undefined}
                   onAction={r.messageError ? r.reload : undefined}
                 />
               </View>
@@ -259,8 +266,14 @@ export function ChatRoom({ id }: { id: number; assignmentId?: number }) {
         />
       </View>
 
+      {r.moderationNotice ? (
+        <Text style={{ paddingHorizontal: 16, paddingVertical: 8, color: COLORS.accentDark, backgroundColor: COLORS.accentLight, fontSize: 12 }}>
+          {r.moderationNotice}
+        </Text>
+      ) : null}
       <ChatComposer
-        canSend={conversation.can_send}
+        restrictionNotice={r.restrictionNotice}
+        canSend={r.canSend}
         draft={r.draft}
         onChange={r.updateDraft}
         onBlur={r.stopTyping}

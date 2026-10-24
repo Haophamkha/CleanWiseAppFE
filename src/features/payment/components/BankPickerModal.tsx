@@ -1,5 +1,8 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { COLORS, SHADOWS } from "@/constants/theme";
+import { SHADOWS } from "@/constants/theme";
 import type { BankCatalogItem } from "@/features/payment/types/PaymentMethod";
 import { Feather } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
@@ -27,6 +30,12 @@ export default function BankPickerModal({
   onClose,
   onSelect,
 }: Props) {
+  const { t } = useTranslation();
+
+  const { mode: themeMode } = useAppTheme();
+
+  const { COLORS } = useAppTheme();
+
   const [keyword, setKeyword] = useState("");
   const [focused, setFocused] = useState(false);
 
@@ -38,7 +47,7 @@ export default function BankPickerModal({
         .toLocaleLowerCase("vi")
         .includes(query),
     );
-  }, [banks, keyword]);
+  }, [banks, keyword, t]);
 
   const close = () => {
     setKeyword("");
@@ -59,10 +68,9 @@ export default function BankPickerModal({
             <Feather name="x" size={20} color={COLORS.ink} />
           </TouchableOpacity>
           <View className="flex-1">
-            <Text className="text-lg font-bold text-ink">Chọn ngân hàng</Text>
+            <Text className="text-lg font-bold text-ink">{t("Chọn ngân hàng")}</Text>
             <Text className="text-xs text-ink-muted">
-              {filteredBanks.length} ngân hàng
-            </Text>
+              {filteredBanks.length} {t("ngân hàng")}</Text>
           </View>
         </View>
 
@@ -78,13 +86,13 @@ export default function BankPickerModal({
               size={18}
               color={focused ? COLORS.primary : COLORS.inkMuted}
             />
-            <TextInput
+            <TextInput keyboardAppearance={themeMode}
               className="flex-1 py-3.5 ml-3 text-ink"
               value={keyword}
               onChangeText={setKeyword}
               onFocus={() => setFocused(true)}
               onBlur={() => setFocused(false)}
-              placeholder="Tìm theo tên ngân hàng"
+              placeholder={t("Tìm theo tên ngân hàng")}
               placeholderTextColor={COLORS.inkMuted}
               autoCapitalize="none"
               autoCorrect={false}
@@ -154,7 +162,7 @@ export default function BankPickerModal({
           )}
           ListEmptyComponent={
             <View className="pt-16">
-              <EmptyState icon="search" title="Không tìm thấy ngân hàng" />
+              <EmptyState icon="search" title={t("Không tìm thấy ngân hàng")} />
             </View>
           }
         />

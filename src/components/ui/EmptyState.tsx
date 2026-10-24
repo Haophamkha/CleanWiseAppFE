@@ -1,4 +1,5 @@
-import { COLORS } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { Feather } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 import { Button } from "./Button";
@@ -17,6 +18,8 @@ export function EmptyState({
   actionLabel,
   onAction,
 }: Props) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View className="items-center justify-center py-10 px-6">
       <View className="w-14 h-14 rounded-full bg-primary-light items-center justify-center mb-3">

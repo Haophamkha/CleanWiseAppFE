@@ -1,7 +1,10 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { RequireLoginNotice } from "@/components/common/RequireLoginNotice";
 import { TabScreenHeader } from "@/components/common/TabScreenHeader";
 import { EmptyState } from "@/components/ui";
-import { COLORS } from "@/constants/theme";
+
 import { ConversationItem } from "@/features/chat/components/ConversationItem";
 import { useChatInbox } from "@/features/chat/hooks/useChatInbox";
 import { Feather } from "@expo/vector-icons";
@@ -16,6 +19,12 @@ import {
 } from "react-native";
 
 export function ChatInbox() {
+  const { t } = useTranslation();
+
+  const { mode: themeMode } = useAppTheme();
+
+  const { COLORS } = useAppTheme();
+
   const c = useChatInbox();
   const [keyword, setKeyword] = useState("");
 
@@ -27,11 +36,11 @@ export function ChatInbox() {
         .toLowerCase()
         .includes(k),
     );
-  }, [c.items, keyword]);
+  }, [c.items, keyword, t]);
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.surface }}>
-      <TabScreenHeader title="Tin nhắn">
+      <TabScreenHeader title={t("Tin nhắn")}>
         {c.isLoggedIn && (
           <View
             style={{
@@ -45,10 +54,10 @@ export function ChatInbox() {
             }}
           >
             <Feather name="search" size={18} color={COLORS.inkSoft} />
-            <TextInput
+            <TextInput keyboardAppearance={themeMode}
               value={keyword}
               onChangeText={setKeyword}
-              placeholder="Tìm kiếm cuộc trò chuyện"
+              placeholder={t("Tìm kiếm cuộc trò chuyện")}
               placeholderTextColor={COLORS.inkMuted}
               returnKeyType="search"
               style={{
@@ -72,7 +81,7 @@ export function ChatInbox() {
         <View
           style={{ flex: 1, justifyContent: "center", paddingHorizontal: 20 }}
         >
-          <RequireLoginNotice message="Đăng nhập để xem tin nhắn với nhân viên" />
+          <RequireLoginNotice message={t("Đăng nhập để xem tin nhắn với nhân viên")} />
         </View>
       ) : c.isInitialLoading ? (
         <View style={{ flex: 1, justifyContent: "center" }}>
@@ -82,8 +91,8 @@ export function ChatInbox() {
         <View style={{ flex: 1, justifyContent: "center" }}>
           <EmptyState
             icon="wifi-off"
-            title="Không tải được tin nhắn"
-            actionLabel="Thử lại"
+            title={t("Không tải được tin nhắn")}
+            actionLabel={t("Thử lại")}
             onAction={c.refresh}
           />
         </View>
@@ -105,7 +114,7 @@ export function ChatInbox() {
               refreshing={c.refreshing}
               onRefresh={c.refresh}
               tintColor={COLORS.primary}
-              colors={[COLORS.primary]}
+              colors={[COLORS.primaryFill]}
             />
           }
           onEndReached={c.loadMore}
@@ -122,8 +131,8 @@ export function ChatInbox() {
                 icon={keyword ? "search" : "message-circle"}
                 title={
                   keyword
-                    ? "Không tìm thấy cuộc trò chuyện phù hợp"
-                    : "Chưa có cuộc trò chuyện nào. Tin nhắn với nhân viên sẽ xuất hiện sau khi đơn được nhận."
+                    ? t("Không tìm thấy cuộc trò chuyện phù hợp")
+                    : t("Chưa có cuộc trò chuyện nào. Tin nhắn với nhân viên sẽ xuất hiện sau khi đơn được nhận.")
                 }
               />
             </View>

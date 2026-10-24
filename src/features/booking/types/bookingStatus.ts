@@ -1,15 +1,19 @@
+import { translate as t, getLocale } from "@/features/language/i18n";
+import type { ThemeColors } from "@/constants/theme";
 import { Feather } from "@expo/vector-icons";
 
-export const PROGRESS_STEPS: {
+export function getLocalizedProgressSteps(): {
   key: string;
   label: string;
   icon: keyof typeof Feather.glyphMap;
-}[] = [
-  { key: "PENDING", label: "Chờ nhận việc", icon: "clock" },
-  { key: "ASSIGNED", label: "Đã nhận", icon: "user-check" },
-  { key: "IN_PROGRESS", label: "Đang thực hiện", icon: "tool" },
-  { key: "COMPLETED", label: "Hoàn thành", icon: "check-circle" },
-];
+}[] {
+  return [
+    { key: "PENDING", label: t("Chờ nhận việc"), icon: "clock" },
+    { key: "ASSIGNED", label: t("Đã nhận"), icon: "user-check" },
+    { key: "IN_PROGRESS", label: t("Đang thực hiện"), icon: "tool" },
+    { key: "COMPLETED", label: t("Hoàn thành"), icon: "check-circle" },
+  ];
+}
 
 export const STATUS_INDEX: Record<string, number> = {
   PENDING: 0,
@@ -19,7 +23,7 @@ export const STATUS_INDEX: Record<string, number> = {
 };
 
 export function formatDateTime(value: string) {
-  return new Date(value).toLocaleString("vi-VN", {
+  return new Date(value).toLocaleString(getLocale(), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -29,74 +33,74 @@ export function formatDateTime(value: string) {
 }
 
 /** Small status pill shown next to the booking code in the header. */
-export function getBookingStatusMeta(status: string) {
+export function getBookingStatusMeta(status: string, COLORS: ThemeColors) {
   switch (status) {
     case "PENDING":
-      return { label: "Chờ nhận việc", color: "#B45309", bg: "#FEF3C7" };
+      return { label: t("Chờ nhận việc"), color: COLORS.accentDark, bg: COLORS.accentLight };
     case "ASSIGNED":
-      return { label: "Đã nhận việc", color: "#1D4ED8", bg: "#DBEAFE" };
+      return { label: t("Đã nhận việc"), color: COLORS.infoDark, bg: COLORS.infoLight };
     case "IN_PROGRESS":
-      return { label: "Đang thực hiện", color: "#047857", bg: "#D1FAE5" };
+      return { label: t("Đang thực hiện"), color: COLORS.success, bg: COLORS.successLight };
     case "COMPLETED":
-      return { label: "Hoàn thành", color: "#047857", bg: "#D1FAE5" };
+      return { label: t("Hoàn thành"), color: COLORS.success, bg: COLORS.successLight };
     case "CANCELLED":
-      return { label: "Đã hủy", color: "#B91C1C", bg: "#FEE2E2" };
+      return { label: t("Đã hủy"), color: COLORS.danger, bg: COLORS.dangerLight };
     case "EXPIRED":
-      return { label: "Đã hết hạn", color: "#C2410C", bg: "#FFEDD5" };
+      return { label: t("Đã hết hạn"), color: COLORS.accentDark, bg: COLORS.accentLight };
     default:
-      return { label: status, color: "#6B7280", bg: "#F3F4F6" };
+      return { label: status, color: COLORS.inkSoft, bg: COLORS.surfaceMuted };
   }
 }
 
-export function getPaymentStatusMeta(status: string) {
+export function getPaymentStatusMeta(status: string, COLORS: ThemeColors) {
   switch (status) {
     case "SUCCESS":
       return {
-        label: "Đã thanh toán",
-        color: "#047857",
-        bg: "#D1FAE5",
+        label: t("Đã thanh toán"),
+        color: COLORS.success,
+        bg: COLORS.successLight,
         icon: "check-circle" as const,
       };
     case "REFUNDED":
       return {
-        label: "Đã hoàn tiền",
-        color: "#7C3AED",
-        bg: "#EDE9FE",
+        label: t("Đã hoàn tiền"),
+        color: COLORS.violet,
+        bg: COLORS.violetLight,
         icon: "rotate-ccw" as const,
       };
     case "FAILED":
       return {
-        label: "Thanh toán thất bại",
-        color: "#DC2626",
-        bg: "#FEE2E2",
+        label: t("Thanh toán thất bại"),
+        color: COLORS.danger,
+        bg: COLORS.dangerLight,
         icon: "alert-circle" as const,
       };
     case "CANCELLED":
       return {
-        label: "Đã hủy thanh toán",
-        color: "#6B7280",
-        bg: "#F3F4F6",
+        label: t("Đã hủy thanh toán"),
+        color: COLORS.inkSoft,
+        bg: COLORS.surfaceMuted,
         icon: "x-circle" as const,
       };
     case "PAID":
       return {
-        label: "Đã thanh toán",
-        color: "#047857",
-        bg: "#D1FAE5",
+        label: t("Đã thanh toán"),
+        color: COLORS.success,
+        bg: COLORS.successLight,
         icon: "check-circle" as const,
       };
     case "PARTIALLY_REFUNDED":
       return {
-        label: "Đã hoàn một phần",
-        color: "#7C3AED",
-        bg: "#EDE9FE",
+        label: t("Đã hoàn một phần"),
+        color: COLORS.violet,
+        bg: COLORS.violetLight,
         icon: "rotate-ccw" as const,
       };
     default:
       return {
-        label: "Chưa thanh toán",
-        color: "#B45309",
-        bg: "#FEF3C7",
+        label: t("Chưa thanh toán"),
+        color: COLORS.accentDark,
+        bg: COLORS.accentLight,
         icon: "clock" as const,
       };
   }

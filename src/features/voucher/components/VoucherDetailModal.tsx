@@ -1,4 +1,7 @@
-import { COLORS, OVERLAY, RADIUS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { OVERLAY, RADIUS } from "@/constants/theme";
 import type { UserVoucher, Voucher } from "@/features/voucher/types/Voucher";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -16,7 +19,7 @@ import {
     formatVoucherDate,
     formatVoucherMoney,
     getVoucherDaysLeft,
-    voucherSourceLabel,
+    getLocalizedVoucherSourceLabel,
 } from "./VoucherCard";
 
 type Props = {
@@ -28,26 +31,32 @@ type Props = {
   onClaim?: (code: string) => Promise<boolean>;
 };
 
-const distributionLabel: Record<Voucher["distribution_type"], string> = {
-  PUBLIC: "Voucher công khai",
-  CODE_ONLY: "Nhận bằng mã",
-  ASSIGNED: "Được cấp riêng",
-};
+function getLocalizedDistributionLabel(): Record<Voucher["distribution_type"], string> {
+  return {
+    PUBLIC: t("Voucher công khai"),
+    CODE_ONLY: t("Nhận bằng mã"),
+    ASSIGNED: t("Được cấp riêng"),
+  };
+}
 
-const lifecycleLabel: Record<Voucher["lifecycle_status"], string> = {
-  ACTIVE: "Đang hoạt động",
-  UPCOMING: "Sắp diễn ra",
-  EXPIRED: "Đã hết hạn",
-  EXHAUSTED: "Đã hết lượt nhận",
-  DISABLED: "Đã ngừng hoạt động",
-};
+function getLocalizedLifecycleLabel(): Record<Voucher["lifecycle_status"], string> {
+  return {
+    ACTIVE: t("Đang hoạt động"),
+    UPCOMING: t("Sắp diễn ra"),
+    EXPIRED: t("Đã hết hạn"),
+    EXHAUSTED: t("Đã hết lượt nhận"),
+    DISABLED: t("Đã ngừng hoạt động"),
+  };
+}
 
-const walletStatusLabel: Record<UserVoucher["status"], string> = {
-  AVAILABLE: "Có thể sử dụng",
-  RESERVED: "Đang được giữ cho đơn hàng",
-  USED: "Đã sử dụng",
-  REVOKED: "Đã thu hồi",
-};
+function getLocalizedWalletStatusLabel(): Record<UserVoucher["status"], string> {
+  return {
+    AVAILABLE: t("Có thể sử dụng"),
+    RESERVED: t("Đang được giữ cho đơn hàng"),
+    USED: t("Đã sử dụng"),
+    REVOKED: t("Đã thu hồi"),
+  };
+}
 
 type IconName = keyof typeof Feather.glyphMap;
 
@@ -60,6 +69,8 @@ function StatTile({
   label: string;
   value: string;
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       style={{
@@ -112,6 +123,8 @@ function DetailRow({
   value: string;
   last?: boolean;
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       style={{
@@ -151,6 +164,10 @@ export function VoucherDetailModal({
   onClose,
   onClaim,
 }: Props) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const insets = useSafeAreaInsets();
   if (!voucher) return null;
 
@@ -164,34 +181,34 @@ export function VoucherDetailModal({
   const rows: { icon: IconName; label: string; value: string }[] = [
     {
       icon: "calendar",
-      label: "Hiệu lực",
+      label: t("Hiệu lực"),
       value: `${formatVoucherDate(voucher.start_at)} - ${formatVoucherDate(voucher.end_at)}`,
     },
     {
       icon: "send",
-      label: "Hình thức phát hành",
-      value: distributionLabel[voucher.distribution_type],
+      label: t("Hình thức phát hành"),
+      value: getLocalizedDistributionLabel()[voucher.distribution_type],
     },
     {
       icon: "activity",
-      label: "Trạng thái",
+      label: t("Trạng thái"),
       value: walletVoucher
-        ? walletStatusLabel[walletVoucher.status]
-        : lifecycleLabel[voucher.lifecycle_status],
+        ? getLocalizedWalletStatusLabel()[walletVoucher.status]
+        : getLocalizedLifecycleLabel()[voucher.lifecycle_status],
     },
   ];
   if (voucher.remaining_issuance != null && !walletVoucher) {
     rows.push({
       icon: "users",
-      label: "Số lượng còn lại",
+      label: t("Số lượng còn lại"),
       value: `${voucher.remaining_issuance} voucher`,
     });
   }
   if (walletVoucher) {
     rows.push({
       icon: "inbox",
-      label: "Nguồn nhận",
-      value: voucherSourceLabel[walletVoucher.source],
+      label: t("Nguồn nhận"),
+      value: getLocalizedVoucherSourceLabel()[walletVoucher.source],
     });
   }
 
@@ -252,8 +269,7 @@ export function VoucherDetailModal({
                 color: COLORS.ink,
               }}
             >
-              Chi tiết voucher
-            </Text>
+              {t("Chi tiết voucher")}</Text>
             <TouchableOpacity
               onPress={onClose}
               hitSlop={8}
@@ -276,7 +292,7 @@ export function VoucherDetailModal({
           >
             {/* Hero */}
             <LinearGradient
-              colors={[COLORS.primary, COLORS.primaryDark]}
+              colors={[COLORS.primaryFill, COLORS.primaryFillDark]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{
@@ -368,8 +384,7 @@ export function VoucherDetailModal({
                     color: "rgba(255,255,255,0.85)",
                   }}
                 >
-                  GIẢM
-                </Text>
+                  {t("GIẢM")}</Text>
               </View>
 
               <View
@@ -388,8 +403,7 @@ export function VoucherDetailModal({
                 }}
               >
                 <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.85)" }}>
-                  Mã voucher
-                </Text>
+                  {t("Mã voucher")}</Text>
                 <Text
                   style={{
                     fontSize: 16,
@@ -424,8 +438,8 @@ export function VoucherDetailModal({
                   }}
                 >
                   {daysLeft === 0
-                    ? "Voucher hết hạn hôm nay"
-                    : `Voucher sắp hết hạn, còn ${daysLeft} ngày`}
+                    ? t("Voucher hết hạn hôm nay")
+                    : t("Voucher sắp hết hạn, còn {{value0}} ngày", { value0: daysLeft , count: daysLeft})}
                 </Text>
               </View>
             )}
@@ -434,16 +448,16 @@ export function VoucherDetailModal({
             <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
               <StatTile
                 icon="shopping-bag"
-                label="Đơn tối thiểu"
+                label={t("Đơn tối thiểu")}
                 value={formatVoucherMoney(voucher.min_order_amount)}
               />
               <StatTile
                 icon="trending-down"
-                label="Giảm tối đa"
+                label={t("Giảm tối đa")}
                 value={
                   isPercent && voucher.max_discount_amount
                     ? formatVoucherMoney(voucher.max_discount_amount)
-                    : "Không giới hạn"
+                    : t("Không giới hạn")
                 }
               />
             </View>
@@ -465,8 +479,7 @@ export function VoucherDetailModal({
                     color: COLORS.inkSoft,
                   }}
                 >
-                  MÔ TẢ ƯU ĐÃI
-                </Text>
+                  {t("MÔ TẢ ƯU ĐÃI")}</Text>
                 <Text
                   style={{
                     marginTop: 6,
@@ -515,9 +528,7 @@ export function VoucherDetailModal({
                   color: COLORS.accentDark,
                 }}
               >
-                Mỗi tài khoản chỉ nhận voucher này một lần. Voucher chỉ áp dụng
-                khi đơn hàng đáp ứng đủ điều kiện.
-              </Text>
+                {t("Mỗi tài khoản chỉ nhận voucher này một lần. Voucher chỉ áp dụng khi đơn hàng đáp ứng đủ điều kiện.")}</Text>
             </View>
           </ScrollView>
 
@@ -563,8 +574,8 @@ export function VoucherDetailModal({
                   }}
                 >
                   {walletVoucher.is_usable
-                    ? "Voucher có thể sử dụng"
-                    : "Voucher hiện không khả dụng"}
+                    ? t("Voucher có thể sử dụng")
+                    : t("Voucher hiện không khả dụng")}
                 </Text>
               </View>
             ) : (
@@ -579,7 +590,7 @@ export function VoucherDetailModal({
                   paddingVertical: 15,
                   alignItems: "center",
                   borderRadius: 16,
-                  backgroundColor: COLORS.primary,
+                  backgroundColor: COLORS.primaryFill,
                   opacity: isClaiming ? 0.8 : 1,
                 }}
               >
@@ -593,8 +604,7 @@ export function VoucherDetailModal({
                       color: COLORS.white,
                     }}
                   >
-                    Nhận voucher
-                  </Text>
+                    {t("Nhận voucher")}</Text>
                 )}
               </TouchableOpacity>
             )}

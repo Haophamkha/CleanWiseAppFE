@@ -1,6 +1,9 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { COLORS, RADIUS, SHADOWS } from "@/constants/theme";
+import { RADIUS, SHADOWS } from "@/constants/theme";
 import { AddressSummaryCard } from "@/features/booking/components/AddressSummaryCard";
 import { IconRow } from "@/features/booking/components/IconRow";
 import { PaymentMethodSheet } from "@/features/booking/components/PaymentMethodSheet";
@@ -55,6 +58,10 @@ const PriceRow = ({
 );
 
 export default function BookingConfirmScreen() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const insets = useSafeAreaInsets();
   const {
     service,
@@ -102,8 +109,8 @@ export default function BookingConfirmScreen() {
       <View className="flex-1 justify-center bg-canvas">
         <EmptyState
           icon="alert-circle"
-          title="Không có thông tin đặt lịch"
-          actionLabel="Quay lại"
+          title={t("Không có thông tin đặt lịch")}
+          actionLabel={t("Quay lại")}
           onAction={() => router.back()}
         />
       </View>
@@ -113,7 +120,7 @@ export default function BookingConfirmScreen() {
   return (
     <View className="flex-1 bg-canvas">
       <View className="bg-surface" style={{ paddingTop: insets.top }}>
-        <ScreenHeader title="Xác nhận và thanh toán" />
+        <ScreenHeader title={t("Xác nhận và thanh toán")} />
       </View>
 
       <ScrollView
@@ -127,7 +134,7 @@ export default function BookingConfirmScreen() {
           style={[{ borderRadius: RADIUS.card + 4 }, SHADOWS.card]}
         >
           <View className="px-5 pt-5 pb-4">
-            <Heading>Thời gian làm việc</Heading>
+            <Heading>{t("Thời gian làm việc")}</Heading>
             {scheduleRows.map((row, i) => (
               <IconRow
                 key={i}
@@ -142,7 +149,7 @@ export default function BookingConfirmScreen() {
           <Dashed />
 
           <View className="px-5 pt-4 pb-4">
-            <Heading>Chi tiết công việc</Heading>
+            <Heading>{t("Chi tiết công việc")}</Heading>
             <ServiceOptionsSummary
               fields={summaryFields}
               values={values}
@@ -153,37 +160,33 @@ export default function BookingConfirmScreen() {
           <Dashed />
 
           <View className="px-5 pt-4 pb-5">
-            <Heading>Chi tiết thanh toán</Heading>
+            <Heading>{t("Chi tiết thanh toán")}</Heading>
 
             <PriceRow
-              label={`Giá dịch vụ${
-                recurringPrice ? ` (${recurringPrice.sessionsCount} buổi)` : ""
-              }`}
+              label={t("Giá dịch vụ{{value0}}", { value0: recurringPrice ? t(" ({{value0}} buổi)", { value0: recurringPrice.sessionsCount }) : "" })}
               value={grossPrice != null ? formatVnd(grossPrice) : "—"}
             />
             <PriceRow
-              label={`Giảm giá${
-                recurringPrice && recurringPrice.discountPercent > 0
+              label={t("Giảm giá{{value0}}", { value0: recurringPrice && recurringPrice.discountPercent > 0
                   ? ` (${recurringPrice.discountPercent}%)`
-                  : ""
-              }`}
+                  : "" })}
               value={
-                discountAmount > 0 ? `-${formatVnd(discountAmount)}` : "0đ"
+                discountAmount > 0 ? `-${formatVnd(discountAmount)}` : t("0đ")
               }
               accent={discountAmount > 0}
             />
 
             <View className="flex-row items-center justify-between border-t border-line pt-3 mt-1 mb-4">
-              <Text className="font-bold text-ink-soft">Tổng thanh toán</Text>
+              <Text className="font-bold text-ink-soft">{t("Tổng thanh toán")}</Text>
               <Text className="font-extrabold text-xl text-primary">
                 {totalAmount != null ? formatVnd(totalAmount) : "—"}
               </Text>
             </View>
 
             {selectedVoucher && voucherValidation ? (
-              <View className="rounded-2xl bg-primary px-4 py-3.5">
+              <View className="rounded-2xl bg-primary-fill px-4 py-3.5">
                 <View className="flex-row items-center">
-                  <View className="w-10 h-10 rounded-xl bg-white/20 items-center justify-center mr-3">
+                  <View className="w-10 h-10 rounded-xl bg-surface/20 items-center justify-center mr-3">
                     <Feather name="tag" size={18} color={COLORS.white} />
                   </View>
                   <View className="flex-1">
@@ -197,7 +200,7 @@ export default function BookingConfirmScreen() {
                       className="text-white/80 text-xs mt-0.5"
                       numberOfLines={1}
                     >
-                      {selectedVoucher.voucher.name} · Giảm{" "}
+                      {selectedVoucher.voucher.name}  {t("· Giảm")}{" "}
                       {formatVnd(voucherDiscount)}
                     </Text>
                   </View>
@@ -208,17 +211,15 @@ export default function BookingConfirmScreen() {
                     onPress={() => setVoucherModalVisible(true)}
                   >
                     <Text className="text-white font-bold text-xs">
-                      Đổi voucher
-                    </Text>
+                      {t("Đổi voucher")}</Text>
                   </TouchableOpacity>
-                  <View className="w-px bg-white/20" />
+                  <View className="w-px bg-surface/20" />
                   <TouchableOpacity
                     className="flex-1 items-center py-1"
                     onPress={clearSelectedVoucher}
                   >
                     <Text className="text-white font-bold text-xs">
-                      Bỏ voucher
-                    </Text>
+                      {t("Bỏ voucher")}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -235,15 +236,14 @@ export default function BookingConfirmScreen() {
                 </View>
                 <View className="flex-1">
                   <Text className="font-bold text-[14px] text-primary-dark">
-                    Thêm voucher
-                  </Text>
+                    {t("Thêm voucher")}</Text>
                   <Text className="text-ink-muted text-[11px] mt-0.5">
                     {estimatedPrice == null
-                      ? "Khả dụng sau khi dịch vụ có giá"
-                      : "Chọn mã giảm giá của bạn"}
+                      ? t("Khả dụng sau khi dịch vụ có giá")
+                      : t("Chọn mã giảm giá của bạn")}
                   </Text>
                 </View>
-                <View className="w-7 h-7 rounded-full bg-primary items-center justify-center">
+                <View className="w-7 h-7 rounded-full bg-primary-fill items-center justify-center">
                   <Feather name="plus" size={15} color={COLORS.white} />
                 </View>
               </TouchableOpacity>
@@ -254,24 +254,23 @@ export default function BookingConfirmScreen() {
         {/* Địa chỉ */}
         <View className="mt-6">
           <Text className="font-bold text-base text-ink mb-2">
-            {isMovingService ? "Địa chỉ chuyển đi" : "Địa chỉ"}
+            {isMovingService ? t("Địa chỉ chuyển đi") : t("Địa chỉ")}
           </Text>
           {pickupAddress ? (
             <AddressSummaryCard address={pickupAddress} />
           ) : (
-            <Text className="text-danger">Chưa chọn địa chỉ</Text>
+            <Text className="text-danger">{t("Chưa chọn địa chỉ")}</Text>
           )}
         </View>
 
         {isMovingService && (
           <View className="mt-6">
             <Text className="font-bold text-base text-ink mb-2">
-              Địa chỉ chuyển đến
-            </Text>
+              {t("Địa chỉ chuyển đến")}</Text>
             {deliveryAddress ? (
               <AddressSummaryCard address={deliveryAddress} />
             ) : (
-              <Text className="text-danger">Chưa chọn địa chỉ</Text>
+              <Text className="text-danger">{t("Chưa chọn địa chỉ")}</Text>
             )}
           </View>
         )}
@@ -279,8 +278,7 @@ export default function BookingConfirmScreen() {
         {/* Nhân viên yêu thích */}
         <View className="mt-6">
           <Text className="font-bold text-base text-ink mb-2">
-            Nhân viên yêu thích
-          </Text>
+            {t("Nhân viên yêu thích")}</Text>
 
           {favoritesLoading ? (
             <View className="py-4 items-center">
@@ -306,12 +304,11 @@ export default function BookingConfirmScreen() {
                   >
                     {selectedWorker
                       ? workerName(selectedWorker)
-                      : "Chọn nhân viên"}
+                      : t("Chọn nhân viên")}
                   </Text>
                   {selectedWorker && (
                     <Text className="text-ink-muted text-xs mt-0.5">
-                      Gửi yêu cầu riêng cho nhân viên này
-                    </Text>
+                      {t("Gửi yêu cầu riêng cho nhân viên này")}</Text>
                   )}
                 </View>
                 {selectedWorker && (
@@ -349,12 +346,9 @@ export default function BookingConfirmScreen() {
               </View>
               <View className="flex-1">
                 <Text className="text-[14px] font-semibold text-ink">
-                  Chưa có nhân viên yêu thích phù hợp
-                </Text>
+                  {t("Chưa có nhân viên yêu thích phù hợp")}</Text>
                 <Text className="text-ink-muted text-xs mt-0.5">
-                  Sau khi hoàn thành đơn, bạn có thể thêm nhân viên vào danh
-                  sách yêu thích để gửi yêu cầu riêng cho lần đặt sau.
-                </Text>
+                  {t("Sau khi hoàn thành đơn, bạn có thể thêm nhân viên vào danh sách yêu thích để gửi yêu cầu riêng cho lần đặt sau.")}</Text>
               </View>
             </View>
           )}
@@ -363,8 +357,7 @@ export default function BookingConfirmScreen() {
         {/* Phương thức thanh toán */}
         <View className="mt-6">
           <Text className="font-bold text-base text-ink mb-2">
-            Phương thức thanh toán
-          </Text>
+            {t("Phương thức thanh toán")}</Text>
           <TouchableOpacity
             onPress={() => setPaymentModalVisible(true)}
             activeOpacity={0.8}
@@ -388,15 +381,13 @@ export default function BookingConfirmScreen() {
                 </Text>
               )}
             </View>
-            <Text className="text-xs font-semibold text-primary mr-1">Đổi</Text>
+            <Text className="text-xs font-semibold text-primary mr-1">{t("Đổi")}</Text>
             <Feather name="chevron-right" size={18} color={COLORS.inkMuted} />
           </TouchableOpacity>
 
           {prepaidOnly && (
             <Text className="text-ink-muted text-xs mt-2">
-              Gói định kỳ cần thanh toán trước. Hủy buổi nào sẽ được hoàn tiền
-              buổi đó vào ví.
-            </Text>
+              {t("Gói định kỳ cần thanh toán trước. Hủy buổi nào sẽ được hoàn tiền buổi đó vào ví.")}</Text>
           )}
         </View>
       </ScrollView>
@@ -407,20 +398,20 @@ export default function BookingConfirmScreen() {
         style={{ paddingBottom: Math.max(insets.bottom, 12) }}
       >
         <View className="flex-row items-center justify-between mb-3">
-          <Text className="text-ink-soft text-sm">Tổng tiền</Text>
+          <Text className="text-ink-soft text-sm">{t("Tổng tiền")}</Text>
           <Text className="text-primary font-extrabold text-xl">
-            {totalAmount != null ? formatVnd(totalAmount) : "Chờ báo giá"}
+            {totalAmount != null ? formatVnd(totalAmount) : t("Chờ báo giá")}
           </Text>
         </View>
         <TouchableOpacity
-          className="bg-primary rounded-2xl h-14 items-center justify-center"
+          className="bg-primary-fill rounded-2xl h-14 items-center justify-center"
           style={[SHADOWS.float, { opacity: isLoading ? 0.6 : 1 }]}
           disabled={isLoading}
           activeOpacity={0.85}
           onPress={confirm}
         >
           <Text className="text-white font-bold text-base">
-            {isLoading ? "Đang đăng việc..." : "Đăng việc"}
+            {isLoading ? t("Đang đăng việc...") : t("Đăng việc")}
           </Text>
         </TouchableOpacity>
       </View>

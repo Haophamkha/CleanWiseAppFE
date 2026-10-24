@@ -1,9 +1,16 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Avatar } from "@/components/ui";
-import { COLORS } from "@/constants/theme";
+
 import { useEffect, useRef } from "react";
 import { Animated, Text, View } from "react-native";
 
 export function TypingIndicator({ avatar }: { avatar?: string | null }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const dots = useRef([
     new Animated.Value(0),
     new Animated.Value(0),
@@ -39,7 +46,7 @@ export function TypingIndicator({ avatar }: { avatar?: string | null }) {
         <Avatar uri={avatar} size={32} />
       </View>
       <View className="flex-row items-center py-2">
-        <Text className="text-xs mr-2 text-ink-soft">Đang soạn tin</Text>
+        <Text className="text-xs mr-2 text-ink-soft">{t("Đang soạn tin")}</Text>
         {dots.map((dot, index) => (
           <Animated.View
             key={index}

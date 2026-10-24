@@ -13,9 +13,13 @@ import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
+import { AppThemeProvider } from "@/features/theme/ThemeProvider";
+import { AppLanguageProvider } from "@/features/language/LanguageProvider";
+import * as SplashScreen from "expo-splash-screen";
 import "../global.css";
 
 registerAuthDispatch(store.dispatch);
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function AuthInit() {
   const user = useAppSelector((s) => s.auth.user);
@@ -42,16 +46,18 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <Provider store={store}>
-        <ConfirmProvider>
-          <SuccessSheetProvider>
-            <AuthInit />
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(tabs)" />
-            </Stack>
-            <AppToast />
-          </SuccessSheetProvider>
-        </ConfirmProvider>
+        <AppLanguageProvider><AppThemeProvider>
+          <ConfirmProvider>
+            <SuccessSheetProvider>
+              <AuthInit />
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="(tabs)" />
+              </Stack>
+              <AppToast />
+            </SuccessSheetProvider>
+          </ConfirmProvider>
+        </AppThemeProvider></AppLanguageProvider>
       </Provider>
     </SafeAreaProvider>
   );

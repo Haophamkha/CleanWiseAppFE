@@ -1,4 +1,7 @@
-import { COLORS, RADIUS, SHADOWS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { RADIUS, SHADOWS } from "@/constants/theme";
 import {
   useScheduleDetail,
   type ScheduleImage,
@@ -24,58 +27,24 @@ type IconName = keyof typeof Feather.glyphMap;
 const HERO_OVERLAP = 28;
 const THUMB = 92;
 
-const STATUS_CONFIG: Record<
-  string,
-  { label: string; bg: string; text: string; icon: IconName }
-> = {
-  PENDING: {
-    label: "Chờ thực hiện",
-    bg: COLORS.accentLight,
-    text: COLORS.accentDark,
-    icon: "clock",
-  },
-  IN_PROGRESS: {
-    label: "Đang thực hiện",
-    bg: COLORS.infoLight,
-    text: COLORS.infoDark,
-    icon: "loader",
-  },
-  COMPLETED: {
-    label: "Đã hoàn thành",
-    bg: COLORS.primaryLight,
-    text: COLORS.primaryDark,
-    icon: "check-circle",
-  },
-  CANCELLED: {
-    label: "Đã hủy",
-    bg: COLORS.dangerLight,
-    text: COLORS.danger,
-    icon: "x-circle",
-  },
-  MISSED: {
-    label: "Không có nhân viên nhận",
-    bg: COLORS.canvas,
-    text: COLORS.inkSoft,
-    icon: "alert-triangle",
-  },
-};
-
 // Thứ tự cố định 3 nhóm ảnh minh chứng — luôn hiện đủ, kể cả khi chưa có ảnh
-const IMAGE_GROUPS: {
+function getLocalizedImageGroups(): {
   type: string;
   label: string;
   icon: IconName;
   danger?: boolean;
-}[] = [
-  { type: "BEFORE", label: "Trước khi làm", icon: "sunrise" },
-  { type: "AFTER", label: "Sau khi làm", icon: "sunset" },
-  {
-    type: "ISSUE",
-    label: "Báo cáo sự cố",
-    icon: "alert-triangle",
-    danger: true,
-  },
-];
+}[] {
+  return [
+    { type: "BEFORE", label: t("Trước khi làm"), icon: "sunrise" },
+    { type: "AFTER", label: t("Sau khi làm"), icon: "sunset" },
+    {
+      type: "ISSUE",
+      label: t("Báo cáo sự cố"),
+      icon: "alert-triangle",
+      danger: true,
+    },
+  ];
+}
 
 /* ───────────────────────── Thành phần nhỏ ───────────────────────── */
 
@@ -88,6 +57,8 @@ function Card({
   icon?: IconName;
   children: ReactNode;
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       style={[
@@ -148,6 +119,10 @@ function TimelineStep({
   date?: string;
   last?: boolean;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const done = !!time;
   return (
     <View style={{ flexDirection: "row" }}>
@@ -159,7 +134,7 @@ function TimelineStep({
             borderRadius: 17,
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: done ? COLORS.primary : COLORS.canvas,
+            backgroundColor: done ? COLORS.primaryFill : COLORS.canvas,
             borderWidth: done ? 0 : 1.5,
             borderStyle: "dashed",
             borderColor: COLORS.line,
@@ -213,7 +188,7 @@ function TimelineStep({
               color: done ? COLORS.ink : COLORS.inkMuted,
             }}
           >
-            {time ?? "Chưa cập nhật"}
+            {time ?? t("Chưa cập nhật")}
           </Text>
           {!!date && (
             <Text
@@ -241,6 +216,10 @@ function ImageGroup({
   danger?: boolean;
   onOpen: (uri: string) => void;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const tint = danger ? COLORS.dangerLight : COLORS.primaryLight;
   const tone = danger ? COLORS.danger : COLORS.primaryDark;
 
@@ -325,8 +304,7 @@ function ImageGroup({
           <Text
             style={{ marginLeft: 6, fontSize: 12.5, color: COLORS.inkMuted }}
           >
-            Chưa có ảnh
-          </Text>
+            {t("Chưa có ảnh")}</Text>
         </View>
       )}
     </View>
@@ -336,6 +314,46 @@ function ImageGroup({
 /* ───────────────────────── Màn hình ───────────────────────── */
 
 export function ScheduleDetail() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
+  const STATUS_CONFIG: Record<
+  string,
+  { label: string; bg: string; text: string; icon: IconName }
+> = {
+  PENDING: {
+    label: t("Chờ thực hiện"),
+    bg: COLORS.accentLight,
+    text: COLORS.accentDark,
+    icon: "clock",
+  },
+  IN_PROGRESS: {
+    label: t("Đang thực hiện"),
+    bg: COLORS.infoLight,
+    text: COLORS.infoDark,
+    icon: "loader",
+  },
+  COMPLETED: {
+    label: t("Đã hoàn thành"),
+    bg: COLORS.primaryLight,
+    text: COLORS.primaryDark,
+    icon: "check-circle",
+  },
+  CANCELLED: {
+    label: t("Đã hủy"),
+    bg: COLORS.dangerLight,
+    text: COLORS.danger,
+    icon: "x-circle",
+  },
+  MISSED: {
+    label: t("Không có nhân viên nhận"),
+    bg: COLORS.canvas,
+    text: COLORS.inkSoft,
+    icon: "alert-triangle",
+  },
+};
+
   const s = useScheduleDetail();
   const insets = useSafeAreaInsets();
 
@@ -371,8 +389,7 @@ export function ScheduleDetail() {
             color: COLORS.ink,
           }}
         >
-          Không tải được thông tin buổi làm việc
-        </Text>
+          {t("Không tải được thông tin buổi làm việc")}</Text>
         <TouchableOpacity
           onPress={s.goBack}
           activeOpacity={0.85}
@@ -381,12 +398,11 @@ export function ScheduleDetail() {
             paddingHorizontal: 28,
             paddingVertical: 12,
             borderRadius: 16,
-            backgroundColor: COLORS.primary,
+            backgroundColor: COLORS.primaryFill,
           }}
         >
           <Text style={{ fontWeight: "800", color: COLORS.white }}>
-            Quay lại
-          </Text>
+            {t("Quay lại")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -406,7 +422,7 @@ export function ScheduleDetail() {
       >
         {/* ── Hero ── */}
         <LinearGradient
-          colors={[COLORS.primary, COLORS.primaryDark]}
+          colors={[COLORS.primaryFill, COLORS.primaryFillDark]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
@@ -472,8 +488,7 @@ export function ScheduleDetail() {
                   color: "rgba(255,255,255,0.8)",
                 }}
               >
-                Chi tiết buổi làm việc
-              </Text>
+                {t("Chi tiết buổi làm việc")}</Text>
               <Text
                 style={{
                   marginTop: 2,
@@ -482,7 +497,7 @@ export function ScheduleDetail() {
                   color: COLORS.white,
                 }}
               >
-                Buổi {schedule.sequence_no}
+                {t("Buổi")}{" "}{schedule.sequence_no}
               </Text>
             </View>
 
@@ -523,16 +538,16 @@ export function ScheduleDetail() {
           }}
         >
           {/* Tiến độ: lịch hẹn → bắt đầu → hoàn thành. Luôn hiện đủ, chỗ nào chưa có thì để trống */}
-          <Card title="Tiến độ buổi làm" icon="activity">
+          <Card title={t("Tiến độ buổi làm")} icon="activity">
             <TimelineStep
               icon="calendar"
-              label="Lịch hẹn"
+              label={t("Lịch hẹn")}
               time={s.scheduled?.timeStr ?? null}
               date={scheduledDate}
             />
             <TimelineStep
               icon="play-circle"
-              label="Bắt đầu thực tế"
+              label={t("Bắt đầu thực tế")}
               time={s.actualStart?.timeStr ?? null}
               date={
                 s.actualStart
@@ -542,7 +557,7 @@ export function ScheduleDetail() {
             />
             <TimelineStep
               icon="check-circle"
-              label="Hoàn thành lúc"
+              label={t("Hoàn thành lúc")}
               time={s.actualEnd?.timeStr ?? null}
               date={
                 s.actualEnd
@@ -576,8 +591,7 @@ export function ScheduleDetail() {
                     color: COLORS.accentDark,
                   }}
                 >
-                  GHI CHÚ
-                </Text>
+                  {t("GHI CHÚ")}</Text>
                 <Text
                   style={{
                     marginTop: 4,
@@ -646,8 +660,7 @@ export function ScheduleDetail() {
                     color: COLORS.inkMuted,
                   }}
                 >
-                  NHÂN VIÊN THỰC HIỆN
-                </Text>
+                  {t("NHÂN VIÊN THỰC HIỆN")}</Text>
                 <Text
                   numberOfLines={1}
                   style={{
@@ -679,8 +692,7 @@ export function ScheduleDetail() {
                     color: COLORS.primaryDark,
                   }}
                 >
-                  Hồ sơ
-                </Text>
+                  {t("Hồ sơ")}</Text>
                 <Feather
                   name="chevron-right"
                   size={15}
@@ -691,8 +703,8 @@ export function ScheduleDetail() {
           )}
 
           {/* Ảnh minh chứng — luôn hiện đủ 3 nhóm: trước / sau / sự cố */}
-          <Card title="Ảnh minh chứng" icon="camera">
-            {IMAGE_GROUPS.map((g) => (
+          <Card title={t("Ảnh minh chứng")} icon="camera">
+            {getLocalizedImageGroups().map((g) => (
               <ImageGroup
                 key={g.type}
                 icon={g.icon}
@@ -705,7 +717,7 @@ export function ScheduleDetail() {
             {s.otherImages.length > 0 && (
               <ImageGroup
                 icon="folder"
-                label="Khác"
+                label={t("Khác")}
                 imgs={s.otherImages}
                 onOpen={s.setViewerImage}
               />

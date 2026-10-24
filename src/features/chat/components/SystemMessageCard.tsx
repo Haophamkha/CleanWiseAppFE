@@ -1,4 +1,7 @@
-import { COLORS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import type { ChatAssignment } from "@/features/chat/types/chat";
 import {
     formatFullDateTime,
@@ -16,6 +19,10 @@ export function SystemMessageCard({
   message: UiChatMessage;
   assignment?: ChatAssignment;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const sub = assignment
     ? [assignment.service_name, assignment.booking_code]
         .filter(Boolean)
@@ -61,8 +68,7 @@ export function SystemMessageCard({
         <Text
           style={{ fontSize: 15, fontWeight: "700", color: COLORS.primaryDark }}
         >
-          Thông báo lịch làm
-        </Text>
+          {t("Thông báo lịch làm")}</Text>
         {!!sub && (
           <Text
             numberOfLines={1}

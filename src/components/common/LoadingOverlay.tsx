@@ -1,4 +1,6 @@
-import { COLORS } from "@/features/service/components/formFieldShared";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { BlurView } from "expo-blur";
 import LottieView from "lottie-react-native";
 import { Text, View } from "react-native";
@@ -39,7 +41,7 @@ function CleaningMascot({ size = 150 }: { size?: number }) {
 
 export function LoadingOverlay({
   visible = true,
-  text = "Đang tải...",
+  text = t("Đang tải..."),
   fullscreen = false,
   size = 150,
 }: {
@@ -48,6 +50,8 @@ export function LoadingOverlay({
   fullscreen?: boolean;
   size?: number;
 }) {
+  const { COLORS, mode } = useAppTheme();
+
   if (!visible) return null;
 
   // Inline (không fullscreen): giữ đơn giản, không cần blur/card,
@@ -82,7 +86,7 @@ export function LoadingOverlay({
   // Bỏ hẳn border/shadow quanh khối mascot — để mascot + chữ nổi tự nhiên
   // ngay trên lớp blur, không còn viền thẻ bo góc như trước.
   return (
-    <BlurView intensity={35} tint="light" style={fullscreenStyle}>
+    <BlurView intensity={35} tint={mode} style={fullscreenStyle}>
       <View
         style={{
           alignItems: "center",

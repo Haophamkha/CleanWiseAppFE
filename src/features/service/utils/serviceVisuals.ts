@@ -1,29 +1,9 @@
-import { COLORS } from "@/constants/theme";
-
-const TILE = { bg: COLORS.primaryLight, color: COLORS.primary };
-
-export const SERVICE_SECTION_VISUALS: Record<
-  string,
-  { icon: string; bg: string; color: string }
-> = {
-  HOME_CLEANING: { icon: "broom", ...TILE },
-  APPLIANCE_CLEANING: { icon: "air-conditioner", ...TILE },
-  MOVING: { icon: "truck-fast", ...TILE },
-  UPHOLSTERY_CLEANING: { icon: "sofa", ...TILE },
-};
-
-const DEFAULT_VISUAL = { icon: "briefcase-outline", ...TILE };
-
-export function getServiceVisual(sectionCode: string) {
-  return SERVICE_SECTION_VISUALS[sectionCode] ?? DEFAULT_VISUAL;
+import type { ThemeColors } from "@/constants/theme";
+const ICONS: Record<string, string> = { HOME_CLEANING: "broom", APPLIANCE_CLEANING: "air-conditioner", MOVING: "truck-fast", UPHOLSTERY_CLEANING: "sofa" };
+export function getServiceVisual(sectionCode: string, COLORS: ThemeColors) {
+  return { icon: ICONS[sectionCode] ?? "briefcase-outline", bg: COLORS.primaryLight, color: COLORS.primary };
 }
-
-// Icon riêng cho vài mã dịch vụ cụ thể
-const CODE_ICON_OVERRIDES: Record<string, string> = {
-  HOME_CLEANING_MONTHLY: "calendar-check",
-};
-
-export function getServiceGridVisual(code: string, sectionCode: string) {
-  const base = getServiceVisual(sectionCode);
-  return { ...base, icon: CODE_ICON_OVERRIDES[code] ?? base.icon };
+export function getServiceGridVisual(code: string, sectionCode: string, COLORS: ThemeColors) {
+  const base = getServiceVisual(sectionCode, COLORS);
+  return { ...base, icon: code === "HOME_CLEANING_MONTHLY" ? "calendar-check" : base.icon };
 }

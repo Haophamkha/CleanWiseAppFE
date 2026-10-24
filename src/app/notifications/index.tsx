@@ -1,7 +1,10 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { COLORS, SHADOWS } from "@/constants/theme";
+import { SHADOWS } from "@/constants/theme";
 import { ClearNotificationsButton } from "@/features/notification/components/ClearNotificationsButton";
 import NotificationFilterTabs from "@/features/notification/components/NotificationFilterTabs";
 import NotificationItem from "@/features/notification/components/NotificationItem";
@@ -19,6 +22,10 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function NotificationsScreen() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const insets = useSafeAreaInsets();
   const {
     filter,
@@ -27,6 +34,7 @@ export default function NotificationsScreen() {
     unreadCount,
     isLoading,
     isFetching,
+    isError,
     isMarkingAll,
     changeFilter,
     loadMore,
@@ -44,7 +52,7 @@ export default function NotificationsScreen() {
     <View className="flex-1 bg-canvas">
       <View className="bg-surface" style={{ paddingTop: insets.top }}>
         <ScreenHeader
-          title="Thông báo"
+          title={t("Thông báo")}
           right={
             <View className="flex-row items-center">
               <TouchableOpacity
@@ -53,7 +61,7 @@ export default function NotificationsScreen() {
                 activeOpacity={0.8}
                 className={`flex-row items-center justify-center h-10 px-3 rounded-full border ${
                   canMarkAll
-                    ? "bg-primary border-primary"
+                    ? "bg-primary-fill border-primary"
                     : "bg-canvas border-line"
                 }`}
                 style={canMarkAll ? SHADOWS.float : undefined}
@@ -72,8 +80,7 @@ export default function NotificationsScreen() {
                     canMarkAll ? "text-white" : "text-ink-muted"
                   }`}
                 >
-                  Đọc hết
-                </Text>
+                  {t("Đọc hết")}</Text>
               </TouchableOpacity>
 
               <View style={{ marginLeft: 8 }}>
@@ -92,7 +99,7 @@ export default function NotificationsScreen() {
 
       {unreadCount > 0 && (
         <View className="flex-row items-center px-5 pb-2">
-          <Badge label={`${unreadCount} chưa đọc`} tone="primary" />
+          <Badge label={t("{{value0}} chưa đọc", { value0: unreadCount })} tone="primary" />
         </View>
       )}
 
@@ -111,7 +118,7 @@ export default function NotificationsScreen() {
             refreshing={false}
             onRefresh={refresh}
             tintColor={COLORS.primary}
-            colors={[COLORS.primary]}
+            colors={[COLORS.primaryFill]}
           />
         }
         onEndReachedThreshold={0.4}
@@ -122,14 +129,30 @@ export default function NotificationsScreen() {
         ListFooterComponent={
           isFetching && page > 1 ? (
             <ActivityIndicator className="my-4" color={COLORS.primary} />
+          ) : isError && items.length > 0 ? (
+            <EmptyState
+              icon="wifi-off"
+              title={t("Không thể tải thông báo")}
+              actionLabel={t("Thử lại")}
+              onAction={refresh}
+            />
           ) : null
         }
         ListEmptyComponent={
           isLoading ? (
             <ActivityIndicator className="mt-24" color={COLORS.primary} />
+          ) : isError ? (
+            <View className="mt-16">
+              <EmptyState
+                icon="wifi-off"
+                title={t("Không thể tải thông báo")}
+                actionLabel={t("Thử lại")}
+                onAction={refresh}
+              />
+            </View>
           ) : (
             <View className="mt-16">
-              <EmptyState icon="bell-off" title="Không có thông báo nào" />
+              <EmptyState icon="bell-off" title={t("Không có thông báo nào")} />
             </View>
           )
         }

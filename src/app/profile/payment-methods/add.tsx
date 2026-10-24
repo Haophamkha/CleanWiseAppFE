@@ -1,3 +1,6 @@
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import {
     useCreateBankPaymentMethodMutation,
     useGetBankCatalogQuery,
@@ -47,10 +50,14 @@ const getFirstError = (error: any) => {
     const first = Object.values(errors).flat().find(Boolean);
     if (typeof first === "string") return first;
   }
-  return error?.data?.message || "Không thể lưu tài khoản. Vui lòng thử lại.";
+  return error?.data?.message || t("Không thể lưu tài khoản. Vui lòng thử lại.");
 };
 
 export default function AddCustomerPaymentMethodScreen() {
+  const { t } = useTranslation();
+
+  const { COLORS, mode: themeMode } = useAppTheme();
+
   const [step, setStep] = useState<Step>("options");
   const [selectedBank, setSelectedBank] = useState<BankCatalogItem | null>(
     null,
@@ -88,15 +95,15 @@ export default function AddCustomerPaymentMethodScreen() {
       options.length
         ? options
         : [
-            { code: "MOMO", name: "Ví MoMo", status: "COMING_SOON" },
+            { code: "MOMO", name: t("Ví MoMo"), status: "COMING_SOON" },
             { code: "VNPAY", name: "VNPAY", status: "COMING_SOON" },
             {
               code: "BANK_ACCOUNT",
-              name: "Tài khoản ngân hàng",
+              name: t("Tài khoản ngân hàng"),
               status: "AVAILABLE",
             },
           ],
-    [options],
+    [options, t],
   );
 
   const handleBack = () => {
@@ -115,25 +122,25 @@ export default function AddCustomerPaymentMethodScreen() {
       return;
     }
     Alert.alert(
-      "Sắp hỗ trợ",
-      `CleanWise đang hoàn thiện tính năng liên kết ${option.name}.`,
+      t("Sắp hỗ trợ"),
+      t("CleanWise đang hoàn thiện tính năng liên kết {{value0}}.", { value0: option.name }),
     );
   };
 
   const handleSubmit = async () => {
     const normalizedAccount = accountNumber.replace(/\s/g, "");
-    if (!selectedBank) return setError("Vui lòng chọn ngân hàng.");
+    if (!selectedBank) return setError(t("Vui lòng chọn ngân hàng."));
     if (!/^\d{6,19}$/.test(normalizedAccount)) {
-      return setError("Số tài khoản phải gồm từ 6 đến 19 chữ số.");
+      return setError(t("Số tài khoản phải gồm từ 6 đến 19 chữ số."));
     }
     if (accountHolderName.trim().length < 2) {
-      return setError("Vui lòng nhập tên chủ tài khoản.");
+      return setError(t("Vui lòng nhập tên chủ tài khoản."));
     }
     if (!/^\d{9,14}$/.test(identity)) {
-      return setError("CCCD/CMND Sandbox phải gồm từ 9 đến 14 chữ số.");
+      return setError(t("CCCD/CMND Sandbox phải gồm từ 9 đến 14 chữ số."));
     }
     if (!/^0\d{9}$/.test(mobile)) {
-      return setError("Số điện thoại Sandbox phải gồm 10 chữ số và bắt đầu bằng 0.");
+      return setError(t("Số điện thoại Sandbox phải gồm 10 chữ số và bắt đầu bằng 0."));
     }
 
     setError("");
@@ -147,7 +154,7 @@ export default function AddCustomerPaymentMethodScreen() {
         display_name: displayName.trim() || undefined,
         is_default: isDefault,
       }).unwrap();
-      showSuccessToast("Đã thêm tài khoản ngân hàng");
+      showSuccessToast(t("Đã thêm tài khoản ngân hàng"));
       try {
         const result = await startVerification({ id: method.id, identity, mobile }).unwrap();
         if (result.requires_otp) {
@@ -156,10 +163,10 @@ export default function AddCustomerPaymentMethodScreen() {
         }
       } catch (verificationError: any) {
         Alert.alert(
-          "Tài khoản đã được lưu",
+          t("Tài khoản đã được lưu"),
           verificationError?.data?.message ??
-            "Không thể bắt đầu xác minh. Bạn có thể thử lại trong danh sách tài khoản.",
-          [{ text: "Để sau", onPress: () => router.back() }],
+            t("Không thể bắt đầu xác minh. Bạn có thể thử lại trong danh sách tài khoản."),
+          [{ text: t("Để sau"), onPress: () => router.back() }],
         );
         return;
       }
@@ -173,49 +180,47 @@ export default function AddCustomerPaymentMethodScreen() {
     if (!otpMethodId) return;
     try {
       await confirmVerification({ id: otpMethodId, otp }).unwrap();
-      showSuccessToast("Xác minh Sandbox TINGEE thành công");
+      showSuccessToast(t("Xác minh Sandbox TINGEE thành công"));
       setOtpMethodId(null);
       router.back();
     } catch (verificationError: any) {
-      Alert.alert("OTP chưa hợp lệ", verificationError?.data?.message ?? "Vui lòng thử lại.");
+      Alert.alert(t("OTP chưa hợp lệ"), verificationError?.data?.message ?? t("Vui lòng thử lại."));
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-surface">
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View className="flex-row items-center px-5 py-4 border-b border-gray-100">
+        <View className="flex-row items-center px-5 py-4 border-b border-line">
           <TouchableOpacity
             onPress={handleBack}
-            className="w-9 h-9 rounded-full bg-gray-50 items-center justify-center mr-3"
+            className="w-9 h-9 rounded-full bg-canvas items-center justify-center mr-3"
             disabled={isBusy}
           >
             <Feather name="arrow-left" size={21} color="#111827" />
           </TouchableOpacity>
-          <Text className="text-gray-900 text-lg font-bold flex-1">
+          <Text className="text-ink text-lg font-bold flex-1">
             {step === "options"
-              ? "Thêm phương thức"
-              : "Thêm tài khoản ngân hàng"}
+              ? t("Thêm phương thức")
+              : t("Thêm tài khoản ngân hàng")}
           </Text>
         </View>
 
         {step === "options" ? (
           <ScrollView
-            className="flex-1 bg-gray-50 px-5 pt-6"
+            className="flex-1 bg-canvas px-5 pt-6"
             showsVerticalScrollIndicator={false}
           >
             <View className="bg-emerald-700 rounded-3xl p-5 mb-6 overflow-hidden">
-              <View className="absolute w-28 h-28 rounded-full bg-white/10 -right-7 -top-10" />
+              <View className="absolute w-28 h-28 rounded-full bg-surface/10 -right-7 -top-10" />
               <Feather name="credit-card" size={24} color="#FFFFFF" />
               <Text className="text-white font-extrabold text-lg mt-3">
-                Chọn phương thức nhận tiền
-              </Text>
+                {t("Chọn phương thức nhận tiền")}</Text>
               <Text className="text-emerald-100 text-sm leading-5 mt-1">
-                Dùng khi nhận hoàn tiền hoặc rút số dư từ ví CleanWise.
-              </Text>
+                {t("Dùng khi nhận hoàn tiền hoặc rút số dư từ ví CleanWise.")}</Text>
             </View>
 
             {isLoadingOptions ? (
@@ -226,12 +231,12 @@ export default function AddCustomerPaymentMethodScreen() {
                 return (
                   <TouchableOpacity
                     key={option.code}
-                    className="flex-row items-center bg-white rounded-3xl border border-gray-100 p-4 mb-3"
+                    className="flex-row items-center bg-surface rounded-3xl border border-line p-4 mb-3"
                     onPress={() => handleOption(option)}
                     activeOpacity={0.75}
                   >
                     <View
-                      className={`w-12 h-12 rounded-2xl items-center justify-center mr-3 ${available ? "bg-emerald-50" : "bg-gray-100"}`}
+                      className={`w-12 h-12 rounded-2xl items-center justify-center mr-3 ${available ? "bg-emerald-50" : "bg-canvas"}`}
                     >
                       <Feather
                         name={optionIcon(option.code)}
@@ -240,16 +245,16 @@ export default function AddCustomerPaymentMethodScreen() {
                       />
                     </View>
                     <View className="flex-1">
-                      <Text className="text-gray-900 font-bold text-base">
+                      <Text className="text-ink font-bold text-base">
                         {option.name}
                       </Text>
                       <Text
-                        className={`text-sm mt-1 ${available ? "text-emerald-700" : "text-gray-400"}`}
+                        className={`text-sm mt-1 ${available ? "text-emerald-700" : "text-ink-muted"}`}
                       >
-                        {available ? "Có thể thêm ngay" : "Sắp hỗ trợ"}
+                        {available ? t("Có thể thêm ngay") : t("Sắp hỗ trợ")}
                       </Text>
                     </View>
-                    <Feather name="chevron-right" size={20} color="#D1D5DB" />
+                    <Feather name="chevron-right" size={20} color={COLORS.line} />
                   </TouchableOpacity>
                 );
               })
@@ -266,25 +271,24 @@ export default function AddCustomerPaymentMethodScreen() {
               <View className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 mb-6 flex-row">
                 <Feather name="shield" size={19} color={PRIMARY} />
                 <Text className="flex-1 text-emerald-800 text-sm leading-5 ml-3">
-                  Dùng dữ liệu giả lập TINGEE Sandbox và nhập OTP test. Không nhập mật khẩu hoặc OTP ngân hàng thật.
-                </Text>
+                  {t("Dùng dữ liệu giả lập TINGEE Sandbox và nhập OTP test. Không nhập mật khẩu hoặc OTP ngân hàng thật.")}</Text>
               </View>
 
-              <Text className="text-gray-700 font-medium mb-1">Ngân hàng</Text>
+              <Text className="text-ink font-medium mb-1">{t("Ngân hàng")}</Text>
               <TouchableOpacity
-                className="flex-row items-center border border-gray-200 bg-gray-50 rounded-2xl px-4 py-3.5 mb-4"
+                className="flex-row items-center border border-line bg-canvas rounded-2xl px-4 py-3.5 mb-4"
                 onPress={() => setPickerVisible(true)}
                 disabled={isLoadingBanks || isBankError}
               >
-                <Feather name="briefcase" size={18} color="#9CA3AF" />
+                <Feather name="briefcase" size={18} color={COLORS.inkMuted} />
                 <Text
-                  className={`flex-1 ml-3 ${selectedBank ? "text-gray-900" : "text-gray-400"}`}
+                  className={`flex-1 ml-3 ${selectedBank ? "text-ink" : "text-ink-muted"}`}
                 >
                   {isLoadingBanks
-                    ? "Đang tải ngân hàng..."
-                    : selectedBank?.short_name || "Chọn ngân hàng"}
+                    ? t("Đang tải ngân hàng...")
+                    : selectedBank?.short_name || t("Chọn ngân hàng")}
                 </Text>
-                <Feather name="chevron-down" size={18} color="#9CA3AF" />
+                <Feather name="chevron-down" size={18} color={COLORS.inkMuted} />
               </TouchableOpacity>
               {isBankError && (
                 <TouchableOpacity
@@ -292,20 +296,18 @@ export default function AddCustomerPaymentMethodScreen() {
                   className="mb-4"
                 >
                   <Text className="text-red-600 text-sm">
-                    Không tải được ngân hàng. Nhấn để thử lại.
-                  </Text>
+                    {t("Không tải được ngân hàng. Nhấn để thử lại.")}</Text>
                 </TouchableOpacity>
               )}
 
-              <Text className="text-gray-700 font-medium mb-1">
-                Số tài khoản
-              </Text>
-              <View className="flex-row items-center border border-gray-200 bg-gray-50 rounded-2xl px-4 mb-4">
-                <Feather name="hash" size={18} color="#9CA3AF" />
-                <TextInput
-                  className="flex-1 ml-3 py-3.5 text-gray-900"
-                  placeholder="Nhập số tài khoản"
-                  placeholderTextColor="#9CA3AF"
+              <Text className="text-ink font-medium mb-1">
+                {t("Số tài khoản")}</Text>
+              <View className="flex-row items-center border border-line bg-canvas rounded-2xl px-4 mb-4">
+                <Feather name="hash" size={18} color={COLORS.inkMuted} />
+                <TextInput keyboardAppearance={themeMode}
+                  className="flex-1 ml-3 py-3.5 text-ink"
+                  placeholder={t("Nhập số tài khoản")}
+                  placeholderTextColor={COLORS.inkMuted}
                   keyboardType="number-pad"
                   value={accountNumber}
                   onChangeText={(value) => {
@@ -322,20 +324,19 @@ export default function AddCustomerPaymentMethodScreen() {
                   <Feather
                     name={showAccountNumber ? "eye-off" : "eye"}
                     size={18}
-                    color="#9CA3AF"
+                    color={COLORS.inkMuted}
                   />
                 </TouchableOpacity>
               </View>
 
-              <Text className="text-gray-700 font-medium mb-1">
-                Tên chủ tài khoản
-              </Text>
-              <View className="flex-row items-center border border-gray-200 bg-gray-50 rounded-2xl px-4 mb-4">
-                <Feather name="user" size={18} color="#9CA3AF" />
-                <TextInput
-                  className="flex-1 ml-3 py-3.5 text-gray-900"
+              <Text className="text-ink font-medium mb-1">
+                {t("Tên chủ tài khoản")}</Text>
+              <View className="flex-row items-center border border-line bg-canvas rounded-2xl px-4 mb-4">
+                <Feather name="user" size={18} color={COLORS.inkMuted} />
+                <TextInput keyboardAppearance={themeMode}
+                  className="flex-1 ml-3 py-3.5 text-ink"
                   placeholder="NGUYEN VAN A"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={COLORS.inkMuted}
                   value={accountHolderName}
                   onChangeText={(value) => {
                     setAccountHolderName(value);
@@ -345,41 +346,38 @@ export default function AddCustomerPaymentMethodScreen() {
                 />
               </View>
 
-              <Text className="text-gray-700 font-medium mb-1">CCCD/CMND Sandbox</Text>
-              <View className="flex-row items-center border border-gray-200 bg-gray-50 rounded-2xl px-4 mb-4">
-                <Feather name="user-check" size={18} color="#9CA3AF" />
-                <TextInput className="flex-1 ml-3 py-3.5 text-gray-900" placeholder="Mã định danh trong kịch bản test" value={identity} onChangeText={setIdentity} keyboardType="number-pad" maxLength={14} />
+              <Text className="text-ink font-medium mb-1">CCCD/CMND Sandbox</Text>
+              <View className="flex-row items-center border border-line bg-canvas rounded-2xl px-4 mb-4">
+                <Feather name="user-check" size={18} color={COLORS.inkMuted} />
+                <TextInput keyboardAppearance={themeMode} className="flex-1 ml-3 py-3.5 text-ink" placeholder={t("Mã định danh trong kịch bản test")} value={identity} onChangeText={setIdentity} keyboardType="number-pad" maxLength={14} />
               </View>
 
-              <Text className="text-gray-700 font-medium mb-1">Số điện thoại Sandbox</Text>
-              <View className="flex-row items-center border border-gray-200 bg-gray-50 rounded-2xl px-4 mb-4">
-                <Feather name="smartphone" size={18} color="#9CA3AF" />
-                <TextInput className="flex-1 ml-3 py-3.5 text-gray-900" placeholder="Số điện thoại trong kịch bản test" value={mobile} onChangeText={setMobile} keyboardType="phone-pad" maxLength={10} />
+              <Text className="text-ink font-medium mb-1">{t("Số điện thoại Sandbox")}</Text>
+              <View className="flex-row items-center border border-line bg-canvas rounded-2xl px-4 mb-4">
+                <Feather name="smartphone" size={18} color={COLORS.inkMuted} />
+                <TextInput keyboardAppearance={themeMode} className="flex-1 ml-3 py-3.5 text-ink" placeholder={t("Số điện thoại trong kịch bản test")} value={mobile} onChangeText={setMobile} keyboardType="phone-pad" maxLength={10} />
               </View>
 
-              <Text className="text-gray-700 font-medium mb-1">
-                Tên gợi nhớ (không bắt buộc)
-              </Text>
-              <View className="flex-row items-center border border-gray-200 bg-gray-50 rounded-2xl px-4 mb-5">
-                <Feather name="tag" size={18} color="#9CA3AF" />
-                <TextInput
-                  className="flex-1 ml-3 py-3.5 text-gray-900"
-                  placeholder="Ví dụ: Tài khoản cá nhân"
-                  placeholderTextColor="#9CA3AF"
+              <Text className="text-ink font-medium mb-1">
+                {t("Tên gợi nhớ (không bắt buộc)")}</Text>
+              <View className="flex-row items-center border border-line bg-canvas rounded-2xl px-4 mb-5">
+                <Feather name="tag" size={18} color={COLORS.inkMuted} />
+                <TextInput keyboardAppearance={themeMode}
+                  className="flex-1 ml-3 py-3.5 text-ink"
+                  placeholder={t("Ví dụ: Tài khoản cá nhân")}
+                  placeholderTextColor={COLORS.inkMuted}
                   value={displayName}
                   onChangeText={setDisplayName}
                   maxLength={100}
                 />
               </View>
 
-              <View className="flex-row items-center justify-between py-3 border-t border-gray-100">
+              <View className="flex-row items-center justify-between py-3 border-t border-line">
                 <View className="flex-1 pr-4">
-                  <Text className="text-gray-900 font-semibold">
-                    Đặt làm mặc định
-                  </Text>
-                  <Text className="text-gray-500 text-sm mt-1">
-                    Ưu tiên tài khoản này khi nhận tiền.
-                  </Text>
+                  <Text className="text-ink font-semibold">
+                    {t("Đặt làm mặc định")}</Text>
+                  <Text className="text-ink-soft text-sm mt-1">
+                    {t("Ưu tiên tài khoản này khi nhận tiền.")}</Text>
                 </View>
                 <Switch
                   value={isDefault}
@@ -399,7 +397,7 @@ export default function AddCustomerPaymentMethodScreen() {
               )}
             </ScrollView>
 
-            <View className="px-5 pt-3 pb-7 border-t border-gray-100 bg-white">
+            <View className="px-5 pt-3 pb-7 border-t border-line bg-surface">
               <TouchableOpacity
                 className="rounded-2xl py-4 items-center bg-emerald-700"
                 style={{ opacity: isBusy ? 0.6 : 1 }}
@@ -411,8 +409,7 @@ export default function AddCustomerPaymentMethodScreen() {
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <Text className="text-white font-bold text-base">
-                    Lưu và xác minh
-                  </Text>
+                    {t("Lưu và xác minh")}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -431,13 +428,13 @@ export default function AddCustomerPaymentMethodScreen() {
         />
         <Modal visible={otpMethodId !== null} transparent animationType="fade" onRequestClose={() => setOtpMethodId(null)}>
           <View className="flex-1 bg-black/40 justify-center px-6">
-            <View className="bg-white rounded-3xl p-5">
-              <Text className="text-gray-900 text-lg font-bold">Nhập OTP Sandbox</Text>
-              <Text className="text-gray-500 mt-2 leading-5">Nhập mã OTP giả lập của kịch bản TINGEE.</Text>
-              <TextInput className="border border-gray-200 rounded-2xl px-4 py-3 mt-4 text-gray-900" keyboardType="number-pad" value={otp} onChangeText={(value) => setOtp(value.replace(/\D/g, "").slice(0, 8))} placeholder="Mã OTP" maxLength={8} />
+            <View className="bg-surface rounded-3xl p-5">
+              <Text className="text-ink text-lg font-bold">{t("Nhập OTP Sandbox")}</Text>
+              <Text className="text-ink-soft mt-2 leading-5">{t("Nhập mã OTP giả lập của kịch bản TINGEE.")}</Text>
+              <TextInput keyboardAppearance={themeMode} className="border border-line rounded-2xl px-4 py-3 mt-4 text-ink" keyboardType="number-pad" value={otp} onChangeText={(value) => setOtp(value.replace(/\D/g, "").slice(0, 8))} placeholder={t("Mã OTP")} maxLength={8} />
               <View className="flex-row mt-5">
-                <TouchableOpacity className="flex-1 py-3 items-center" onPress={() => setOtpMethodId(null)}><Text className="text-gray-500 font-semibold">Để sau</Text></TouchableOpacity>
-                <TouchableOpacity className="flex-1 py-3 items-center bg-emerald-700 rounded-xl" onPress={handleConfirmOtp} disabled={isConfirming || otp.length < 4}><Text className="text-white font-bold">{isConfirming ? "Đang kiểm tra..." : "Xác nhận"}</Text></TouchableOpacity>
+                <TouchableOpacity className="flex-1 py-3 items-center" onPress={() => setOtpMethodId(null)}><Text className="text-ink-soft font-semibold">{t("Để sau")}</Text></TouchableOpacity>
+                <TouchableOpacity className="flex-1 py-3 items-center bg-emerald-700 rounded-xl" onPress={handleConfirmOtp} disabled={isConfirming || otp.length < 4}><Text className="text-white font-bold">{isConfirming ? t("Đang kiểm tra...") : t("Xác nhận")}</Text></TouchableOpacity>
               </View>
             </View>
           </View>

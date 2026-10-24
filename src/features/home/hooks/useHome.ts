@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import { useGetBookingsQuery } from "@/features/booking/api/bookingApi";
 import { useGetServicesQuery } from "@/features/service/api/serviceApi";
 import { useGetPublicVouchersQuery } from "@/features/voucher/api/voucherApi";
@@ -16,6 +18,8 @@ const normalize = (s: string) =>
     .toLowerCase();
 
 export function useHome() {
+  const { t } = useTranslation();
+
   const user = useAppSelector((s) => s.auth.user);
   const isAuthenticated = !!user;
   const [query, setQuery] = useState("");
@@ -43,21 +47,21 @@ export function useHome() {
       }
       servicesQ.refetch();
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []),
+    }, [t]),
   );
 
   const services = useMemo(() => {
     const list = servicesQ.data ?? [];
     const q = normalize(query.trim());
     return q ? list.filter((s) => normalize(s.name).includes(q)) : list;
-  }, [servicesQ.data, query]);
+  }, [servicesQ.data, query, t]);
 
   const vouchers = useMemo(
     () =>
       (vouchersQ.data ?? [])
         .filter((v) => v.lifecycle_status === "ACTIVE")
         .slice(0, 8),
-    [vouchersQ.data],
+    [vouchersQ.data, t],
   );
 
   const activeBookings = useMemo(
@@ -65,7 +69,7 @@ export function useHome() {
       (bookingsQ.data?.results ?? [])
         .filter((b) => ACTIVE_STATUSES.includes(b.status))
         .slice(0, 2),
-    [bookingsQ.data],
+    [bookingsQ.data, t],
   );
 
   const onRefresh = useCallback(async () => {
@@ -78,7 +82,7 @@ export function useHome() {
     } finally {
       setRefreshing(false);
     }
-  }, [isAuthenticated, servicesQ, vouchersQ, bookingsQ]);
+  }, [isAuthenticated, servicesQ, vouchersQ, bookingsQ, t]);
 
   // Họ và tên đầy đủ (họ trước, tên sau); không có thì rơi về username
   const fullName = [user?.last_name, user?.first_name]
@@ -88,7 +92,7 @@ export function useHome() {
 
   return {
     isAuthenticated,
-    displayName: fullName || user?.username || "bạn",
+    displayName: fullName || user?.username || t("bạn"),
     query,
     setQuery,
     isSearching: query.trim().length > 0,

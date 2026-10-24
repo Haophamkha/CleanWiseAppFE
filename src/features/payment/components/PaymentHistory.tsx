@@ -1,13 +1,9 @@
+import { useTranslation } from "react-i18next";
+import { translate as t, getLocale } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
-import {
-    COLORS,
-    ON_DARK,
-    OVERLAY,
-    RADIUS,
-    SHADOWS,
-    TREND,
-} from "@/constants/theme";
+import { ON_DARK, OVERLAY, RADIUS, SHADOWS } from "@/constants/theme";
 import type {
     PaymentHistoryItem,
     PaymentHistorySource,
@@ -40,43 +36,43 @@ type IconName = React.ComponentProps<typeof Feather>["name"];
 
 type FilterOption<T extends string> = { key: T; label: string; icon: IconName };
 
-const SOURCE_OPTIONS: FilterOption<PaymentHistorySource>[] = [
-  { key: "all", label: "Tất cả loại", icon: "layers" },
-  { key: "wallet", label: "Qua ví", icon: "briefcase" },
-  { key: "online", label: "Online", icon: "credit-card" },
-];
+function getLocalizedSourceOptions(): FilterOption<PaymentHistorySource>[] {
+  return [
+    { key: "all", label: t("Tất cả loại"), icon: "layers" },
+    { key: "wallet", label: t("Qua ví"), icon: "briefcase" },
+    { key: "online", label: "Online", icon: "credit-card" },
+  ];
+}
 
-const STATUS_OPTIONS: FilterOption<PaymentHistoryStatusFilter>[] = [
-  { key: "all", label: "Mọi trạng thái", icon: "list" },
-  { key: "paid", label: "Đã thanh toán", icon: "check-circle" },
-  { key: "pending", label: "Chờ thanh toán", icon: "clock" },
-  { key: "cancelled", label: "Đã hủy", icon: "x-circle" },
-  { key: "refunded", label: "Đã hoàn", icon: "rotate-ccw" },
-];
+function getLocalizedStatusOptions(): FilterOption<PaymentHistoryStatusFilter>[] {
+  return [
+    { key: "all", label: t("Mọi trạng thái"), icon: "list" },
+    { key: "paid", label: t("Đã thanh toán"), icon: "check-circle" },
+    { key: "pending", label: t("Chờ thanh toán"), icon: "clock" },
+    { key: "cancelled", label: t("Đã hủy"), icon: "x-circle" },
+    { key: "refunded", label: t("Đã hoàn"), icon: "rotate-ccw" },
+  ];
+}
 
-const EMPTY_TEXT: Record<PaymentHistorySource, string> = {
-  all: "Chưa có giao dịch thanh toán nào.",
-  wallet: "Chưa có giao dịch nào qua ví.",
-  online: "Chưa có thanh toán online nào.",
-};
+function getLocalizedEmptyText(): Record<PaymentHistorySource, string> {
+  return {
+    all: t("Chưa có giao dịch thanh toán nào."),
+    wallet: t("Chưa có giao dịch nào qua ví."),
+    online: t("Chưa có thanh toán online nào."),
+  };
+}
 
 // Trạng thái khác SUCCESS thì hiện badge; SUCCESS thì không cần.
-const BADGE: Partial<Record<PaymentHistoryStatus, { bg: string; fg: string }>> =
-  {
-    PENDING: { bg: COLORS.accentLight, fg: COLORS.accentDark },
-    FAILED: { bg: COLORS.dangerLight, fg: COLORS.danger },
-    CANCELLED: { bg: COLORS.dangerLight, fg: COLORS.danger },
-    REFUNDED: { bg: COLORS.infoLight, fg: COLORS.infoDark },
-  };
+
 
 const dayLabel = (iso: string) => {
   const d = new Date(iso);
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
-  if (d.toDateString() === today.toDateString()) return "Hôm nay";
-  if (d.toDateString() === yesterday.toDateString()) return "Hôm qua";
-  return d.toLocaleDateString("vi-VN", {
+  if (d.toDateString() === today.toDateString()) return t("Hôm nay");
+  if (d.toDateString() === yesterday.toDateString()) return t("Hôm qua");
+  return d.toLocaleDateString(getLocale(), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -109,6 +105,8 @@ function FilterDropdown<T extends string>({
   options: FilterOption<T>[];
   onChange: (key: T) => void;
 }) {
+  const { COLORS } = useAppTheme();
+
   const insets = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
   const current = options.find((o) => o.key === value) ?? options[0];
@@ -138,7 +136,7 @@ function FilterDropdown<T extends string>({
             borderRadius: 10,
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: active ? COLORS.primary : COLORS.surface,
+            backgroundColor: active ? COLORS.primaryFill : COLORS.surface,
           }}
         >
           <Feather
@@ -248,7 +246,7 @@ function FilterDropdown<T extends string>({
                       alignItems: "center",
                       justifyContent: "center",
                       backgroundColor: selected
-                        ? COLORS.primary
+                        ? COLORS.primaryFill
                         : COLORS.canvas,
                     }}
                   >
@@ -326,6 +324,10 @@ function StatTile({
 }
 
 function SummaryCard({ totals }: { totals: PaymentHistoryTotals }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       style={[
@@ -333,7 +335,7 @@ function SummaryCard({ totals }: { totals: PaymentHistoryTotals }) {
           marginTop: 16,
           padding: 20,
           borderRadius: RADIUS.hero,
-          backgroundColor: COLORS.primary,
+          backgroundColor: COLORS.primaryFill,
           overflow: "hidden",
         },
         SHADOWS.float,
@@ -377,8 +379,7 @@ function SummaryCard({ totals }: { totals: PaymentHistoryTotals }) {
           <Feather name="shield" size={16} color={ON_DARK.text} />
         </View>
         <Text style={{ marginLeft: 10, fontSize: 13, color: ON_DARK.textSoft }}>
-          Tổng đã thanh toán
-        </Text>
+          {t("Tổng đã thanh toán")}</Text>
       </View>
 
       <Text
@@ -395,12 +396,12 @@ function SummaryCard({ totals }: { totals: PaymentHistoryTotals }) {
       <View style={{ flexDirection: "row", gap: 10, marginTop: 18 }}>
         <StatTile
           icon="rotate-ccw"
-          label="Đã hoàn về ví"
+          label={t("Đã hoàn về ví")}
           value={formatVnd(totals.refunded)}
         />
         <StatTile
           icon="hash"
-          label="Số giao dịch"
+          label={t("Số giao dịch")}
           value={String(totals.count)}
         />
       </View>
@@ -417,6 +418,16 @@ function HistoryRow({
   item: PaymentHistoryItem;
   onPress?: () => void;
 }) {
+  const { COLORS, TREND } = useAppTheme();
+
+  const BADGE: Partial<Record<PaymentHistoryStatus, { bg: string; fg: string }>> =
+  {
+    PENDING: { bg: COLORS.accentLight, fg: COLORS.accentDark },
+    FAILED: { bg: COLORS.dangerLight, fg: COLORS.danger },
+    CANCELLED: { bg: COLORS.dangerLight, fg: COLORS.danger },
+    REFUNDED: { bg: COLORS.infoLight, fg: COLORS.infoDark },
+  };
+
   const isRefund = item.kind === "REFUND";
   const dead = item.status === "FAILED" || item.status === "CANCELLED";
   const tone = isRefund ? TREND.up : COLORS.primaryDark;
@@ -528,6 +539,8 @@ function HistoryRow({
 }
 
 function SkeletonList() {
+  const { COLORS } = useAppTheme();
+
   return (
     <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
       <View
@@ -608,9 +621,13 @@ function PaymentHistoryList({
   status: PaymentHistoryStatusFilter;
   onResetFilters: () => void;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const insets = useSafeAreaInsets();
   const h = usePaymentHistory(source, status);
-  const sections = useMemo(() => groupByDay(h.items), [h.items]);
+  const sections = useMemo(() => groupByDay(h.items), [h.items, t]);
   const filtering = source !== "all" || status !== "all";
 
   if (h.isInitialLoading) return <SkeletonList />;
@@ -619,8 +636,8 @@ function PaymentHistoryList({
     return (
       <EmptyState
         icon="alert-circle"
-        title="Không tải được lịch sử thanh toán."
-        actionLabel="Thử lại"
+        title={t("Không tải được lịch sử thanh toán.")}
+        actionLabel={t("Thử lại")}
         onAction={() => h.retry()}
       />
     );
@@ -642,7 +659,7 @@ function PaymentHistoryList({
           refreshing={h.refreshing}
           onRefresh={h.onRefresh}
           tintColor={COLORS.primary}
-          colors={[COLORS.primary]}
+          colors={[COLORS.primaryFill]}
         />
       }
       onEndReached={h.loadMore}
@@ -662,8 +679,7 @@ function PaymentHistoryList({
                 }}
               >
                 <Text style={{ fontSize: 13, color: COLORS.inkSoft }}>
-                  Đang lọc · {h.totals.count} giao dịch
-                </Text>
+                  {t("Đang lọc ·")}{" "}{h.totals.count} {t("giao dịch")}</Text>
                 <TouchableOpacity onPress={onResetFilters} hitSlop={8}>
                   <Text
                     style={{
@@ -672,8 +688,7 @@ function PaymentHistoryList({
                       color: COLORS.primary,
                     }}
                   >
-                    Xóa lọc
-                  </Text>
+                    {t("Xóa lọc")}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -685,10 +700,10 @@ function PaymentHistoryList({
           icon="file-text"
           title={
             filtering
-              ? "Không có giao dịch phù hợp với bộ lọc."
-              : EMPTY_TEXT.all
+              ? t("Không có giao dịch phù hợp với bộ lọc.")
+              : getLocalizedEmptyText().all
           }
-          actionLabel={filtering ? "Xóa bộ lọc" : undefined}
+          actionLabel={filtering ? t("Xóa bộ lọc") : undefined}
           onAction={filtering ? onResetFilters : undefined}
         />
       }
@@ -742,6 +757,8 @@ function PaymentHistoryList({
 /* ============================ màn hình ============================ */
 
 export function PaymentHistory() {
+  const { t } = useTranslation();
+
   const insets = useSafeAreaInsets();
   const [source, setSource] = useState<PaymentHistorySource>("all");
   const [status, setStatus] = useState<PaymentHistoryStatusFilter>("all");
@@ -754,7 +771,7 @@ export function PaymentHistory() {
   return (
     <View className="flex-1 bg-canvas">
       <View style={{ paddingTop: insets.top }} className="bg-surface">
-        <ScreenHeader title="Lịch sử thanh toán" />
+        <ScreenHeader title={t("Lịch sử thanh toán")} />
       </View>
 
       {/* Thanh lọc: 2 dropdown nằm ngang */}
@@ -768,15 +785,15 @@ export function PaymentHistory() {
         }}
       >
         <FilterDropdown
-          caption="Loại"
+          caption={t("Loại")}
           value={source}
-          options={SOURCE_OPTIONS}
+          options={getLocalizedSourceOptions()}
           onChange={setSource}
         />
         <FilterDropdown
-          caption="Trạng thái"
+          caption={t("Trạng thái")}
           value={status}
-          options={STATUS_OPTIONS}
+          options={getLocalizedStatusOptions()}
           onChange={setStatus}
         />
       </View>

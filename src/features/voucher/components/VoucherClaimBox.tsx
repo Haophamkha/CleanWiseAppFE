@@ -1,4 +1,7 @@
-import { COLORS, SHADOWS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { SHADOWS } from "@/constants/theme";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
@@ -22,6 +25,8 @@ type Props = {
 const NOTCH = 18;
 
 function Notch({ side }: { side: "left" | "right" }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       pointerEvents="none"
@@ -47,6 +52,12 @@ export function VoucherClaimBox({
   loading,
   disabled,
 }: Props) {
+  const { t } = useTranslation();
+
+  const { mode: themeMode } = useAppTheme();
+
+  const { COLORS } = useAppTheme();
+
   const [focused, setFocused] = useState(false);
   const empty = code.trim().length === 0;
   const inactive = disabled || empty;
@@ -67,7 +78,7 @@ export function VoucherClaimBox({
     >
       {/* ── Banner ── */}
       <LinearGradient
-        colors={[COLORS.primary, COLORS.primaryDark]}
+        colors={[COLORS.primaryFill, COLORS.primaryFillDark]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{ padding: 18, paddingBottom: 20, overflow: "hidden" }}
@@ -117,8 +128,7 @@ export function VoucherClaimBox({
             <Text
               style={{ fontSize: 17, fontWeight: "800", color: COLORS.white }}
             >
-              Bạn có mã ưu đãi?
-            </Text>
+              {t("Bạn có mã ưu đãi?")}</Text>
             <Text
               style={{
                 marginTop: 3,
@@ -127,8 +137,7 @@ export function VoucherClaimBox({
                 color: "rgba(255,255,255,0.85)",
               }}
             >
-              Nhập mã để thêm voucher vào ví và dùng ngay khi đặt lịch
-            </Text>
+              {t("Nhập mã để thêm voucher vào ví và dùng ngay khi đặt lịch")}</Text>
           </View>
         </View>
       </LinearGradient>
@@ -181,7 +190,7 @@ export function VoucherClaimBox({
               size={16}
               color={focused ? COLORS.primaryDark : COLORS.inkMuted}
             />
-            <TextInput
+            <TextInput keyboardAppearance={themeMode}
               style={{
                 flex: 1,
                 marginLeft: 10,
@@ -192,7 +201,7 @@ export function VoucherClaimBox({
                 color: COLORS.ink,
               }}
               numberOfLines={1}
-              placeholder="Nhập mã voucher"
+              placeholder={t("Nhập mã voucher")}
               placeholderTextColor={COLORS.inkMuted}
               value={code}
               onChangeText={onChange}
@@ -222,7 +231,7 @@ export function VoucherClaimBox({
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 14,
-              backgroundColor: COLORS.primary,
+              backgroundColor: COLORS.primaryFill,
               opacity: inactive ? 0.4 : 1,
             }}
           >
@@ -233,8 +242,7 @@ export function VoucherClaimBox({
                 numberOfLines={1}
                 style={{ fontSize: 14, fontWeight: "800", color: COLORS.white }}
               >
-                Nhận mã
-              </Text>
+                {t("Nhận mã")}</Text>
             )}
           </TouchableOpacity>
         </View>

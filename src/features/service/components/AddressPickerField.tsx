@@ -1,7 +1,10 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import type { Address } from "@/features/address/types/Address";
 import { Feather } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
-import { COLORS } from "./formFieldShared";
+
 
 export function AddressPickerField({
   label,
@@ -14,6 +17,10 @@ export function AddressPickerField({
   value?: Address;
   onPress: () => void;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   return (
     <View className="mb-6">
       <View className="flex-row items-center mb-2">
@@ -51,7 +58,7 @@ export function AddressPickerField({
                   className="font-bold text-[14px]"
                   style={{ color: COLORS.primary }}
                 >
-                  {value.label || "Địa chỉ"}
+                  {value.label || t("Địa chỉ")}
                 </Text>
               </View>
               <Text
@@ -72,8 +79,7 @@ export function AddressPickerField({
               className="text-[13px] font-bold"
               style={{ color: COLORS.primary }}
             >
-              Đổi
-            </Text>
+              {t("Đổi")}</Text>
           </View>
         ) : (
           <View className="flex-row items-center justify-between">
@@ -85,8 +91,7 @@ export function AddressPickerField({
                 style={{ marginRight: 8 }}
               />
               <Text className="text-[15px]" style={{ color: COLORS.textMuted }}>
-                Chọn địa chỉ
-              </Text>
+                {t("Chọn địa chỉ")}</Text>
             </View>
             <Feather name="chevron-right" size={18} color={COLORS.textMuted} />
           </View>

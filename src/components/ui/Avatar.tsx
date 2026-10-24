@@ -1,4 +1,5 @@
-import { COLORS } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { Feather } from "@expo/vector-icons";
 import { Image, View } from "react-native";
 
@@ -9,6 +10,8 @@ export function Avatar({
   uri?: string | null;
   size?: number;
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       className="bg-canvas border border-line items-center justify-center overflow-hidden"

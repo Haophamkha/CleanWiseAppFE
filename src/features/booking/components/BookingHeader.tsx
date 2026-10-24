@@ -1,4 +1,7 @@
-import { COLORS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -12,8 +15,12 @@ export function BookingHeader({
   serviceName: string;
   status: string;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const insets = useSafeAreaInsets();
-  const statusMeta = getBookingStatusMeta(status);
+  const statusMeta = getBookingStatusMeta(status, COLORS);
 
   return (
     <View
@@ -35,8 +42,7 @@ export function BookingHeader({
             className="text-[11px] font-semibold uppercase text-ink-muted"
             style={{ letterSpacing: 1 }}
           >
-            Chi tiết đơn hàng
-          </Text>
+            {t("Chi tiết đơn hàng")}</Text>
           <Text className="text-lg font-bold text-ink mt-0.5" numberOfLines={1}>
             {serviceName}
           </Text>

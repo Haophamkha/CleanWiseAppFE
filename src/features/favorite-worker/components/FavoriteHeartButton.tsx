@@ -1,5 +1,8 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 // src/features/favorite-worker/components/FavoriteHeartButton.tsx
-import { COLORS } from "@/constants/theme";
+
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
 import { ActivityIndicator, Animated, TouchableOpacity } from "react-native";
@@ -17,6 +20,10 @@ export function FavoriteHeartButton({
   onPress,
   size = 44,
 }: Props) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const scale = useRef(new Animated.Value(1)).current;
   const first = useRef(true);
 
@@ -48,7 +55,7 @@ export function FavoriteHeartButton({
         disabled={loading}
         activeOpacity={0.85}
         accessibilityRole="button"
-        accessibilityLabel={liked ? "Bỏ yêu thích" : "Thêm vào yêu thích"}
+        accessibilityLabel={liked ? t("Bỏ yêu thích") : t("Thêm vào yêu thích")}
         style={{
           width: size,
           height: size,
@@ -57,7 +64,7 @@ export function FavoriteHeartButton({
           borderRadius: size * 0.33,
           borderWidth: liked ? 0 : 1.5,
           borderColor: COLORS.line,
-          backgroundColor: liked ? COLORS.danger : COLORS.surface,
+          backgroundColor: liked ? COLORS.dangerFill : COLORS.surface,
         }}
       >
         {loading ? (

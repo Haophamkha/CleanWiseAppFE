@@ -1,5 +1,8 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { EmptyState } from "@/components/ui";
-import { COLORS } from "@/constants/theme";
+
 import { BannerCarousel } from "@/features/home/components/BannerCarousel";
 import { GuestBanner } from "@/features/home/components/GuestBanner";
 import { HomeHeader } from "@/features/home/components/HomeHeader";
@@ -16,6 +19,10 @@ import {
 } from "react-native";
 
 export default function HomeScreen() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const h = useHome();
 
   return (
@@ -29,7 +36,7 @@ export default function HomeScreen() {
             refreshing={h.refreshing}
             onRefresh={h.onRefresh}
             tintColor={COLORS.primary}
-            colors={[COLORS.primary]}
+            colors={[COLORS.primaryFill]}
           />
         }
       >
@@ -43,7 +50,7 @@ export default function HomeScreen() {
         <View className="px-5 pt-5">
           {!h.isAuthenticated && <GuestBanner />}
 
-          <SectionHeader title="Dịch vụ" />
+          <SectionHeader title={t("Dịch vụ")} />
           {h.servicesLoading ? (
             <View className="items-center py-10">
               <ActivityIndicator color={COLORS.primary} />
@@ -51,8 +58,8 @@ export default function HomeScreen() {
           ) : h.servicesError ? (
             <EmptyState
               icon="wifi-off"
-              title="Không tải được danh sách dịch vụ"
-              actionLabel="Thử lại"
+              title={t("Không tải được danh sách dịch vụ")}
+              actionLabel={t("Thử lại")}
               onAction={h.retryServices}
             />
           ) : h.services.length === 0 ? (
@@ -60,8 +67,8 @@ export default function HomeScreen() {
               icon="search"
               title={
                 h.isSearching
-                  ? "Không tìm thấy dịch vụ phù hợp"
-                  : "Chưa có dịch vụ nào"
+                  ? t("Không tìm thấy dịch vụ phù hợp")
+                  : t("Chưa có dịch vụ nào")
               }
             />
           ) : (
@@ -86,7 +93,7 @@ export default function HomeScreen() {
           <View className="mt-5">
             <View className="px-5">
               <SectionHeader
-                title="Ưu đãi cho bạn"
+                title={t("Ưu đãi cho bạn")}
                 onSeeAll={() => router.push("/vouchers" as any)}
               />
             </View>

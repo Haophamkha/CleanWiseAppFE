@@ -1,22 +1,27 @@
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
-import { COLORS } from "@/constants/theme";
+
 import { Feather } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
-const QUICK_REASONS = [
-  "Tôi đổi lịch/kế hoạch",
-  "Đặt nhầm dịch vụ",
-  "Giá không phù hợp",
-  "Tìm được lựa chọn khác",
-];
+function getLocalizedQuickReasons() {
+  return [
+    t("Tôi đổi lịch/kế hoạch"),
+    t("Đặt nhầm dịch vụ"),
+    t("Giá không phù hợp"),
+    t("Tìm được lựa chọn khác"),
+  ];
+}
 
 export function CancelBookingModal({
   visible,
   loading,
   isPaidOnline,
-  title = "Hủy đơn hàng",
+  title = t("Hủy đơn hàng"),
   refundNote,
   onClose,
   onConfirm,
@@ -30,6 +35,12 @@ export function CancelBookingModal({
   onClose: () => void;
   onConfirm: (reason: string) => void;
 }) {
+  const { t } = useTranslation();
+
+  const { mode: themeMode } = useAppTheme();
+
+  const { COLORS } = useAppTheme();
+
   const [reason, setReason] = useState("");
 
   useEffect(() => {
@@ -39,7 +50,7 @@ export function CancelBookingModal({
   const note =
     refundNote ??
     (isPaidOnline
-      ? "Đơn này đã thanh toán. Số tiền sẽ được hoàn ngay vào ví của bạn sau khi hủy."
+      ? t("Đơn này đã thanh toán. Số tiền sẽ được hoàn ngay vào ví của bạn sau khi hủy.")
       : null);
 
   const handleClose = () => {
@@ -63,8 +74,7 @@ export function CancelBookingModal({
           <View className="flex-1">
             <Text className="text-lg font-bold text-ink">{title}</Text>
             <Text className="text-[13px] text-ink-muted mt-0.5">
-              Cho chúng tôi biết lý do để cải thiện dịch vụ.
-            </Text>
+              {t("Cho chúng tôi biết lý do để cải thiện dịch vụ.")}</Text>
           </View>
         </View>
 
@@ -83,7 +93,7 @@ export function CancelBookingModal({
         )}
 
         <View className="flex-row flex-wrap mt-4 mb-3" style={{ gap: 8 }}>
-          {QUICK_REASONS.map((r) => {
+          {getLocalizedQuickReasons().map((r) => {
             const selected = reason === r;
             return (
               <TouchableOpacity
@@ -108,10 +118,10 @@ export function CancelBookingModal({
           })}
         </View>
 
-        <TextInput
+        <TextInput keyboardAppearance={themeMode}
           className="rounded-2xl border border-line bg-canvas px-4 py-3 text-[14px] text-ink mb-5"
           style={{ minHeight: 88, textAlignVertical: "top" }}
-          placeholder="Nhập lý do hủy..."
+          placeholder={t("Nhập lý do hủy...")}
           placeholderTextColor={COLORS.inkMuted}
           multiline
           numberOfLines={3}
@@ -122,14 +132,14 @@ export function CancelBookingModal({
 
         <View className="flex-row" style={{ gap: 10 }}>
           <Button
-            title="Đóng"
+            title={t("Đóng")}
             variant="outline"
             className="flex-1"
             disabled={loading}
             onPress={handleClose}
           />
           <Button
-            title="Xác nhận hủy"
+            title={t("Xác nhận hủy")}
             variant="danger"
             className="flex-1"
             loading={loading}

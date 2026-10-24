@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import type { BookingScheduleDetail } from "@/features/booking/types/Booking";
 import { router } from "expo-router";
 import { useMemo } from "react";
@@ -32,9 +34,11 @@ export function PackageScheduleSection({
   canCancelSchedule?: (s: BookingScheduleDetail) => boolean;
   onCancelSchedule?: (s: BookingScheduleDetail) => void;
 }) {
+  const { t } = useTranslation();
+
   const displaySchedule = useMemo(
     () => pickUpcomingSchedule(schedules),
-    [schedules],
+    [schedules, t],
   );
 
   if (!schedules.length) return null;
@@ -66,7 +70,7 @@ export function PackageScheduleSection({
 
   return (
     <View className="mb-5">
-      <SectionTitle icon="user">Buổi làm việc sắp tới</SectionTitle>
+      <SectionTitle icon="user">{t("Buổi làm việc sắp tới")}</SectionTitle>
 
       {displaySchedule && (
         <ScheduleItemCard

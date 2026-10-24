@@ -1,4 +1,7 @@
-import { COLORS } from "@/constants/theme";
+import { translate as t } from "@/features/language/i18n";
+import { useTranslation } from "react-i18next";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { Feather } from "@expo/vector-icons";
 import type { ComponentProps } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
@@ -39,17 +42,17 @@ function cardIcon(card: ChatbotCard): IconName {
 function cardSubtitle(card: ChatbotCard): string {
   switch (card.type) {
     case "help":
-      return `Nguồn hướng dẫn · Phiên bản ${card.version}`;
+      return t("Nguồn hướng dẫn · Phiên bản {{value0}}", { value0: card.version });
     case "booking":
-      return [card.data?.service_name, card.data?.status_label]
+      return [card.data?.service_name, card.data?.status_label ? t(card.data.status_label) : undefined]
         .filter(Boolean)
         .join(" · ");
     case "schedule":
-      return card.status_label;
+      return t(card.status_label);
     case "address_map":
-      return "Chọn vị trí rồi lưu, tôi sẽ tiếp tục giúp bạn";
+      return t("Chọn vị trí rồi lưu, tôi sẽ tiếp tục giúp bạn");
     default:
-      return "Dịch vụ CleanWise";
+      return t("Dịch vụ CleanWise");
   }
 }
 
@@ -62,15 +65,19 @@ export function ChatbotActionCard({
   onPress: () => void;
   loading: boolean;
 }) {
+  useTranslation();
+  const { COLORS } = useAppTheme();
+
   const icon = cardIcon(card);
   const subtitle = cardSubtitle(card);
+  const title = card.type === "address_map" ? t("Thêm địa chỉ trên bản đồ") : card.title;
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={loading}
       activeOpacity={0.8}
       accessibilityRole="button"
-      accessibilityLabel={`${card.label}: ${card.title}`}
+      accessibilityLabel={`${t(card.label)}: ${title}`}
       className="bg-primary-soft border border-primary-border rounded-2xl p-3 mt-2"
     >
       <View className="flex-row items-center">
@@ -79,7 +86,7 @@ export function ChatbotActionCard({
         </View>
         <View className="flex-1">
           <Text className="text-ink font-bold text-[13px]" numberOfLines={2}>
-            {card.title}
+            {title}
           </Text>
           {!!subtitle && (
             <Text className="text-ink-soft text-xs mt-0.5" numberOfLines={2}>
@@ -90,7 +97,7 @@ export function ChatbotActionCard({
       </View>
       <View className="flex-row items-center justify-end mt-2">
         <Text className="text-primary-dark text-xs font-bold mr-1.5">
-          {card.label}
+          {t(card.label)}
         </Text>
         {loading ? (
           <ActivityIndicator size="small" color={COLORS.primary} />

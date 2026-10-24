@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import { useCreateReviewMutation } from "@/features/review/api/reviewApi";
 import type {
   AssignmentReviewState,
@@ -15,6 +17,8 @@ export function useCreateReview(
   onCreated: (review: Review) => void,
   onClose: () => void,
 ) {
+  const { t } = useTranslation();
+
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [images, setImages] = useState<ReviewPickedImage[]>([]);
@@ -51,14 +55,14 @@ export function useCreateReview(
           type: image.type ?? "image/jpeg",
         };
         if (!["image/jpeg", "image/png", "image/webp"].includes(picked.type))
-          setError("Ảnh chỉ hỗ trợ JPG, PNG hoặc WEBP.");
+          setError(t("Ảnh chỉ hỗ trợ JPG, PNG hoặc WEBP."));
         else {
           setImages((current) => [...current, picked]);
           setError("");
         }
       }
     } catch {
-      if (!closed.current) setError("Không thể chọn ảnh. Vui lòng thử lại.");
+      if (!closed.current) setError(t("Không thể chọn ảnh. Vui lòng thử lại."));
     } finally {
       picking.current = false;
       if (!closed.current) setPicking(false);
@@ -67,11 +71,11 @@ export function useCreateReview(
   const submit = async () => {
     if (saving.current || picking.current) return;
     if (!state.can_review) {
-      setError("Buổi làm này không còn đủ điều kiện đánh giá.");
+      setError(t("Buổi làm này không còn đủ điều kiện đánh giá."));
       return;
     }
     if (rating < 1) {
-      setError("Vui lòng chọn số sao trước khi gửi.");
+      setError(t("Vui lòng chọn số sao trước khi gửi."));
       return;
     }
     saving.current = true;
@@ -92,12 +96,12 @@ export function useCreateReview(
         else data.append("images", image as unknown as Blob);
       }
       const review = await createReview(data).unwrap();
-      showSuccessToast("Đã gửi đánh giá", "Cảm ơn bạn đã chia sẻ trải nghiệm.");
+      showSuccessToast(t("Đã gửi đánh giá"), t("Cảm ơn bạn đã chia sẻ trải nghiệm."));
       if (!closed.current) onCreated(review);
     } catch (err) {
       if (!closed.current)
         setError(
-          getApiErrorMessage(err, "Không thể gửi đánh giá. Vui lòng thử lại."),
+          getApiErrorMessage(err, t("Không thể gửi đánh giá. Vui lòng thử lại.")),
         );
     } finally {
       saving.current = false;

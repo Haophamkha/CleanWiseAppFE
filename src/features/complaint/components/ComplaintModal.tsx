@@ -1,3 +1,6 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import {
   useCreateComplaintMutation,
   useGetComplaintDetailQuery,
@@ -8,7 +11,7 @@ import type {
   ComplaintStage,
   PickedFile,
 } from "@/features/complaint/types/Complaint";
-import { COLORS } from "@/features/service/components/formFieldShared";
+
 import { getApiErrorMessage } from "@/utils/apiError";
 import { formatVnd } from "@/utils/currency";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
@@ -40,17 +43,6 @@ function getComplaintStage(bookingStatus: string): ComplaintStage | null {
   }
 }
 
-const STATUS_BADGE: Record<
-  string,
-  { bg: string; text: string; label: string }
-> = {
-  PENDING: { bg: "#FEF3C7", text: "#92400E", label: "Chờ xử lý" },
-  IN_REVIEW: { bg: "#DBEAFE", text: "#1E40AF", label: "Đang xem xét" },
-  RESOLVED: { bg: "#D1FAE5", text: "#065F46", label: "Đã xử lý" },
-  REJECTED: { bg: "#FEE2E2", text: "#991B1B", label: "Bị từ chối" },
-  CANCELLED: { bg: "#F3F4F6", text: "#6B7280", label: "Đã hủy" },
-};
-
 export function ComplaintModal({
   visible,
   bookingId,
@@ -66,6 +58,23 @@ export function ComplaintModal({
   onClose: () => void;
   onSuccess?: () => void;
 }) {
+  const { t } = useTranslation();
+
+  const { mode: themeMode } = useAppTheme();
+
+  const { COLORS } = useAppTheme();
+  const STATUS_BADGE: Record<
+  string,
+  { bg: string; text: string; label: string }
+> = {
+  PENDING: { bg: COLORS.accentLight, text: COLORS.accentDark, label: t("Chờ xử lý") },
+  IN_REVIEW: { bg: COLORS.infoLight, text: COLORS.infoDark, label: t("Đang xem xét") },
+  RESOLVED: { bg: COLORS.successLight, text: COLORS.success, label: t("Đã xử lý") },
+  REJECTED: { bg: COLORS.dangerLight, text: COLORS.danger, label: t("Bị từ chối") },
+  CANCELLED: { bg: COLORS.surfaceMuted, text: COLORS.inkSoft, label: t("Đã hủy") },
+};
+
+
   const [issueTypeId, setIssueTypeId] = useState<number | null>(null);
   const [content, setContent] = useState("");
   const [images, setImages] = useState<PickedFile[]>([]);
@@ -73,7 +82,7 @@ export function ComplaintModal({
 
   const complaintStage = useMemo(
     () => getComplaintStage(bookingStatus),
-    [bookingStatus],
+    [bookingStatus, t],
   );
 
   // Kiểm tra buổi này đã có khiếu nại chưa
@@ -120,19 +129,19 @@ export function ComplaintModal({
   const handleSubmit = async () => {
     if (!complaintStage) {
       const message =
-        "Trạng thái đơn hàng hiện tại không cho phép gửi khiếu nại.";
+        t("Trạng thái đơn hàng hiện tại không cho phép gửi khiếu nại.");
       setError(message);
-      showErrorToast("Không thể gửi phản hồi", message);
+      showErrorToast(t("Không thể gửi phản hồi"), message);
       return;
     }
 
     if (!issueTypeId) {
-      setError("Vui lòng chọn lý do phản hồi");
+      setError(t("Vui lòng chọn lý do phản hồi"));
       return;
     }
 
     if (!content.trim()) {
-      setError("Vui lòng mô tả chi tiết vấn đề gặp phải");
+      setError(t("Vui lòng mô tả chi tiết vấn đề gặp phải"));
       return;
     }
 
@@ -148,8 +157,8 @@ export function ComplaintModal({
       }).unwrap();
 
       showSuccessToast(
-        "Đã gửi phản hồi",
-        "Chúng tôi sẽ xem xét và phản hồi bạn sớm nhất",
+        t("Đã gửi phản hồi"),
+        t("Chúng tôi sẽ xem xét và phản hồi bạn sớm nhất"),
       );
 
       resetAndClose();
@@ -157,11 +166,11 @@ export function ComplaintModal({
     } catch (err: any) {
       const message = getApiErrorMessage(
         err,
-        "Gửi phản hồi thất bại, vui lòng thử lại",
+        t("Gửi phản hồi thất bại, vui lòng thử lại"),
       );
 
       setError(message);
-      showErrorToast("Không thể gửi phản hồi", message);
+      showErrorToast(t("Không thể gửi phản hồi"), message);
     }
   };
 
@@ -194,8 +203,7 @@ export function ComplaintModal({
           className="text-[13px] font-bold uppercase mb-1"
           style={{ color: COLORS.textMuted }}
         >
-          Lý do
-        </Text>
+          {t("Lý do")}</Text>
 
         <Text
           className="text-[15px] font-medium mb-3"
@@ -208,8 +216,7 @@ export function ComplaintModal({
           className="text-[13px] font-bold uppercase mb-1"
           style={{ color: COLORS.textMuted }}
         >
-          Mô tả
-        </Text>
+          {t("Mô tả")}</Text>
 
         <Text className="text-[14px] mb-3" style={{ color: COLORS.text }}>
           {existingComplaint.content || "—"}
@@ -221,8 +228,7 @@ export function ComplaintModal({
               className="text-[13px] font-bold uppercase mb-2"
               style={{ color: COLORS.textMuted }}
             >
-              Ảnh minh chứng
-            </Text>
+              {t("Ảnh minh chứng")}</Text>
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View className="flex-row mb-3" style={{ gap: 10 }}>
@@ -244,8 +250,7 @@ export function ComplaintModal({
               className="text-[13px] font-bold uppercase mb-1"
               style={{ color: COLORS.textMuted }}
             >
-              Phản hồi từ chúng tôi
-            </Text>
+              {t("Phản hồi từ chúng tôi")}</Text>
 
             <Text className="text-[14px] mb-3" style={{ color: COLORS.text }}>
               {existingComplaint.resolution_note}
@@ -257,21 +262,20 @@ export function ComplaintModal({
           <View
             className="flex-row items-center justify-between rounded-xl px-4 py-3 mb-3"
             style={{
-              backgroundColor: "#F5F3FF",
+              backgroundColor: COLORS.violetLight,
               borderWidth: 1,
-              borderColor: "#DDD6FE",
+              borderColor: COLORS.violetLight,
             }}
           >
             <Text
               className="text-[13px] font-semibold"
-              style={{ color: "#6D28D9" }}
+              style={{ color: COLORS.violet }}
             >
-              Đã hoàn vào ví
-            </Text>
+              {t("Đã hoàn vào ví")}</Text>
 
             <Text
               className="text-[15px] font-extrabold"
-              style={{ color: "#6D28D9" }}
+              style={{ color: COLORS.violet }}
             >
               {formatVnd(Number(existingComplaint.refund_amount))}
             </Text>
@@ -281,14 +285,13 @@ export function ComplaintModal({
         <View
           className="rounded-xl px-4 py-3 mt-2"
           style={{
-            backgroundColor: "#F9FAFB",
+            backgroundColor: COLORS.canvas,
             borderWidth: 1,
-            borderColor: "#E5E7EB",
+            borderColor: COLORS.line,
           }}
         >
           <Text className="text-[13px]" style={{ color: COLORS.textMuted }}>
-            Buổi làm việc này đã được gửi khiếu nại, không thể chỉnh sửa.
-          </Text>
+            {t("Buổi làm việc này đã được gửi khiếu nại, không thể chỉnh sửa.")}</Text>
         </View>
       </View>
     );
@@ -300,9 +303,8 @@ export function ComplaintModal({
         <View className="items-center justify-center py-6">
           <ActivityIndicator color={COLORS.primary} />
 
-          <Text className="text-[13px] text-gray-400 mt-2">
-            Đang tải danh sách lý do...
-          </Text>
+          <Text className="text-[13px] text-ink-muted mt-2">
+            {t("Đang tải danh sách lý do...")}</Text>
         </View>
       );
     }
@@ -312,14 +314,13 @@ export function ComplaintModal({
         <View
           className="rounded-xl px-4 py-3"
           style={{
-            backgroundColor: "#FEF2F2",
+            backgroundColor: COLORS.dangerLight,
             borderWidth: 1,
-            borderColor: "#FECACA",
+            borderColor: COLORS.dangerLight,
           }}
         >
           <Text className="text-[13px]" style={{ color: COLORS.danger }}>
-            Không tải được danh sách lý do phản hồi.
-          </Text>
+            {t("Không tải được danh sách lý do phản hồi.")}</Text>
         </View>
       );
     }
@@ -329,14 +330,13 @@ export function ComplaintModal({
         <View
           className="rounded-xl px-4 py-3"
           style={{
-            backgroundColor: "#F9FAFB",
+            backgroundColor: COLORS.canvas,
             borderWidth: 1,
-            borderColor: "#E5E7EB",
+            borderColor: COLORS.line,
           }}
         >
-          <Text className="text-[13px] text-gray-500">
-            Hiện chưa có lý do phản hồi phù hợp với trạng thái đơn hàng.
-          </Text>
+          <Text className="text-[13px] text-ink-soft">
+            {t("Hiện chưa có lý do phản hồi phù hợp với trạng thái đơn hàng.")}</Text>
         </View>
       );
     }
@@ -347,8 +347,7 @@ export function ComplaintModal({
           className="text-[13px] font-bold uppercase mb-2"
           style={{ color: COLORS.textMuted, letterSpacing: 0.5 }}
         >
-          Lý do
-        </Text>
+          {t("Lý do")}</Text>
 
         {issueTypes.map((item) => {
           const selected = issueTypeId === item.id;
@@ -363,9 +362,9 @@ export function ComplaintModal({
               activeOpacity={0.85}
               className="rounded-2xl px-4 py-3.5 mb-2.5 flex-row items-center"
               style={{
-                backgroundColor: selected ? "#FEF2F2" : "#FFFFFF",
+                backgroundColor: selected ? COLORS.dangerLight : COLORS.surface,
                 borderWidth: selected ? 2 : 1,
-                borderColor: selected ? COLORS.danger : "#E5E7EB",
+                borderColor: selected ? COLORS.danger : COLORS.line,
                 shadowColor: selected ? COLORS.danger : "transparent",
                 shadowOpacity: selected ? 0.15 : 0,
                 shadowRadius: 6,
@@ -377,8 +376,8 @@ export function ComplaintModal({
                 className="w-5 h-5 rounded-full items-center justify-center mr-3"
                 style={{
                   borderWidth: 2,
-                  borderColor: selected ? COLORS.danger : "#D1D5DB",
-                  backgroundColor: selected ? COLORS.danger : "transparent",
+                  borderColor: selected ? COLORS.danger : COLORS.line,
+                  backgroundColor: selected ? COLORS.dangerFill : "transparent",
                 }}
               >
                 {selected && <Feather name="check" size={12} color="#fff" />}
@@ -411,10 +410,9 @@ export function ComplaintModal({
           className="text-[13px] font-bold uppercase mb-2 mt-3"
           style={{ color: COLORS.textMuted, letterSpacing: 0.5 }}
         >
-          Mô tả chi tiết
-        </Text>
+          {t("Mô tả chi tiết")}</Text>
 
-        <TextInput
+        <TextInput keyboardAppearance={themeMode}
           className="rounded-xl px-4 py-3 text-[15px]"
           style={{
             backgroundColor: COLORS.background,
@@ -424,8 +422,8 @@ export function ComplaintModal({
             minHeight: 110,
             textAlignVertical: "top",
           }}
-          placeholder="Mô tả cụ thể vấn đề bạn gặp phải..."
-          placeholderTextColor="#9CA3AF"
+          placeholder={t("Mô tả cụ thể vấn đề bạn gặp phải...")}
+          placeholderTextColor={COLORS.inkMuted}
           multiline
           value={content}
           onChangeText={(value) => {
@@ -435,7 +433,7 @@ export function ComplaintModal({
           maxLength={1000}
         />
 
-        <Text className="text-[11px] text-gray-400 text-right mt-1">
+        <Text className="text-[11px] text-ink-muted text-right mt-1">
           {content.length}/1000
         </Text>
 
@@ -443,8 +441,7 @@ export function ComplaintModal({
           className="text-[13px] font-bold uppercase mb-2 mt-4"
           style={{ color: COLORS.textMuted, letterSpacing: 0.5 }}
         >
-          Ảnh minh chứng (không bắt buộc)
-        </Text>
+          {t("Ảnh minh chứng (không bắt buộc)")}</Text>
 
         <ComplaintAttachmentPicker
           images={images}
@@ -464,7 +461,7 @@ export function ComplaintModal({
           activeOpacity={0.85}
           className="rounded-2xl py-4 items-center mt-5 mb-3"
           style={{
-            backgroundColor: COLORS.danger,
+            backgroundColor: COLORS.dangerFill,
             opacity:
               isLoading || isLoadingIssueTypes || issueTypes.length === 0
                 ? 0.7
@@ -475,8 +472,7 @@ export function ComplaintModal({
             <ActivityIndicator color="#fff" />
           ) : (
             <Text className="text-white font-bold text-[15px]">
-              Gửi phản hồi
-            </Text>
+              {t("Gửi phản hồi")}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -535,17 +531,17 @@ export function ComplaintModal({
             className="flex-row items-center justify-between px-5 py-4"
             style={{
               borderBottomWidth: 1,
-              borderBottomColor: "#F1F5F9",
+              borderBottomColor: COLORS.line,
             }}
           >
             <View className="flex-row items-center flex-1">
               <View
                 className="w-10 h-10 rounded-full items-center justify-center mr-3"
                 style={{
-                  backgroundColor: "#FEE2E2",
+                  backgroundColor: COLORS.dangerLight,
                 }}
               >
-                <Feather name="alert-circle" size={19} color="#B91C1C" />
+                <Feather name="alert-circle" size={19} color={COLORS.danger} />
               </View>
 
               <View className="flex-1">
@@ -555,7 +551,7 @@ export function ComplaintModal({
                     color: COLORS.text,
                   }}
                 >
-                  {hasExisting ? "Khiếu nại đã gửi" : "Gửi phản hồi"}
+                  {hasExisting ? t("Khiếu nại đã gửi") : t("Gửi phản hồi")}
                 </Text>
 
                 <Text
@@ -565,8 +561,8 @@ export function ComplaintModal({
                   }}
                 >
                   {hasExisting
-                    ? "Thông tin khiếu nại của bạn"
-                    : "Hãy mô tả vấn đề bạn gặp phải"}
+                    ? t("Thông tin khiếu nại của bạn")
+                    : t("Hãy mô tả vấn đề bạn gặp phải")}
                 </Text>
               </View>
             </View>
@@ -577,7 +573,7 @@ export function ComplaintModal({
               activeOpacity={0.7}
               className="w-9 h-9 rounded-full items-center justify-center"
               style={{
-                backgroundColor: "#F3F4F6",
+                backgroundColor: COLORS.surfaceMuted,
               }}
             >
               <Feather name="x" size={19} color={COLORS.textMuted} />
@@ -605,8 +601,7 @@ export function ComplaintModal({
                     color: COLORS.textMuted,
                   }}
                 >
-                  Đang kiểm tra khiếu nại...
-                </Text>
+                  {t("Đang kiểm tra khiếu nại...")}</Text>
               </View>
             ) : hasExisting ? (
               renderExisting()

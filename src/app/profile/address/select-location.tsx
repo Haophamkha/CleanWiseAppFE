@@ -1,7 +1,10 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 // app/profile/address/select-location.tsx
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import ScreenContainer from "@/components/ScreenContainer";
-import { COLORS } from "@/constants/theme";
+
 import LocationMapView from "@/features/address/components/LocationMapView";
 import { useSelectLocation } from "@/features/address/hooks/useSelectLocation";
 import { Feather } from "@expo/vector-icons";
@@ -19,7 +22,7 @@ const PIN_SIZE = 44;
 const PIN_HEIGHT = 52; // vòng tròn + mũi nhọn
 
 const softShadow = {
-  shadowColor: COLORS.ink,
+  shadowColor: "#000000",
   shadowOpacity: 0.18,
   shadowOffset: { width: 0, height: 6 },
   shadowRadius: 16,
@@ -61,6 +64,8 @@ function Skeleton({ width, height = 14 }: { width: string; height?: number }) {
 
 /** Ghim giữa bản đồ: nhấc lên khi đang tìm địa chỉ, rơi xuống khi xong */
 function CenterPin({ locating }: { locating: boolean }) {
+  const { COLORS } = useAppTheme();
+
   const lift = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -134,20 +139,20 @@ function CenterPin({ locating }: { locating: boolean }) {
             left: (PIN_SIZE - 12) / 2,
             width: 12,
             height: 12,
-            backgroundColor: COLORS.primary,
+            backgroundColor: COLORS.primaryFill,
             transform: [{ rotate: "45deg" }],
             borderRadius: 2,
           }}
         />
         {/* Vòng tròn */}
         <View
-          className="bg-primary items-center justify-center"
+          className="bg-primary-fill items-center justify-center"
           style={{
             width: PIN_SIZE,
             height: PIN_SIZE,
             borderRadius: PIN_SIZE / 2,
             borderWidth: 3,
-            borderColor: "#FFFFFF",
+            borderColor: COLORS.surface,
             ...softShadow,
           }}
         >
@@ -159,6 +164,10 @@ function CenterPin({ locating }: { locating: boolean }) {
 }
 
 export default function SelectLocationScreen() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const s = useSelectLocation();
 
   // Tách "86 Lê Thánh Tôn, Phường Sài Gòn, Thành phố Hồ Chí Minh"
@@ -168,7 +177,7 @@ export default function SelectLocationScreen() {
 
   return (
     <ScreenContainer>
-      <ScreenHeader title="Chọn vị trí" />
+      <ScreenHeader title={t("Chọn vị trí")} />
 
       <View className="flex-1">
         <LocationMapView
@@ -195,8 +204,7 @@ export default function SelectLocationScreen() {
           >
             <Feather name="move" size={14} color={COLORS.primary} />
             <Text className="text-xs font-medium text-ink ml-2">
-              Kéo bản đồ để chọn vị trí chính xác
-            </Text>
+              {t("Kéo bản đồ để chọn vị trí chính xác")}</Text>
           </View>
         </View>
 
@@ -220,10 +228,9 @@ export default function SelectLocationScreen() {
 
           <View className="bg-surface rounded-3xl p-5" style={softShadow}>
             <View className="flex-row items-center mb-3">
-              <View className="w-2 h-2 rounded-full bg-primary mr-2" />
+              <View className="w-2 h-2 rounded-full bg-primary-fill mr-2" />
               <Text className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                Vị trí đã chọn
-              </Text>
+                {t("Vị trí đã chọn")}</Text>
             </View>
 
             <View className="flex-row items-start mb-5">
@@ -263,7 +270,7 @@ export default function SelectLocationScreen() {
               onPress={s.confirmLocation}
               disabled={s.isConfirming}
               activeOpacity={0.85}
-              className="bg-primary rounded-2xl flex-row items-center justify-center"
+              className="bg-primary-fill rounded-2xl flex-row items-center justify-center"
               style={{ height: 52, opacity: s.isConfirming ? 0.7 : 1 }}
             >
               {s.isConfirming ? (
@@ -275,8 +282,7 @@ export default function SelectLocationScreen() {
                     className="text-base font-semibold ml-2"
                     style={{ color: "#FFFFFF" }}
                   >
-                    Xác nhận vị trí này
-                  </Text>
+                    {t("Xác nhận vị trí này")}</Text>
                 </>
               )}
             </TouchableOpacity>

@@ -1,4 +1,5 @@
 import { baseApi } from "@/store/baseApi";
+import { i18n } from "@/features/language/i18n";
 import type {
   ChatbotConversation,
   ChatbotMessage,
@@ -93,7 +94,7 @@ export const chatbotApi = baseApi.injectEndpoints({
       query: ({ conversationId, ...data }) => ({
         url: `/api/chatbot/conversations/${conversationId}/messages/`,
         method: "POST",
-        data,
+        data: { ...data, language: i18n.resolvedLanguage ?? "vi" },
         timeout: 130000,
       }),
       transformResponse: unwrap<ChatbotReply>,

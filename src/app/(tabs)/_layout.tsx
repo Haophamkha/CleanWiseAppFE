@@ -1,4 +1,6 @@
-import { COLORS, SHADOWS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { useGetConversationsQuery } from "@/features/chat/api/chatApi";
 import { useChatSocket } from "@/features/chat/hooks/useChatSocket";
 import { useAppSelector } from "@/store/hooks";
@@ -68,6 +70,8 @@ function TabItem({
   onPress,
   onLongPress,
 }: ItemProps) {
+  const { COLORS } = useAppTheme();
+
   const active = useRef(new Animated.Value(focused ? 1 : 0)).current;
   const press = useRef(new Animated.Value(1)).current;
   const badge = options.tabBarBadge;
@@ -145,7 +149,7 @@ function TabItem({
               height: 18,
               paddingHorizontal: 4,
               borderRadius: 9,
-              backgroundColor: COLORS.danger,
+              backgroundColor: COLORS.dangerFill,
               alignItems: "center",
               justifyContent: "center",
               borderWidth: 1.5,
@@ -194,6 +198,8 @@ function CenterItem({
   onPress,
   onLongPress,
 }: ItemProps) {
+  const { COLORS, SHADOWS } = useAppTheme();
+
   const press = useRef(new Animated.Value(1)).current;
   const pop = useRef(new Animated.Value(focused ? 1 : 0)).current;
   const pulse = useRef(new Animated.Value(0)).current;
@@ -281,7 +287,7 @@ function CenterItem({
             width: CIRCLE,
             height: CIRCLE,
             borderRadius: CIRCLE / 2,
-            backgroundColor: COLORS.primary,
+            backgroundColor: COLORS.primaryFill,
             opacity: ringOpacity,
             transform: [{ scale: ringScale }],
           }}
@@ -293,7 +299,7 @@ function CenterItem({
               width: CIRCLE,
               height: CIRCLE,
               borderRadius: CIRCLE / 2,
-              backgroundColor: COLORS.primary,
+              backgroundColor: COLORS.primaryFill,
               alignItems: "center",
               justifyContent: "center",
               borderWidth: 3,
@@ -335,6 +341,8 @@ function CenterItem({
 }
 
 function CurvedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const { COLORS, isDark } = useAppTheme();
+
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   useEffect(() => {
     const show = Keyboard.addListener(
@@ -384,13 +392,13 @@ function CurvedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           <Path
             d={path}
             fill={COLORS.ink}
-            fillOpacity={0.04}
+            fillOpacity={isDark ? 0 : 0.04}
             transform="translate(0,-4)"
           />
           <Path
             d={path}
             fill={COLORS.ink}
-            fillOpacity={0.05}
+            fillOpacity={isDark ? 0 : 0.05}
             transform="translate(0,-2)"
           />
           <Path d={path} fill={COLORS.surface} />
@@ -450,6 +458,9 @@ function CurvedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 }
 
 export default function TabsLayout() {
+  const { t } = useTranslation();
+  const { COLORS } = useAppTheme();
+
   const user = useAppSelector((state) => state.auth.user);
   const { data: conversations, refetch } = useGetConversationsQuery(1, {
     skip: !user,
@@ -477,7 +488,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: "Trang chủ",
+          title: t("Trang chủ"),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "home" : "home-outline"}
@@ -491,7 +502,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="booking"
         options={{
-          title: "Đơn hàng",
+          title: t("Đơn hàng"),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "calendar" : "calendar-outline"}
@@ -505,7 +516,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="chatbot"
         options={{
-          title: "Trợ lý",
+          title: t("Trợ lý"),
           tabBarIcon: ({ color, size, focused }) => (
             <MaterialCommunityIcons
               name={focused ? "robot-happy" : "robot-happy-outline"}
@@ -519,7 +530,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="messages"
         options={{
-          title: "Tin nhắn",
+          title: t("Tin nhắn"),
           tabBarBadge:
             unreadCount > 0
               ? unreadCount > 99
@@ -541,7 +552,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Cá nhân",
+          title: t("Cá nhân"),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "person" : "person-outline"}

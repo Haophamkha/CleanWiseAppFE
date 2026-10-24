@@ -1,8 +1,11 @@
-import { GRADIENTS } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { LinearGradient } from "expo-linear-gradient";
 import { ReactNode } from "react";
 
 export function GradientHeader({ children }: { children: ReactNode }) {
+  const { GRADIENTS } = useAppTheme();
+
   return (
     <LinearGradient
       colors={GRADIENTS.hero}
