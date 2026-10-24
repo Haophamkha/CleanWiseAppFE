@@ -1,4 +1,5 @@
-import { COLORS } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { Feather } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 
@@ -9,6 +10,8 @@ export function SectionTitle({
   icon?: keyof typeof Feather.glyphMap;
   children: React.ReactNode;
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View className="flex-row items-center mb-3">
       {icon && (

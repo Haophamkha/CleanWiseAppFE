@@ -1,4 +1,6 @@
-import { COLORS, RADIUS, SHADOWS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { RADIUS, SHADOWS } from "@/constants/theme";
 import type { Review } from "@/features/review/types/Review";
 import { useReviewEditability } from "@/features/review/hooks/useReviewEditability";
 import {
@@ -16,6 +18,8 @@ export function ReviewCard({
   review: Review;
   onEdit: () => void;
 }) {
+  const { t } = useTranslation();
+
   const editable = useReviewEditability(review);
   return (
     <View
@@ -32,10 +36,10 @@ export function ReviewCard({
         {review.service_name}
       </Text>
       <Text className="text-ink-soft text-xs mt-1">
-        {review.booking_code} · Buổi {review.schedule.sequence_no}
+        {review.booking_code}  {t("· Buổi")} {review.schedule.sequence_no}
       </Text>
       <Text className="text-ink-muted text-xs mt-1">
-        Ngày làm: {formatReviewDate(review.schedule.scheduled_start)}
+        {t("Ngày làm:")}{" "}{formatReviewDate(review.schedule.scheduled_start)}
       </Text>
       {!!review.comment && (
         <Text className="text-ink text-sm leading-5 mt-4">
@@ -52,7 +56,7 @@ export function ReviewCard({
             <Image
               key={image.id}
               source={{ uri: image.image }}
-              accessibilityLabel="Ảnh đánh giá"
+              accessibilityLabel={t("Ảnh đánh giá")}
               className="w-24 h-24 rounded-xl mr-2"
               resizeMode="cover"
             />
@@ -62,8 +66,7 @@ export function ReviewCard({
       {!!review.admin_reply && (
         <View className="bg-primary-soft border border-primary-border rounded-xl p-3 mt-4">
           <Text className="text-primary-dark text-xs font-bold mb-1">
-            Phản hồi từ CleanWise
-          </Text>
+            {t("Phản hồi từ CleanWise")}</Text>
           <Text className="text-ink-soft text-sm leading-5">
             {review.admin_reply}
           </Text>
@@ -71,22 +74,21 @@ export function ReviewCard({
       )}
       {!review.is_visible && (
         <Text className="text-danger text-xs mt-3">
-          Đánh giá đang được ẩn khỏi hiển thị công khai.
-        </Text>
+          {t("Đánh giá đang được ẩn khỏi hiển thị công khai.")}</Text>
       )}
       <Text className="text-ink-muted text-xs mt-4">
-        Đã gửi: {formatReviewDate(review.created_at)}
-        {review.is_edited ? " · Đã chỉnh sửa" : ""}
+        {t("Đã gửi:")}{" "}{formatReviewDate(review.created_at)}
+        {review.is_edited ? t(" · Đã chỉnh sửa") : ""}
       </Text>
       <View className="mt-3 pt-3 border-t border-line">
         <Text className="text-ink-soft text-xs mb-3">
           {editable
-            ? `Có thể sửa đến ${formatReviewDate(review.edit_deadline)}`
-            : "Đã hết thời hạn chỉnh sửa"}
+            ? t("Có thể sửa đến {{value0}}", { value0: formatReviewDate(review.edit_deadline) })
+            : t("Đã hết thời hạn chỉnh sửa")}
         </Text>
         {editable && (
           <Button
-            title="Chỉnh sửa đánh giá"
+            title={t("Chỉnh sửa đánh giá")}
             variant="soft"
             icon="edit-3"
             onPress={onEdit}

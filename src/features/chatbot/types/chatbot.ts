@@ -12,6 +12,7 @@ export type ChatbotCard =
       type: "help";
       action: "OPEN_HELP_ARTICLE";
       article_id: number;
+      section_id?: string;
       version: number;
       effective_from: string;
     })
@@ -49,13 +50,41 @@ export type ChatbotMessage = {
   created_at: string;
 };
 
+export type HelpImage = {
+  file: string;
+  width: number;
+  height: number;
+  alt: string;
+  alt_en?: string;
+  markers?: { x: number; y: number; width: number; height: number }[];
+};
+
+export type HelpStep = {
+  title: string;
+  text: string;
+  result?: string;
+  title_en?: string;
+  text_en?: string;
+  result_en?: string;
+  image?: HelpImage;
+};
+
+export type HelpSection = {
+  id?: string;
+  heading: string;
+  text: string;
+  heading_en?: string;
+  text_en?: string;
+  steps?: HelpStep[];
+};
+
 export type HelpArticle = {
   id: number;
   slug: string;
   version: number;
   title: string;
   summary: string;
-  sections: { heading: string; text: string }[];
+  sections: HelpSection[];
   effective_from: string;
   source_document: string;
 };

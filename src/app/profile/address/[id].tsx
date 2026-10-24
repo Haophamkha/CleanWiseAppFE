@@ -1,8 +1,11 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 // app/profile/address/[id].tsx
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import ScreenContainer from "@/components/ScreenContainer";
 import { Button, EmptyState, ErrorText } from "@/components/ui";
-import { COLORS } from "@/constants/theme";
+
 import AddressForm, {
   FormSectionTitle,
 } from "@/features/address/components/AddressForm";
@@ -20,6 +23,10 @@ import {
 } from "react-native";
 
 export default function EditAddressScreen() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const e = useEditAddress();
 
   const deleteButton =
@@ -41,7 +48,7 @@ export default function EditAddressScreen() {
 
   return (
     <ScreenContainer>
-      <ScreenHeader title="Cập nhật địa chỉ" right={deleteButton} />
+      <ScreenHeader title={t("Cập nhật địa chỉ")} right={deleteButton} />
 
       {e.status === "loading" ? (
         <View className="flex-1 items-center justify-center">
@@ -52,10 +59,10 @@ export default function EditAddressScreen() {
           icon="alert-circle"
           title={
             e.status === "invalid"
-              ? "Địa chỉ không hợp lệ"
-              : "Không tải được địa chỉ"
+              ? t("Địa chỉ không hợp lệ")
+              : t("Không tải được địa chỉ")
           }
-          actionLabel={e.status === "invalid" ? "Quay lại" : "Thử lại"}
+          actionLabel={e.status === "invalid" ? t("Quay lại") : t("Thử lại")}
           onAction={e.status === "invalid" ? () => router.back() : e.retry}
         />
       ) : (
@@ -66,19 +73,19 @@ export default function EditAddressScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <FormSectionTitle>Khu vực</FormSectionTitle>
+            <FormSectionTitle>{t("Khu vực")}</FormSectionTitle>
             <ProvinceWardPicker
               initialProvince={e.city}
               initialWard={e.ward}
               onSelect={e.pickProvinceWard}
             />
             <MapPickButton
-              label="Hoặc chọn lại trên bản đồ"
+              label={t("Hoặc chọn lại trên bản đồ")}
               onPress={e.goToMap}
               disabled={e.isNavigating}
             />
 
-            <FormSectionTitle>Thông tin người nhận</FormSectionTitle>
+            <FormSectionTitle>{t("Thông tin người nhận")}</FormSectionTitle>
             <AddressForm
               values={e.values}
               onChange={e.change}
@@ -100,7 +107,7 @@ export default function EditAddressScreen() {
 
           <View className="px-5 pt-3 pb-4 bg-surface border-t border-line">
             <Button
-              title="Lưu thay đổi"
+              title={t("Lưu thay đổi")}
               onPress={e.submit}
               loading={e.isSaving}
             />

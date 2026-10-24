@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import {
     useGetFavoriteWorkersQuery,
     useRemoveFavoriteWorkerMutation,
@@ -10,6 +12,8 @@ import { useEffect, useState } from "react";
 const PAGE_SIZE = 20;
 
 export function useFavoriteWorkers() {
+  const { t } = useTranslation();
+
   const isAuthenticated = !!useAppSelector((state) => state.auth.user);
   const [page, setPage] = useState(1);
   const [workers, setWorkers] = useState<FavoriteWorker[]>([]);
@@ -55,13 +59,13 @@ export function useFavoriteWorkers() {
         current.filter((item) => item.worker_id !== worker.worker_id),
       );
       showSuccessToast(
-        "Đã bỏ yêu thích",
+        t("Đã bỏ yêu thích"),
         `${worker.last_name} ${worker.first_name}`.trim(),
       );
     } catch (error: any) {
       showErrorToast(
-        "Không thể bỏ yêu thích",
-        error?.data?.message ?? "Vui lòng thử lại sau.",
+        t("Không thể bỏ yêu thích"),
+        error?.data?.message ?? t("Vui lòng thử lại sau."),
       );
     } finally {
       setRemovingId(null);

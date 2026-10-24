@@ -1,4 +1,5 @@
-import { OVERLAY, RADIUS } from "@/constants/theme";
+import { RADIUS } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import type { ReactNode } from "react";
 import {
     KeyboardAvoidingView,
@@ -17,6 +18,7 @@ type Props = {
 };
 
 export function BottomSheet({ visible, onClose, children }: Props) {
+  const { OVERLAY } = useAppTheme();
   const insets = useSafeAreaInsets();
 
   return (

@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 // components/address/AddressForm.tsx
 import { Input } from "@/components/ui";
 import type { ReactNode } from "react";
@@ -36,9 +38,11 @@ export default function AddressForm({
   isOther,
   onToggleOther,
 }: Props) {
+  const { t } = useTranslation();
+
   return (
     <View>
-      <Text className="text-sm font-medium text-ink mb-2">Nhãn địa chỉ</Text>
+      <Text className="text-sm font-medium text-ink mb-2">{t("Nhãn địa chỉ")}</Text>
       <View className="flex-row mb-3" style={{ gap: 8 }}>
         {LABEL_PRESETS.map((preset) => {
           const active = values.label === preset;
@@ -48,7 +52,7 @@ export default function AddressForm({
               activeOpacity={0.8}
               onPress={() => onChange("label", active ? "" : preset)}
               className={`px-4 py-2 rounded-full border ${
-                active ? "bg-primary border-primary" : "bg-canvas border-line"
+                active ? "bg-primary-fill border-primary" : "bg-canvas border-line"
               }`}
             >
               <Text
@@ -56,7 +60,7 @@ export default function AddressForm({
                   active ? "text-white" : "text-ink-soft"
                 }`}
               >
-                {preset}
+                {t(preset)}
               </Text>
             </TouchableOpacity>
           );
@@ -64,7 +68,7 @@ export default function AddressForm({
       </View>
       <Input
         icon="tag"
-        placeholder="Hoặc tự đặt tên, vd: Nhà bố mẹ"
+        placeholder={t("Hoặc tự đặt tên, vd: Nhà bố mẹ")}
         value={values.label}
         onChangeText={(v) => onChange("label", v)}
       />
@@ -73,11 +77,9 @@ export default function AddressForm({
         <View className="flex-row items-center justify-between rounded-xl bg-canvas px-4 py-3 mb-3">
           <View className="flex-1 pr-3">
             <Text className="text-sm font-medium text-ink">
-              Người khác sẽ nhận nhân viên
-            </Text>
+              {t("Người khác sẽ nhận nhân viên")}</Text>
             <Text className="text-xs text-ink-muted mt-0.5">
-              Bật nếu bạn không có mặt tại địa chỉ.
-            </Text>
+              {t("Bật nếu bạn không có mặt tại địa chỉ.")}</Text>
           </View>
           <Switch value={isOther} onValueChange={onToggleOther} />
         </View>
@@ -86,17 +88,17 @@ export default function AddressForm({
       {showContact && (
         <>
           <Input
-            label="Tên liên hệ"
+            label={t("Tên liên hệ")}
             icon="user"
-            placeholder="Nhập tên người liên hệ"
+            placeholder={t("Nhập tên người liên hệ")}
             autoCapitalize="words"
             value={values.receiver_name}
             onChangeText={(v) => onChange("receiver_name", v)}
           />
           <Input
-            label="Số điện thoại liên hệ"
+            label={t("Số điện thoại liên hệ")}
             icon="phone"
-            placeholder="Nhân viên sẽ gọi số này khi đến nơi"
+            placeholder={t("Nhân viên sẽ gọi số này khi đến nơi")}
             keyboardType="phone-pad"
             value={values.receiver_phone}
             onChangeText={(v) => onChange("receiver_phone", v)}
@@ -104,9 +106,9 @@ export default function AddressForm({
         </>
       )}
       <Input
-        label="Địa chỉ cụ thể"
+        label={t("Địa chỉ cụ thể")}
         icon="home"
-        placeholder="Số nhà, tên đường"
+        placeholder={t("Số nhà, tên đường")}
         value={values.address_line}
         onChangeText={(v) => onChange("address_line", v)}
       />

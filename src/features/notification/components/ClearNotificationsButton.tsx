@@ -1,4 +1,5 @@
-import { COLORS } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { Feather } from "@expo/vector-icons";
 import { ActivityIndicator, TouchableOpacity } from "react-native";
 
@@ -13,6 +14,8 @@ export function ClearNotificationsButton({
   loading,
   disabled,
 }: Props) {
+  const { COLORS } = useAppTheme();
+
   return (
     <TouchableOpacity
       onPress={onPress}

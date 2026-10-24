@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
 import {
     useGetMyVouchersQuery,
     useValidateVoucherMutation,
@@ -10,35 +12,37 @@ import type {
 import { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 
-const statusReason: Partial<Record<UserVoucher["status"], string>> = {
-  RESERVED: "Đang được giữ cho đơn hàng khác",
-  USED: "Voucher đã được sử dụng",
-  REVOKED: "Voucher đã bị thu hồi",
-};
+function getLocalizedStatusReason(): Partial<Record<UserVoucher["status"], string>> {
+  return {
+    RESERVED: t("Đang được giữ cho đơn hàng khác"),
+    USED: t("Voucher đã được sử dụng"),
+    REVOKED: t("Voucher đã bị thu hồi"),
+  };
+}
 
 export function getUnavailableReason(
   item: UserVoucher,
   subtotalAmount: number,
 ) {
   if (item.status !== "AVAILABLE") {
-    return statusReason[item.status] ?? "Voucher không khả dụng";
+    return getLocalizedStatusReason()[item.status] ?? t("Voucher không khả dụng");
   }
   if (item.voucher.lifecycle_status === "UPCOMING") {
-    return "Voucher chưa đến thời gian sử dụng";
+    return t("Voucher chưa đến thời gian sử dụng");
   }
   if (item.voucher.lifecycle_status === "EXPIRED") {
-    return "Voucher đã hết hạn";
+    return t("Voucher đã hết hạn");
   }
   if (item.voucher.lifecycle_status === "DISABLED") {
-    return "Voucher đã ngừng hoạt động";
+    return t("Voucher đã ngừng hoạt động");
   }
   if (!item.is_usable) {
-    return "Voucher hiện không khả dụng";
+    return t("Voucher hiện không khả dụng");
   }
 
   const minOrderAmount = Number(item.voucher.min_order_amount || 0);
   if (subtotalAmount < minOrderAmount) {
-    return `Cần mua thêm ${formatVoucherMoney(String(minOrderAmount - subtotalAmount))}`;
+    return t("Cần mua thêm {{value0}}", { value0: formatVoucherMoney(String(minOrderAmount - subtotalAmount)) });
   }
   return null;
 }
@@ -54,7 +58,7 @@ function getErrorMessage(error: any) {
   if (Array.isArray(value)) return value.join("\n");
   return typeof value === "string"
     ? value
-    : "Không thể kiểm tra voucher. Vui lòng thử lại.";
+    : t("Không thể kiểm tra voucher. Vui lòng thử lại.");
 }
 
 type Params = {
@@ -77,6 +81,8 @@ export function useBookingVoucher({
   onApplied,
   onClear,
 }: Params) {
+  const { t } = useTranslation();
+
   const [pendingVoucherId, setPendingVoucherId] = useState<number | null>(
     selectedVoucherId ?? null,
   );
@@ -106,7 +112,7 @@ export function useBookingVoucher({
           : 0;
         return leftDisabled - rightDisabled;
       }),
-    [subtotalAmount, walletVouchers],
+    [subtotalAmount, walletVouchers, t],
   );
 
   const apply = async () => {
@@ -129,8 +135,8 @@ export function useBookingVoucher({
 
       if (Number(result.total_amount) <= 0) {
         Alert.alert(
-          "Chưa thể áp dụng voucher",
-          "Hệ thống hiện chưa hỗ trợ đơn hàng có tổng thanh toán bằng 0đ.",
+          t("Chưa thể áp dụng voucher"),
+          t("Hệ thống hiện chưa hỗ trợ đơn hàng có tổng thanh toán bằng 0đ."),
         );
         return;
       }
@@ -138,7 +144,7 @@ export function useBookingVoucher({
       onApplied(selected, result);
       onClose();
     } catch (error) {
-      Alert.alert("Voucher không hợp lệ", getErrorMessage(error));
+      Alert.alert(t("Voucher không hợp lệ"), getErrorMessage(error));
       refetch();
     }
   };

@@ -1,4 +1,5 @@
-import { COLORS } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { Feather } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 import type { FeatherName } from "../../../components/ui/Input";
@@ -11,6 +12,8 @@ type Props = {
 };
 
 export function IconRow({ icon, text, error, isLast }: Props) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View className={`flex-row items-center ${isLast ? "" : "mb-3"}`}>
       <View

@@ -1,3 +1,4 @@
+import { getLocale } from "@/features/language/i18n";
 import type { Review } from "@/features/review/types/Review";
 
 export function canEditReview(review: Review) {
@@ -7,7 +8,7 @@ export function canEditReview(review: Review) {
 }
 
 export function formatReviewDate(value: string) {
-  return new Date(value).toLocaleString("vi-VN", {
+  return new Date(value).toLocaleString(getLocale(), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

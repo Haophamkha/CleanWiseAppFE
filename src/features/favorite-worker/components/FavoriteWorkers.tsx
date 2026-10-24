@@ -1,7 +1,10 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { RequireLoginNotice } from "@/components/common/RequireLoginNotice";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import ScreenContainer from "@/components/ScreenContainer";
-import { COLORS } from "@/constants/theme";
+
 import { FavoriteSummaryCard } from "@/features/favorite-worker/components/FavoriteSummaryCard";
 import { FavoriteWorkersEmpty } from "@/features/favorite-worker/components/FavoriteWorkersEmpty";
 import { FavoriteWorkersError } from "@/features/favorite-worker/components/FavoriteWorkersError";
@@ -10,22 +13,25 @@ import { useFavoriteWorkers } from "@/features/favorite-worker/hooks/useFavorite
 import { ActivityIndicator, FlatList, Text, View } from "react-native";
 
 export function FavoriteWorkers() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const f = useFavoriteWorkers();
 
   return (
     <ScreenContainer>
-      <ScreenHeader title="Nhân viên yêu thích" />
+      <ScreenHeader title={t("Nhân viên yêu thích")} />
 
       {!f.isAuthenticated ? (
         <View className="px-5 pt-5">
-          <RequireLoginNotice message="Đăng nhập để xem danh sách nhân viên yêu thích" />
+          <RequireLoginNotice message={t("Đăng nhập để xem danh sách nhân viên yêu thích")} />
         </View>
       ) : f.isInitialLoading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color={COLORS.primary} />
           <Text className="text-sm text-ink-muted mt-3">
-            Đang tải danh sách...
-          </Text>
+            {t("Đang tải danh sách...")}</Text>
         </View>
       ) : f.hasError ? (
         <FavoriteWorkersError onRetry={() => f.retry()} />

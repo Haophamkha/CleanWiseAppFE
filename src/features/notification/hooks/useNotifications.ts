@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import {
   notificationApi,
   useGetNotificationsQuery,
@@ -8,7 +10,7 @@ import { NotificationFilter } from "@/features/notification/components/Notificat
 import { AppNotification } from "@/features/notification/types/Notification";
 import {
   getNotificationRoute,
-  NOTIFICATION_FILTER_OPTIONS,
+  getLocalizedNotificationFilterOptions,
 } from "@/features/notification/utils/notificationMeta";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -24,6 +26,8 @@ const dedupe = (list: AppNotification[]) => {
 };
 
 export function useNotifications() {
+  const { t } = useTranslation();
+
   const [filter, setFilter] = useState<NotificationFilter>("ALL");
   const [page, setPage] = useState(1);
   const [items, setItems] = useState<AppNotification[]>([]);
@@ -34,12 +38,15 @@ export function useNotifications() {
       page_size: PAGE_SIZE,
       ...(filter !== "ALL" ? { type: filter } : {}),
     }),
-    [filter, page],
+    [filter, page, t],
   );
 
   // Chỉ lấy dữ liệu đúng với tham số hiện tại.
-  const { currentData, isFetching, refetch } =
-    useGetNotificationsQuery(queryParams);
+  const { currentData, isFetching, isError, refetch } =
+    useGetNotificationsQuery(queryParams, {
+      refetchOnMountOrArgChange: true,
+      refetchOnFocus: true,
+    });
 
   const [markRead] = useMarkNotificationReadMutation();
 
@@ -63,7 +70,7 @@ export function useNotifications() {
 
     const timers: ReturnType<typeof setTimeout>[] = [];
 
-    NOTIFICATION_FILTER_OPTIONS.filter(
+    getLocalizedNotificationFilterOptions().filter(
       (option) => option.value !== filter,
     ).forEach((option, index) => {
       timers.push(
@@ -85,7 +92,7 @@ export function useNotifications() {
     });
 
     return () => timers.forEach(clearTimeout);
-  }, [page, currentData, filter, prefetch]);
+  }, [page, currentData, filter, prefetch, t]);
 
   const list = page === 1 ? (currentData?.results ?? []) : items;
 
@@ -128,12 +135,12 @@ export function useNotifications() {
     if (!unreadCount) return;
 
     Alert.alert(
-      "Đánh dấu tất cả đã đọc",
-      "Đánh dấu toàn bộ thông báo là đã đọc?",
+      t("Đánh dấu tất cả đã đọc"),
+      t("Đánh dấu toàn bộ thông báo là đã đọc?"),
       [
-        { text: "Hủy", style: "cancel" },
+        { text: t("Hủy"), style: "cancel" },
         {
-          text: "Đồng ý",
+          text: t("Đồng ý"),
           onPress: () => markAllRead(),
         },
       ],
@@ -143,7 +150,7 @@ export function useNotifications() {
   const refresh = () => {
     setPage(1);
     setItems([]);
-    refetch();
+    if (page === 1) refetch();
   };
 
   return {
@@ -153,6 +160,7 @@ export function useNotifications() {
     unreadCount,
     isLoading,
     isFetching,
+    isError,
     isMarkingAll,
     changeFilter,
     loadMore,

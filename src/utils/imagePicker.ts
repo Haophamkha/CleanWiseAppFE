@@ -1,3 +1,4 @@
+import { translate as t } from "@/features/language/i18n";
 // utils/imagePicker.ts
 import type { PickedFile } from "@/features/complaint/types/Complaint";
 import * as ImagePicker from "expo-image-picker";
@@ -11,8 +12,8 @@ export async function pickImage(options?: Options): Promise<PickedFile | null> {
   const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!permission.granted) {
     Alert.alert(
-      "Cần quyền truy cập",
-      "Vui lòng cho phép ứng dụng truy cập thư viện ảnh.",
+      t("Cần quyền truy cập"),
+      t("Vui lòng cho phép ứng dụng truy cập thư viện ảnh."),
     );
     return null;
   }

@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
 import {
     useClaimVoucherByCodeMutation,
     useGetMyVouchersQuery,
@@ -21,10 +23,12 @@ const getApiErrorMessage = (error: any) => {
     errors?.code ?? errors?.voucher ?? errors?.non_field_errors;
   if (Array.isArray(fieldError)) return fieldError[0];
   if (typeof fieldError === "string") return fieldError;
-  return error?.data?.message ?? "Không thể nhận voucher. Vui lòng thử lại.";
+  return error?.data?.message ?? t("Không thể nhận voucher. Vui lòng thử lại.");
 };
 
 export function useVouchers() {
+  const { t } = useTranslation();
+
   const isAuthenticated = !!useAppSelector((state) => state.auth.user);
   const [activeTab, setActiveTab] = useState<VoucherTab>("discover");
   const [voucherCode, setVoucherCode] = useState("");
@@ -45,14 +49,14 @@ export function useVouchers() {
       activeTab === "discover"
         ? (publicQuery.data ?? [])
         : (walletQuery.data ?? []),
-    [activeTab, publicQuery.data, walletQuery.data],
+    [activeTab, publicQuery.data, walletQuery.data, t],
   );
   const currentQuery = activeTab === "discover" ? publicQuery : walletQuery;
 
   const claim = async (rawCode: string) => {
     const code = rawCode.trim().toUpperCase();
     if (!code) {
-      showErrorToast("Thiếu mã voucher", "Vui lòng nhập mã bạn muốn nhận.");
+      showErrorToast(t("Thiếu mã voucher"), t("Vui lòng nhập mã bạn muốn nhận."));
       return false;
     }
 
@@ -62,12 +66,12 @@ export function useVouchers() {
       await claimVoucher(code).unwrap();
       setVoucherCode("");
       showSuccessToast(
-        "Đã nhận voucher",
-        `${code} đã được thêm vào ví của bạn.`,
+        t("Đã nhận voucher"),
+        t("{{value0}} đã được thêm vào ví của bạn.", { value0: code }),
       );
       return true;
     } catch (error) {
-      showErrorToast("Không thể nhận voucher", getApiErrorMessage(error));
+      showErrorToast(t("Không thể nhận voucher"), getApiErrorMessage(error));
       return false;
     } finally {
       setClaimingCode(null);

@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import { useGetAssignmentReviewQuery } from "@/features/review/api/reviewApi";
 import type { Review } from "@/features/review/types/Review";
 import { useEffect, useState } from "react";
@@ -6,6 +8,8 @@ export function useScheduleReview(
   assignmentId: number | null,
   completed: boolean,
 ) {
+  const { t } = useTranslation();
+
   const query = useGetAssignmentReviewQuery(assignmentId ?? 0, {
     skip: !assignmentId || !completed,
     refetchOnMountOrArgChange: true,
@@ -40,20 +44,20 @@ export function useScheduleReview(
       setCreatedReview(review);
       setMode("view");
     },
-    title: review ? "Xem đánh giá" : "Đánh giá",
+    title: review ? t("Xem đánh giá") : t("Đánh giá"),
     subtitle: !completed
-      ? "Buổi làm chưa hoàn thành"
+      ? t("Buổi làm chưa hoàn thành")
       : !assignmentId
-        ? "Chưa có nhân viên thực hiện"
+        ? t("Chưa có nhân viên thực hiện")
         : query.isError
-          ? "Không tải được. Chạm để thử lại"
+          ? t("Không tải được. Chạm để thử lại")
           : query.isLoading
-            ? "Đang tải..."
+            ? t("Đang tải...")
             : review
-              ? `Đã gửi ${review.rating}/5 sao`
+              ? t("Đã gửi {{value0}}/5 sao", { value0: review.rating })
               : query.currentData?.can_review
-                ? "Chia sẻ trải nghiệm"
-                : "Chưa thể đánh giá",
+                ? t("Chia sẻ trải nghiệm")
+                : t("Chưa thể đánh giá"),
     disabled:
       !completed ||
       !assignmentId ||

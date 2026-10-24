@@ -1,8 +1,15 @@
-import { COLORS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { LinearGradient } from "expo-linear-gradient";
 import { Text, View } from "react-native";
 
 export function FavoriteSummaryCard({ count }: { count: number }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   return (
     <LinearGradient
       colors={[COLORS.accent, COLORS.accentDark]}
@@ -64,8 +71,7 @@ export function FavoriteSummaryCard({ count }: { count: number }) {
 
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 16, fontWeight: "700", color: "#FFFFFF" }}>
-          Nhân viên yêu thích
-        </Text>
+          {t("Nhân viên yêu thích")}</Text>
         <Text
           style={{
             marginTop: 2,
@@ -73,8 +79,7 @@ export function FavoriteSummaryCard({ count }: { count: number }) {
             color: "rgba(255,255,255,0.92)",
           }}
         >
-          Đã lưu trong danh sách của bạn
-        </Text>
+          {t("Đã lưu trong danh sách của bạn")}</Text>
       </View>
     </LinearGradient>
   );

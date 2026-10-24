@@ -1,4 +1,5 @@
-import { COLORS, RADIUS, SHADOWS } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { RADIUS, SHADOWS } from "@/constants/theme";
 import { Feather } from "@expo/vector-icons";
 import type { ComponentProps } from "react";
 import { useEffect, useRef } from "react";
@@ -19,7 +20,16 @@ type Variant = {
   tint: string;
 };
 
-const VARIANTS: Record<VariantKey, Variant> = {
+const DEFAULT_DURATION = 4000;
+
+type ToastCardProps = ToastConfigParams<{ duration?: number }> & {
+  variant: VariantKey;
+};
+
+function ToastCard({ variant, text1, text2, props, hide }: ToastCardProps) {
+  const { COLORS } = useAppTheme();
+
+  const VARIANTS: Record<VariantKey, Variant> = {
   success: { icon: "check", color: COLORS.success, tint: COLORS.successLight },
   error: { icon: "x", color: COLORS.danger, tint: COLORS.dangerLight },
   warning: {
@@ -30,13 +40,6 @@ const VARIANTS: Record<VariantKey, Variant> = {
   info: { icon: "info", color: COLORS.info, tint: COLORS.infoLight },
 };
 
-const DEFAULT_DURATION = 4000;
-
-type ToastCardProps = ToastConfigParams<{ duration?: number }> & {
-  variant: VariantKey;
-};
-
-function ToastCard({ variant, text1, text2, props, hide }: ToastCardProps) {
   const v = VARIANTS[variant];
   const duration = props?.duration ?? DEFAULT_DURATION;
 

@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import {
   useForgotPasswordMutation,
   useResetPasswordMutation,
@@ -5,7 +7,7 @@ import {
 } from "@/features/auth/api/authApi";
 import { getApiErrorMessage } from "@/utils/apiError";
 import { showSuccessToast } from "@/utils/toast";
-import { forgotPasswordSchema, resetPasswordSchema } from "@/utils/validators";
+import { getLocalizedForgotPasswordSchema, getLocalizedResetPasswordSchema } from "@/utils/validators";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 
@@ -15,6 +17,8 @@ const OTP_LENGTH = 6;
 export type ForgotStep = "request" | "verify" | "reset" | "done";
 
 export function useForgotPassword() {
+  const { t } = useTranslation();
+
   const [step, setStep] = useState<ForgotStep>("request");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -43,7 +47,7 @@ export function useForgotPassword() {
   }, [resendAt]);
 
   const sendCode = async () => {
-    const result = forgotPasswordSchema.safeParse({ email: cleanEmail });
+    const result = getLocalizedForgotPasswordSchema().safeParse({ email: cleanEmail });
     if (!result.success) {
       setError(result.error.issues[0].message);
       return;
@@ -53,15 +57,15 @@ export function useForgotPassword() {
       await forgotPassword({ email: cleanEmail }).unwrap();
       setStep("verify");
       setResendAt(Date.now() + RESEND_SECONDS * 1000);
-      showSuccessToast("Đã gửi mã xác nhận", "Kiểm tra email của bạn");
+      showSuccessToast(t("Đã gửi mã xác nhận"), t("Kiểm tra email của bạn"));
     } catch (e) {
-      setError(getApiErrorMessage(e, "Không gửi được mã, thử lại sau."));
+      setError(getApiErrorMessage(e, t("Không gửi được mã, thử lại sau.")));
     }
   };
 
   const verifyOtp = async () => {
     if (otp.length !== OTP_LENGTH) {
-      setError(`Mã xác nhận gồm ${OTP_LENGTH} chữ số`);
+      setError(t("Mã xác nhận gồm {{value0}} chữ số", { value0: OTP_LENGTH }));
       return;
     }
     setError("");
@@ -70,13 +74,13 @@ export function useForgotPassword() {
       setStep("reset");
     } catch (e) {
       setError(
-        getApiErrorMessage(e, "Mã xác nhận không đúng hoặc đã hết hạn."),
+        getApiErrorMessage(e, t("Mã xác nhận không đúng hoặc đã hết hạn.")),
       );
     }
   };
 
   const submitNewPassword = async () => {
-    const result = resetPasswordSchema.safeParse({
+    const result = getLocalizedResetPasswordSchema().safeParse({
       new_password: newPassword,
       new_password_confirm: confirmPassword,
     });
@@ -94,7 +98,7 @@ export function useForgotPassword() {
       }).unwrap();
       setStep("done");
     } catch (e) {
-      setError(getApiErrorMessage(e, "Đặt lại mật khẩu thất bại, thử lại."));
+      setError(getApiErrorMessage(e, t("Đặt lại mật khẩu thất bại, thử lại.")));
     }
   };
 

@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 // features/address/hooks/useSelectLocation.ts
 import type { LocationMapViewHandle } from "@/features/address/components/LocationMapView.types";
 import type { Region } from "@/features/address/types/Region";
@@ -301,6 +303,8 @@ const resolveAddress = async (
 };
 
 export function useSelectLocation() {
+  const { t } = useTranslation();
+
   const params = useLocalSearchParams<{
     editId?: string;
     latitude?: string;
@@ -323,12 +327,12 @@ export function useSelectLocation() {
             longitudeDelta: DELTA,
           }
         : DEFAULT_REGION,
-    [params.latitude, params.longitude],
+    [params.latitude, params.longitude, t],
   );
 
   const [region, setRegion] = useState<Region>(initialRegion);
   const [previewAddress, setPreviewAddress] = useState(
-    "Đang xác định vị trí...",
+    t("Đang xác định vị trí..."),
   );
   const [detectedParts, setDetectedParts] = useState<DetectedParts | null>(
     null,
@@ -355,7 +359,7 @@ export function useSelectLocation() {
         [parts.addressLine, parts.ward, parts.province]
           .filter(Boolean)
           .join(", ")) ||
-        "Không xác định được địa chỉ",
+        t("Không xác định được địa chỉ"),
     );
     setIsLocating(false);
   };
@@ -375,7 +379,7 @@ export function useSelectLocation() {
       setIsLoadingGps(true);
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        setPreviewAddress("Bạn cần cấp quyền vị trí để dùng tính năng này");
+        setPreviewAddress(t("Bạn cần cấp quyền vị trí để dùng tính năng này"));
         return;
       }
       const current = await Location.getCurrentPositionAsync({});
@@ -390,7 +394,7 @@ export function useSelectLocation() {
       scheduleLocate(next.latitude, next.longitude);
     } catch {
       setPreviewAddress(
-        "Không thể lấy vị trí hiện tại. Vui lòng bật GPS và thử lại",
+        t("Không thể lấy vị trí hiện tại. Vui lòng bật GPS và thử lại"),
       );
     } finally {
       setIsLoadingGps(false);

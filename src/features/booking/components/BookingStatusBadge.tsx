@@ -1,4 +1,5 @@
-import { BOOKING_STATUS_META } from "@/features/booking/utils/bookingStatus";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { getBookingStatusMap } from "@/features/booking/utils/bookingStatus";
 import { Text, View } from "react-native";
 
 interface BookingStatusBadgeProps {
@@ -8,12 +9,16 @@ interface BookingStatusBadgeProps {
 export default function BookingStatusBadge({
   status,
 }: BookingStatusBadgeProps) {
+  const { COLORS } = useAppTheme();
+
+  const BOOKING_STATUS_META = getBookingStatusMap(COLORS);
+
   const meta = BOOKING_STATUS_META[
     status as keyof typeof BOOKING_STATUS_META
   ] ?? {
     label: status,
-    color: "#374151",
-    bg: "#F3F4F6",
+    color: COLORS.inkSoft,
+    bg: COLORS.surfaceMuted,
   };
 
   return (

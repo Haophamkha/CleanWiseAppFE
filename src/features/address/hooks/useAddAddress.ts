@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 // features/address/hooks/useAddAddress.ts
 import { useCreateAddressMutation } from "@/features/address/api/addressApi";
 import { useAddressForm } from "@/features/address/hooks/useAddressForm";
@@ -7,6 +9,8 @@ import { getApiErrorMessage } from "@/utils/apiError";
 import { router, useLocalSearchParams } from "expo-router";
 
 export function useAddAddress() {
+  const { t } = useTranslation();
+
   const params = useLocalSearchParams<{
     latitude?: string;
     longitude?: string;
@@ -34,7 +38,7 @@ export function useAddAddress() {
       }
     } catch (e) {
       form.setError(
-        getApiErrorMessage(e, "Thêm địa chỉ thất bại, vui lòng thử lại"),
+        getApiErrorMessage(e, t("Thêm địa chỉ thất bại, vui lòng thử lại")),
       );
     }
   };

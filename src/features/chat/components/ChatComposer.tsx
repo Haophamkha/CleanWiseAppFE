@@ -1,4 +1,7 @@
-import { COLORS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { Feather } from "@expo/vector-icons";
 import {
     StyleSheet,
@@ -10,6 +13,7 @@ import {
 
 type Props = {
   canSend: boolean;
+  restrictionNotice?: string;
   draft: string;
   onChange: (value: string) => void;
   onBlur: () => void;
@@ -19,12 +23,19 @@ type Props = {
 
 export function ChatComposer({
   canSend,
+  restrictionNotice,
   draft,
   onChange,
   onBlur,
   onSend,
   bottomPadding,
 }: Props) {
+  const { t } = useTranslation();
+
+  const { mode: themeMode } = useAppTheme();
+
+  const { COLORS } = useAppTheme();
+
   const box = {
     backgroundColor: COLORS.surface,
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -59,7 +70,7 @@ export function ChatComposer({
               flexShrink: 1,
             }}
           >
-            Lịch này đã kết thúc, bạn vẫn có thể xem lịch sử trò chuyện.
+            {restrictionNotice ?? t("Lịch này đã kết thúc, bạn vẫn có thể xem lịch sử trò chuyện.")}
           </Text>
         </View>
       </View>
@@ -82,11 +93,11 @@ export function ChatComposer({
         },
       ]}
     >
-      <TextInput
+      <TextInput keyboardAppearance={themeMode}
         value={draft}
         onChangeText={onChange}
         onBlur={onBlur}
-        placeholder="Tin nhắn"
+        placeholder={t("Tin nhắn")}
         placeholderTextColor={COLORS.inkMuted}
         multiline
         maxLength={2000}

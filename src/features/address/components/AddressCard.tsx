@@ -1,6 +1,9 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 // components/address/AddressCard.tsx
 import { Badge, Card, type FeatherName } from "@/components/ui";
-import { COLORS } from "@/constants/theme";
+
 import type { Address } from "@/features/address/types/Address";
 import { Feather } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -23,6 +26,10 @@ export default function AddressCard({
   onEdit,
   onSelect,
 }: AddressCardProps) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   return (
     <TouchableOpacity
       disabled={!onSelect}
@@ -42,11 +49,11 @@ export default function AddressCard({
           <View className="flex-1 pr-2">
             <View className="flex-row items-center mb-1">
               <Text className="text-base font-bold text-ink" numberOfLines={1}>
-                {address.label || "Địa chỉ"}
+                {address.label || t("Địa chỉ")}
               </Text>
               {address.is_default && (
                 <View className="ml-2">
-                  <Badge label="Mặc định" tone="primary" />
+                  <Badge label={t("Mặc định")} tone="primary" />
                 </View>
               )}
             </View>

@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 // src/components/booking/ServiceOptionsSummary.tsx
 import type {
     FormField,
@@ -21,6 +23,8 @@ export function ServiceOptionsSummary({
   values: Record<string, any>;
   pricingConfig?: PricingConfig;
 }) {
+  const { t } = useTranslation();
+
   return (
     <View>
       {fields.map((field) => {
@@ -57,7 +61,7 @@ export function ServiceOptionsSummary({
                   <InfoRow
                     key={idx}
                     title={catOpt?.label ?? "—"}
-                    subtitle={[opt?.label, `Số lượng: ${item.quantity ?? 1}`]
+                    subtitle={[opt?.label, t("Số lượng: {{value0}}", { value0: item.quantity ?? 1 })]
                       .filter(Boolean)
                       .join(" · ")}
                     trailing={price != null ? formatVnd(price) : undefined}
@@ -131,7 +135,7 @@ export function ServiceOptionsSummary({
           return (
             <View key={field.key}>
               <SectionLabel label={field.label} />
-              <InfoRow title="Có" />
+              <InfoRow title={t("Có")} />
             </View>
           );
         }
@@ -151,7 +155,7 @@ export function ServiceOptionsSummary({
 function SectionLabel({ label }: { label: string }) {
   return (
     <View className="flex-row items-center mt-3 mb-2">
-      <View className="w-1 h-3.5 rounded-full bg-primary mr-2" />
+      <View className="w-1 h-3.5 rounded-full bg-primary-fill mr-2" />
       <Text
         className="text-[12px] font-bold uppercase text-ink-muted"
         style={{ letterSpacing: 0.4 }}

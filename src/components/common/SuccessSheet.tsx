@@ -1,3 +1,4 @@
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { COLORS, RADIUS } from "@/constants/theme";
 import { Feather } from "@expo/vector-icons";
 import {
@@ -59,6 +60,8 @@ const OFFSET = 520;
 const DEFAULT_AUTO_CLOSE_MS = 3000;
 
 export function SuccessSheetProvider({ children }: { children: ReactNode }) {
+  const { COLORS } = useAppTheme();
+
   const insets = useSafeAreaInsets();
   const [config, setConfig] = useState<SuccessSheetConfig | null>(null);
   const configRef = useRef<SuccessSheetConfig | null>(null);
@@ -264,7 +267,7 @@ export function SuccessSheetProvider({ children }: { children: ReactNode }) {
                   width: 76,
                   height: 76,
                   borderRadius: 38,
-                  backgroundColor: COLORS.success,
+                  backgroundColor: COLORS.successFill,
                   alignItems: "center",
                   justifyContent: "center",
                   transform: [{ scale: check }],

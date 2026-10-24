@@ -1,4 +1,6 @@
-import { COLORS, SHADOWS } from "@/constants/theme";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { SHADOWS } from "@/constants/theme";
 import { Feather } from "@expo/vector-icons";
 import { ReactNode, useState } from "react";
 import {
@@ -36,6 +38,8 @@ export function AuthScreen({
   footer,
   children,
 }: AuthScreenProps) {
+  const { COLORS } = useAppTheme();
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.canvas }}>
       <KeyboardAvoidingView
@@ -143,6 +147,10 @@ export function PillInput({
   onBlur,
   ...rest
 }: PillInputProps) {
+  const { mode: themeMode } = useAppTheme();
+
+  const { COLORS } = useAppTheme();
+
   const [focused, setFocused] = useState(false);
   const [hidden, setHidden] = useState(true);
 
@@ -173,7 +181,7 @@ export function PillInput({
           color={focused ? COLORS.primary : COLORS.inkMuted}
         />
       )}
-      <TextInput
+      <TextInput keyboardAppearance={themeMode}
         {...rest}
         secureTextEntry={password ? hidden : rest.secureTextEntry}
         placeholderTextColor={COLORS.inkMuted}
@@ -232,6 +240,8 @@ export function PillButton({
   loading,
   left,
 }: PillButtonProps) {
+  const { COLORS } = useAppTheme();
+
   const isPrimary = variant === "primary";
   const off = disabled || loading;
 
@@ -250,7 +260,7 @@ export function PillButton({
           opacity: off ? 0.6 : 1,
         },
         isPrimary
-          ? { backgroundColor: COLORS.primary, ...SHADOWS.float }
+          ? { backgroundColor: COLORS.primaryFill, ...SHADOWS.float }
           : {
               backgroundColor: COLORS.surface,
               borderWidth: 1.5,
@@ -282,7 +292,9 @@ export function PillButton({
 /* ------------------------------------------------------------------ */
 /* OrDivider                                                            */
 /* ------------------------------------------------------------------ */
-export function OrDivider({ label = "Hoặc" }: { label?: string }) {
+export function OrDivider({ label = t("Hoặc") }: { label?: string }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       style={{ flexDirection: "row", alignItems: "center", marginVertical: 18 }}

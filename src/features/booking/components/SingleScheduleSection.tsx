@@ -1,5 +1,8 @@
+import { useTranslation } from "react-i18next";
+import { translate as t, getLocale } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Card } from "@/components/ui/Card";
-import { COLORS } from "@/constants/theme";
+
 import type {
   BookingScheduleDetail,
   BookingStatus,
@@ -22,52 +25,20 @@ import { SectionTitle } from "./SectionTitle";
 
 type FeatherName = keyof typeof Feather.glyphMap;
 
-const STATUS_CONFIG: Record<
-  string,
-  { label: string; bg: string; text: string; icon: FeatherName }
-> = {
-  PENDING: {
-    label: "Chờ thực hiện",
-    bg: COLORS.accentLight,
-    text: COLORS.accentDark,
-    icon: "clock",
-  },
-  IN_PROGRESS: {
-    label: "Đang thực hiện",
-    bg: COLORS.infoLight,
-    text: COLORS.infoDark,
-    icon: "loader",
-  },
-  COMPLETED: {
-    label: "Đã hoàn thành",
-    bg: COLORS.successLight,
-    text: COLORS.success,
-    icon: "check-circle",
-  },
-  CANCELLED: {
-    label: "Đã hủy",
-    bg: COLORS.dangerLight,
-    text: COLORS.danger,
-    icon: "x-circle",
-  },
-  MISSED: {
-    label: "Không có nhân viên nhận",
-    bg: COLORS.canvas,
-    text: COLORS.inkSoft,
-    icon: "alert-triangle",
-  },
-};
+function getLocalizedImageTypeOrder(): { type: string; label: string; icon: FeatherName }[] {
+  return [
+    { type: "BEFORE", label: t("Trước khi làm"), icon: "image" },
+    { type: "AFTER", label: t("Sau khi làm"), icon: "image" },
+    { type: "ISSUE", label: t("Báo cáo sự cố"), icon: "alert-triangle" },
+  ];
+}
 
-const IMAGE_TYPE_ORDER: { type: string; label: string; icon: FeatherName }[] = [
-  { type: "BEFORE", label: "Trước khi làm", icon: "image" },
-  { type: "AFTER", label: "Sau khi làm", icon: "image" },
-  { type: "ISSUE", label: "Báo cáo sự cố", icon: "alert-triangle" },
-];
-
-const IMAGE_TYPE_LABEL: Record<string, string> = { OTHER: "Khác" };
+function getLocalizedImageTypeLabel(): Record<string, string> {
+  return { OTHER: t("Khác") };
+}
 
 const timeText = (iso: string) =>
-  new Date(iso).toLocaleTimeString("vi-VN", {
+  new Date(iso).toLocaleTimeString(getLocale(), {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -89,6 +60,8 @@ function InfoRow({
   isLast?: boolean;
   empty?: boolean;
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       className={`flex-row items-center py-3 ${
@@ -131,6 +104,10 @@ function PhotoRow({
   onOpen: (uri: string) => void;
   showEmpty?: boolean;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   if (images.length === 0 && !showEmpty) return null;
   return (
     <View className="mb-3">
@@ -166,7 +143,7 @@ function PhotoRow({
           style={{ height: 64 }}
         >
           <Feather name={icon} size={15} color={COLORS.inkMuted} />
-          <Text className="text-[11.5px] text-ink-muted mt-1">Chưa có ảnh</Text>
+          <Text className="text-[11.5px] text-ink-muted mt-1">{t("Chưa có ảnh")}</Text>
         </View>
       )}
     </View>
@@ -182,6 +159,46 @@ export function SingleScheduleSection({
   bookingId: number;
   bookingStatus: BookingStatus;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
+  const STATUS_CONFIG: Record<
+  string,
+  { label: string; bg: string; text: string; icon: FeatherName }
+> = {
+  PENDING: {
+    label: t("Chờ thực hiện"),
+    bg: COLORS.accentLight,
+    text: COLORS.accentDark,
+    icon: "clock",
+  },
+  IN_PROGRESS: {
+    label: t("Đang thực hiện"),
+    bg: COLORS.infoLight,
+    text: COLORS.infoDark,
+    icon: "loader",
+  },
+  COMPLETED: {
+    label: t("Đã hoàn thành"),
+    bg: COLORS.successLight,
+    text: COLORS.success,
+    icon: "check-circle",
+  },
+  CANCELLED: {
+    label: t("Đã hủy"),
+    bg: COLORS.dangerLight,
+    text: COLORS.danger,
+    icon: "x-circle",
+  },
+  MISSED: {
+    label: t("Không có nhân viên nhận"),
+    bg: COLORS.canvas,
+    text: COLORS.inkSoft,
+    icon: "alert-triangle",
+  },
+};
+
   const [complaintVisible, setComplaintVisible] = useState(false);
   const [viewerImage, setViewerImage] = useState<string | null>(null);
   const [photosOpen, setPhotosOpen] = useState(false);
@@ -222,21 +239,21 @@ export function SingleScheduleSection({
   }[] = [
     {
       icon: "play-circle",
-      label: "Bắt đầu thực tế",
-      value: actualStart ?? "Chưa cập nhật",
+      label: t("Bắt đầu thực tế"),
+      value: actualStart ?? t("Chưa cập nhật"),
       empty: !actualStart,
     },
     {
       icon: "check-circle",
-      label: "Hoàn thành lúc",
-      value: actualEnd ?? "Chưa cập nhật",
+      label: t("Hoàn thành lúc"),
+      value: actualEnd ?? t("Chưa cập nhật"),
       empty: !actualEnd,
     },
   ];
 
   const fullName = worker
     ? `${worker.last_name ?? ""} ${worker.first_name ?? ""}`.trim() ||
-      "Nhân viên"
+      t("Nhân viên")
     : "";
 
   const goToWorker = () => {
@@ -254,7 +271,7 @@ export function SingleScheduleSection({
   return (
     <View className="mb-5">
       <View className="flex-row items-center justify-between">
-        <SectionTitle icon="user">Buổi làm việc</SectionTitle>
+        <SectionTitle icon="user">{t("Buổi làm việc")}</SectionTitle>
         <View
           className="flex-row items-center px-3 py-1.5 rounded-full mb-3"
           style={{ backgroundColor: config.bg }}
@@ -296,7 +313,7 @@ export function SingleScheduleSection({
             >
               <Feather name="info" size={16} color={COLORS.danger} />
               <Text className="ml-2.5 text-[13.5px] text-ink-soft flex-1 leading-5">
-                <Text className="font-bold">Lý do: </Text>
+                <Text className="font-bold">{t("Lý do:")} </Text>
                 {schedule.cancel_reason}
               </Text>
             </View>
@@ -321,8 +338,7 @@ export function SingleScheduleSection({
             <View className="ml-3 flex-1">
               <Text className="font-bold text-[15px] text-ink">{fullName}</Text>
               <Text className="text-[12.5px] text-ink-soft mt-0.5">
-                Nhân viên thực hiện
-              </Text>
+                {t("Nhân viên thực hiện")}</Text>
             </View>
             <View className="w-8 h-8 rounded-full bg-surface items-center justify-center">
               <Feather name="chevron-right" size={17} color={COLORS.primary} />
@@ -335,11 +351,9 @@ export function SingleScheduleSection({
             </View>
             <View className="ml-3 flex-1">
               <Text className="font-semibold text-[15px] text-ink-soft">
-                Chưa có nhân viên
-              </Text>
+                {t("Chưa có nhân viên")}</Text>
               <Text className="text-[12.5px] text-ink-muted mt-0.5">
-                Đang chờ nhân viên nhận việc
-              </Text>
+                {t("Đang chờ nhân viên nhận việc")}</Text>
             </View>
           </View>
         )}
@@ -355,12 +369,10 @@ export function SingleScheduleSection({
               <Feather name="camera" size={16} color={COLORS.primaryDark} />
             </View>
             <Text className="ml-3 flex-1 text-[14px] font-bold text-ink">
-              Ảnh minh chứng
-            </Text>
+              {t("Ảnh minh chứng")}</Text>
             <View className="mr-2 px-2 py-0.5 rounded-full bg-surface">
               <Text className="text-[11.5px] font-bold text-ink-soft">
-                {images.length} ảnh
-              </Text>
+                {images.length} {t("ảnh")}</Text>
             </View>
             <Feather
               name={photosOpen ? "chevron-up" : "chevron-down"}
@@ -371,7 +383,7 @@ export function SingleScheduleSection({
 
           {photosOpen && (
             <View className="px-3.5 pt-3 pb-1 bg-surface">
-              {IMAGE_TYPE_ORDER.map(({ type, label, icon }) => (
+              {getLocalizedImageTypeOrder().map(({ type, label, icon }) => (
                 <PhotoRow
                   key={type}
                   label={label}
@@ -381,7 +393,7 @@ export function SingleScheduleSection({
                 />
               ))}
               <PhotoRow
-                label={IMAGE_TYPE_LABEL.OTHER}
+                label={getLocalizedImageTypeLabel().OTHER}
                 icon="image"
                 images={otherImages}
                 onOpen={setViewerImage}

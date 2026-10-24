@@ -1,4 +1,7 @@
-import { COLORS, SHADOWS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { SHADOWS } from "@/constants/theme";
 import { Feather } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
 
@@ -21,6 +24,8 @@ function ActionCard({
   onPress,
   disabled,
 }: CardProps) {
+  const { COLORS } = useAppTheme();
+
   return (
     <TouchableOpacity
       activeOpacity={0.85}
@@ -50,8 +55,8 @@ export function ReviewFeedbackButtons({
   onReview,
   onFeedback,
   style,
-  reviewTitle = "Đánh giá",
-  reviewSubtitle = "Chia sẻ trải nghiệm",
+  reviewTitle = t("Đánh giá"),
+  reviewSubtitle = t("Chia sẻ trải nghiệm"),
   reviewDisabled,
 }: {
   onReview?: () => void;
@@ -61,6 +66,10 @@ export function ReviewFeedbackButtons({
   reviewSubtitle?: string;
   reviewDisabled?: boolean;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   return (
     <View className="flex-row" style={[{ gap: 12 }, style]}>
       <ActionCard
@@ -75,8 +84,8 @@ export function ReviewFeedbackButtons({
       {onFeedback && (
         <ActionCard
           icon="alert-circle"
-          title="Phản hồi"
-          subtitle="Báo vấn đề phát sinh"
+          title={t("Phản hồi")}
+          subtitle={t("Báo vấn đề phát sinh")}
           bg={COLORS.dangerLight}
           tint={COLORS.danger}
           onPress={onFeedback}

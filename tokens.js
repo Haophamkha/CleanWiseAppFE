@@ -46,12 +46,14 @@ const ACTIVE = "teal"; // <-- violet | teal | emerald | cyan
 
 const p = palettes[ACTIVE];
 
-module.exports = {
+const light = {
   colors: {
-    primary: p.primary,
+    primary: { ...p.primary, fill: p.primary.DEFAULT, fillDark: p.primary.dark },
     accent: { DEFAULT: "#F59E0B", light: "#FEF3C7", dark: "#B45309" },
     canvas: "#F5F7FA",
     surface: "#FFFFFF",
+    surfaceMuted: "#F3F4F6",
+    violet: { DEFAULT: "#7C3AED", light: "#EDE9FE" },
     line: "#E5E7EB",
     ink: { DEFAULT: "#111827", soft: "#4B5563", muted: "#9CA3AF" },
     success: { DEFAULT: "#16A34A", light: "#DCFCE7" },
@@ -59,4 +61,48 @@ module.exports = {
     info: { DEFAULT: "#2563EB", light: "#DBEAFE", dark: "#1E40AF" },
   },
   gradients: { hero: p.gradient },
+};
+
+for (const family of ["success", "danger", "info", "accent"]) light.colors[family].fill = light.colors[family].DEFAULT;
+
+const dark = {
+  colors: {
+    primary: { DEFAULT: "#5EEAD4", dark: "#99F6E4", fill: "#0F766E", fillDark: "#115E59", light: "#203635", soft: "#192B2C", border: "#345451" },
+    accent: { DEFAULT: "#FBBF24", fill: "#92400E", light: "#362F23", dark: "#FDE68A" },
+    canvas: "#111318",
+    surface: "#1B1F27",
+    surfaceMuted: "#252B35",
+    line: "#2C333D",
+    ink: { DEFAULT: "#F1F5F9", soft: "#B8C0CC", muted: "#929EAF" },
+    success: { DEFAULT: "#86EFAC", fill: "#166534", light: "#23362E" },
+    danger: { DEFAULT: "#FCA5A5", fill: "#B91C1C", light: "#38282D" },
+    info: { DEFAULT: "#93C5FD", fill: "#1D4ED8", light: "#243145", dark: "#BFDBFE" },
+    violet: { DEFAULT: "#C4B5FD", light: "#302D40" },
+  },
+  gradients: { hero: ["#182B2D", "#171F27", "#111318"] },
+};
+
+function colorVariables(colors, prefix = "--cw") {
+  const result = {};
+  for (const [key, value] of Object.entries(colors)) {
+    const name = key === "DEFAULT" ? prefix : `${prefix}-${key.replace(/[A-Z]/g, char => `-${char.toLowerCase()}`)}`;
+    if (typeof value === "object") Object.assign(result, colorVariables(value, name));
+    else {
+      const hex = value.replace("#", "");
+      result[name] = [0, 2, 4].map(index => parseInt(hex.slice(index, index + 2), 16)).join(" ");
+    }
+  }
+  return result;
+}
+function variableColors(colors, prefix = "--cw") {
+  return Object.fromEntries(Object.entries(colors).map(([key, value]) => {
+    const name = key === "DEFAULT" ? prefix : `${prefix}-${key.replace(/[A-Z]/g, char => `-${char.toLowerCase()}`)}`;
+    return [key === "DEFAULT" ? "DEFAULT" : key.replace(/[A-Z]/g, char => `-${char.toLowerCase()}`), typeof value === "object" ? variableColors(value, name) : `rgb(var(${name}) / <alpha-value>)`];
+  }));
+}
+module.exports = {
+  ...light,
+  themes: { light, dark },
+  variables: { light: colorVariables(light.colors), dark: colorVariables(dark.colors) },
+  tailwindColors: variableColors(light.colors),
 };

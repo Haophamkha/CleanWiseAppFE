@@ -1,9 +1,12 @@
-import { COLORS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import {
   useCancelComplaintMutation,
   useGetComplaintDetailQuery,
 } from "@/features/complaint/api/complaintApi";
-import { COMPLAINT_STATUS_META } from "@/features/complaint/components/ComplaintCard";
+import { getComplaintStatusMap } from "@/features/complaint/components/ComplaintCard";
 import { formatReviewDate } from "@/features/review/utils/reviewFormat";
 import { formatVnd } from "@/utils/currency";
 import { Feather } from "@expo/vector-icons";
@@ -26,6 +29,10 @@ export function ComplaintDetailModal({
   id: number | null;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const { data, isLoading, isError } = useGetComplaintDetailQuery(
     id as number,
     {
@@ -34,21 +41,22 @@ export function ComplaintDetailModal({
   );
   const [cancel, { isLoading: cancelling }] = useCancelComplaintMutation();
 
+  const COMPLAINT_STATUS_META = getComplaintStatusMap(COLORS);
   const meta = data ? COMPLAINT_STATUS_META[data.status] : undefined;
   const refund = Number(data?.refund_amount) || 0;
 
   const onCancel = () =>
-    Alert.alert("Hủy khiếu nại", "Bạn chắc chắn muốn hủy khiếu nại này?", [
-      { text: "Không", style: "cancel" },
+    Alert.alert(t("Hủy khiếu nại"), t("Bạn chắc chắn muốn hủy khiếu nại này?"), [
+      { text: t("Không"), style: "cancel" },
       {
-        text: "Hủy khiếu nại",
+        text: t("Hủy khiếu nại"),
         style: "destructive",
         onPress: async () => {
           try {
             await cancel(id as number).unwrap();
             onClose();
           } catch {
-            Alert.alert("Lỗi", "Không hủy được khiếu nại, thử lại sau.");
+            Alert.alert(t("Lỗi"), t("Không hủy được khiếu nại, thử lại sau."));
           }
         },
       },
@@ -65,8 +73,7 @@ export function ComplaintDetailModal({
       <View className="bg-surface rounded-t-3xl" style={{ maxHeight: "85%" }}>
         <View className="flex-row items-center justify-between px-5 pt-5 pb-3">
           <Text className="text-ink font-extrabold text-lg">
-            Chi tiết khiếu nại
-          </Text>
+            {t("Chi tiết khiếu nại")}</Text>
           <Pressable onPress={onClose} hitSlop={10}>
             <Feather name="x" size={22} color={COLORS.inkSoft} />
           </Pressable>
@@ -78,8 +85,7 @@ export function ComplaintDetailModal({
           </View>
         ) : isError || !data ? (
           <Text className="text-ink-soft text-center py-16">
-            Không tải được khiếu nại
-          </Text>
+            {t("Không tải được khiếu nại")}</Text>
         ) : (
           <ScrollView
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
@@ -105,8 +111,7 @@ export function ComplaintDetailModal({
             </View>
             <View className="flex-row flex-wrap items-center mt-3">
               <Text className="text-ink-muted text-[11px] font-bold mr-2">
-                MÃ KHIẾU NẠI
-              </Text>
+                {t("MÃ KHIẾU NẠI")}</Text>
               <Text
                 selectable
                 className="text-ink text-[14px] font-extrabold"
@@ -130,8 +135,7 @@ export function ComplaintDetailModal({
                 className="text-[11px] font-bold mr-2"
                 style={{ color: COLORS.primaryDark, opacity: 0.7 }}
               >
-                MÃ ĐƠN
-              </Text>
+                {t("MÃ ĐƠN")}</Text>
               <Text
                 selectable
                 className="text-[14px] font-extrabold"
@@ -151,7 +155,7 @@ export function ComplaintDetailModal({
                   className="text-[12px] font-semibold ml-2"
                   style={{ color: COLORS.primaryDark }}
                 >
-                  · Buổi {data.schedule_sequence_no}
+                  {t("· Buổi")}{" "}{data.schedule_sequence_no}
                 </Text>
               )}
             </View>
@@ -159,20 +163,19 @@ export function ComplaintDetailModal({
               {data.stage_label}
             </Text>
             <Text className="text-ink-muted text-xs mt-0.5">
-              Gửi lúc {formatReviewDate(data.created_at)}
+              {t("Gửi lúc")}{" "}{formatReviewDate(data.created_at)}
             </Text>
 
             {!!data.worker_name && (
               <Text className="text-ink-soft text-sm mt-3">
-                Nhân viên liên quan: {data.worker_name}
+                {t("Nhân viên liên quan:")}{" "}{data.worker_name}
               </Text>
             )}
 
             {!!data.content && (
               <View className="bg-canvas rounded-2xl p-3.5 mt-4">
                 <Text className="text-ink-muted text-xs font-bold mb-1">
-                  Nội dung
-                </Text>
+                  {t("Nội dung")}</Text>
                 <Text className="text-ink text-sm leading-5">
                   {data.content}
                 </Text>
@@ -199,8 +202,7 @@ export function ComplaintDetailModal({
             {(!!data.resolution_note || refund > 0) && (
               <View className="bg-primary-soft border border-primary-border rounded-2xl p-3.5 mt-4">
                 <Text className="text-primary-dark text-xs font-bold mb-1">
-                  Phản hồi từ CleanWise
-                </Text>
+                  {t("Phản hồi từ CleanWise")}</Text>
                 {!!data.resolution_note && (
                   <Text className="text-ink-soft text-sm leading-5">
                     {data.resolution_note}
@@ -208,12 +210,11 @@ export function ComplaintDetailModal({
                 )}
                 {refund > 0 && (
                   <Text className="text-success font-bold text-sm mt-2">
-                    Đã hoàn {formatVnd(refund)} vào ví
-                  </Text>
+                    {t("Đã hoàn")}{" "}{formatVnd(refund)} {t("vào ví")}</Text>
                 )}
                 {!!data.resolved_at && (
                   <Text className="text-ink-muted text-xs mt-2">
-                    Xử lý lúc {formatReviewDate(data.resolved_at)}
+                    {t("Xử lý lúc")}{" "}{formatReviewDate(data.resolved_at)}
                   </Text>
                 )}
               </View>
@@ -228,7 +229,7 @@ export function ComplaintDetailModal({
                 {cancelling ? (
                   <ActivityIndicator color={COLORS.danger} />
                 ) : (
-                  <Text className="text-danger font-bold">Hủy khiếu nại</Text>
+                  <Text className="text-danger font-bold">{t("Hủy khiếu nại")}</Text>
                 )}
               </Pressable>
             )}

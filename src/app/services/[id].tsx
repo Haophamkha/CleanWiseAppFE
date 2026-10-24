@@ -1,3 +1,6 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { useGetAddressesQuery } from "@/features/address/api/addressApi";
 import { clearPickedAddress } from "@/features/address/stores/addressPickerSlice";
 import { setBookingDraft } from "@/features/booking/stores/bookingDraftSlice";
@@ -27,6 +30,10 @@ import { showErrorToast } from "@/utils/toast";
 import { getMissingRequiredFieldLabels } from "@/utils/validators";
 
 export default function ServiceDetailScreen() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const serviceId = Number(id);
   const dispatch = useAppDispatch();
@@ -57,7 +64,7 @@ export default function ServiceDetailScreen() {
   const addressEntries =
     service?.form_schema?.addresses ??
     (service
-      ? [{ key: "address", label: "Địa chỉ thực hiện dịch vụ", required: true }]
+      ? [{ key: "address", label: t("Địa chỉ thực hiện dịch vụ"), required: true }]
       : []);
 
   const pickerKeyFor = (entryKey: string) => `service_${serviceId}_${entryKey}`;
@@ -106,7 +113,7 @@ export default function ServiceDetailScreen() {
     }
 
     if (missing.length > 0) {
-      showErrorToast("Thiếu thông tin", `Vui lòng điền: ${missing.join(", ")}`);
+      showErrorToast(t("Thiếu thông tin"), t("Vui lòng điền: {{value0}}", { value0: missing.join(", ") }));
       return;
     }
 
@@ -133,30 +140,29 @@ export default function ServiceDetailScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator color="#047857" />
+      <View className="flex-1 items-center justify-center bg-surface">
+        <ActivityIndicator color={COLORS.success} />
       </View>
     );
   }
 
   if (isError || !service) {
     return (
-      <View className="flex-1 items-center justify-center bg-white px-6">
+      <View className="flex-1 items-center justify-center bg-surface px-6">
         <Feather name="alert-circle" size={36} color="#DC2626" />
-        <Text className="text-gray-900 font-semibold mt-4">
-          Không tải được dịch vụ
-        </Text>
+        <Text className="text-ink font-semibold mt-4">
+          {t("Không tải được dịch vụ")}</Text>
         <TouchableOpacity
           className="mt-5 bg-emerald-700 rounded-xl px-6 py-3"
           onPress={() => router.back()}
         >
-          <Text className="text-white font-bold">Quay lại</Text>
+          <Text className="text-white font-bold">{t("Quay lại")}</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
-  const visual = getServiceVisual(service.section_code);
+  const visual = getServiceVisual(service.section_code, COLORS);
   const heroImage =
     service.images?.find((i) => i.is_primary)?.image ??
     service.images?.[0]?.image ??
@@ -186,13 +192,13 @@ export default function ServiceDetailScreen() {
   );
 
   return (
-    <View className="flex-1 bg-white">
-      <View className="flex-row items-center px-5 pt-14 pb-4 border-b border-gray-100">
+    <View className="flex-1 bg-surface">
+      <View className="flex-row items-center px-5 pt-14 pb-4 border-b border-line">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Feather name="arrow-left" size={22} color="#111827" />
         </TouchableOpacity>
         <Text
-          className="text-lg font-bold text-gray-900 flex-1"
+          className="text-lg font-bold text-ink flex-1"
           numberOfLines={1}
         >
           {service.name}
@@ -225,7 +231,7 @@ export default function ServiceDetailScreen() {
         )}
 
         <View className="px-5 pt-5">
-          <Text className="text-gray-500 text-sm mb-5">
+          <Text className="text-ink-soft text-sm mb-5">
             {service.description}
           </Text>
 
@@ -258,19 +264,19 @@ export default function ServiceDetailScreen() {
           onRemove={handleRemoveGroupItem}
           onSubmit={handleGoToConfirm}
           submitDisabled={groupItems.length === 0 || missingRequiredAddress}
-          submitLabel="Tiếp theo"
+          submitLabel={t("Tiếp theo")}
         />
       ) : (
         <View
-          className="px-6 pt-4 border-t border-gray-100 bg-white"
+          className="px-6 pt-4 border-t border-line bg-surface"
           style={{ paddingBottom: insets.bottom + 16 }}
         >
           <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-gray-500 text-sm">Tạm tính</Text>
+            <Text className="text-ink-soft text-sm">{t("Tạm tính")}</Text>
             <Text className="text-emerald-700 font-bold text-lg">
               {estimatedPrice != null
                 ? formatVnd(estimatedPrice)
-                : "Chưa đủ thông tin"}
+                : t("Chưa đủ thông tin")}
             </Text>
           </View>
           <TouchableOpacity
@@ -283,7 +289,7 @@ export default function ServiceDetailScreen() {
             disabled={estimatedPrice == null || missingRequiredAddress}
             onPress={handleGoToConfirm}
           >
-            <Text className="text-white font-bold text-base">Đặt dịch vụ</Text>
+            <Text className="text-white font-bold text-base">{t("Đặt dịch vụ")}</Text>
           </TouchableOpacity>
         </View>
       )}

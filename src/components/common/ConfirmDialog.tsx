@@ -1,4 +1,6 @@
-import { COLORS } from "@/features/service/components/formFieldShared";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { Feather } from "@expo/vector-icons";
 import {
     ActivityIndicator,
@@ -29,13 +31,15 @@ export function ConfirmDialog({
   visible,
   title,
   message,
-  confirmText = "Xác nhận",
-  cancelText = "Huỷ",
+  confirmText = t("Xác nhận"),
+  cancelText = t("Huỷ"),
   danger = false,
   loading = false,
   onConfirm,
   onCancel,
 }: Props) {
+  const { COLORS } = useAppTheme();
+
   const accentColor = danger ? COLORS.danger : COLORS.primary;
   const accentBg = danger ? "#FEF2F2" : COLORS.primaryLight;
 

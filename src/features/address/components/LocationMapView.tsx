@@ -1,4 +1,5 @@
-import { COLORS } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import {
   forwardRef,
   useEffect,
@@ -24,8 +25,16 @@ const MAP_STYLE = "liberty";
 
 const LocationMapView = forwardRef<LocationMapViewHandle, Props>(
   ({ initialRegion, onRegionChangeComplete, userLocation }, ref) => {
+  const { COLORS } = useAppTheme();
+
     const webviewRef = useRef<WebView>(null);
     const loadedRef = useRef(false);
+    useEffect(() => {
+      if (loadedRef.current) {
+        webviewRef.current?.injectJavaScript(`document.body.style.backgroundColor = '${COLORS.canvas}'; document.documentElement.style.backgroundColor = '${COLORS.canvas}'; true;`);
+      }
+    }, [COLORS.canvas]);
+
 
     const onChangeRef = useRef(onRegionChangeComplete);
     onChangeRef.current = onRegionChangeComplete;
@@ -64,7 +73,7 @@ const LocationMapView = forwardRef<LocationMapViewHandle, Props>(
           <style>
             html, body, #map {
               height: 100%; margin: 0; padding: 0;
-              background-color: #eef3f4;
+              background-color: ${COLORS.canvas};
               -webkit-tap-highlight-color: transparent;
             }
             .maplibregl-ctrl-attrib {
@@ -194,7 +203,7 @@ const LocationMapView = forwardRef<LocationMapViewHandle, Props>(
             console.log("WebView message parse error", e);
           }
         }}
-        style={{ flex: 1, backgroundColor: "#eef3f4" }}
+        style={{ flex: 1, backgroundColor: COLORS.canvas }}
         javaScriptEnabled
         domStorageEnabled
         bounces={false}
@@ -210,7 +219,7 @@ const LocationMapView = forwardRef<LocationMapViewHandle, Props>(
               {
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: "#eef3f4",
+                backgroundColor: COLORS.canvas,
               },
             ]}
           >

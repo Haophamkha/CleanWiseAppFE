@@ -1,7 +1,8 @@
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 // src/components/service/FormSchemaRenderer.tsx
 import type { FormField } from "@/features/service/types/Service";
 import { Text, View } from "react-native";
-import { COLORS, FieldControl, Values } from "./formFieldShared";
+import { FieldControl, Values } from "./formFieldShared";
 import { RepeatableCategoryGroupField } from "./RepeatableCategoryGroupField";
 import { TaskChecklist } from "./TaskChecklist";
 
@@ -18,6 +19,8 @@ export function FormSchemaRenderer({
   taskChecklist?: string;
   onChange: (key: string, value: any) => void;
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View>
       {fields.map((field) => {

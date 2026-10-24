@@ -1,5 +1,8 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 // src/features/favorite-worker/components/WorkerCard.tsx
-import { COLORS, SHADOWS } from "@/constants/theme";
+import { SHADOWS } from "@/constants/theme";
 import type { FavoriteWorker } from "@/features/favorite-worker/types/FavoriteWorker";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -9,6 +12,8 @@ import { FavoriteHeartButton } from "./FavoriteHeartButton";
 const AVATAR = 64;
 
 function Chip({ icon, label }: { icon: any; label: string }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       style={{
@@ -38,10 +43,14 @@ export function WorkerCard({
   removing: boolean;
   onRemove: () => void;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   // Họ đứng trước tên: first_name = "Lò", last_name = "Văn C" -> "Lò Văn C"
   const fullName =
     `${worker.first_name ?? ""} ${worker.last_name ?? ""}`.trim() ||
-    "Nhân viên";
+    t("Nhân viên");
   const rating = Number(worker.average_rating ?? 0);
   const hasRating = worker.total_completed_jobs > 0 && rating > 0;
 
@@ -126,7 +135,7 @@ export function WorkerCard({
                 color: COLORS.accentDark,
               }}
             >
-              {hasRating ? rating.toFixed(1) : "Chưa có đánh giá"}
+              {hasRating ? rating.toFixed(1) : t("Chưa có đánh giá")}
             </Text>
           </View>
         </View>
@@ -138,11 +147,11 @@ export function WorkerCard({
       <View style={{ flexDirection: "row", marginTop: 12 }}>
         <Chip
           icon="briefcase"
-          label={`${worker.experience_years} năm kinh nghiệm`}
+          label={t("{{value0}} năm kinh nghiệm", { value0: worker.experience_years , count: worker.experience_years})}
         />
         <Chip
           icon="check-circle"
-          label={`${worker.total_completed_jobs} đơn`}
+          label={t("{{value0}} đơn", { value0: worker.total_completed_jobs , count: worker.total_completed_jobs})}
         />
       </View>
 
@@ -174,8 +183,7 @@ export function WorkerCard({
         <Text
           style={{ fontSize: 14, fontWeight: "700", color: COLORS.primaryDark }}
         >
-          Xem hồ sơ
-        </Text>
+          {t("Xem hồ sơ")}</Text>
         <Feather
           name="chevron-right"
           size={16}

@@ -1,12 +1,14 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { RequireLoginNotice } from "@/components/common/RequireLoginNotice";
-import { TabScreenHeader } from "@/components/common/TabScreenHeader";
 import { EmptyState } from "@/components/ui";
-import { COLORS } from "@/constants/theme";
+
 import { clearPickedAddress } from "@/features/address/stores/addressPickerSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { Feather } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -18,6 +20,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CHATBOT_ADDRESS_PICKER_KEY, addressPickedMessage } from "../constants";
 import { useChatbot } from "../hooks/useChatbot";
 import { useChatbotCardNavigation } from "../hooks/useChatbotCardNavigation";
@@ -28,7 +31,24 @@ import { ChatbotMessageBubble } from "./ChatbotMessageBubble";
 import { ChatbotThinkingIndicator } from "./ChatbotThinkingIndicator";
 import { ChatbotWelcome } from "./ChatbotWelcome";
 
+function ChatbotHeader({ children }: { children?: ReactNode }) {
+  const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+  return (
+    <View className="flex-row items-center justify-between px-5 pb-3" style={{ paddingTop: insets.top + 12 }}>
+      <Text className="flex-1 text-ink text-xl font-extrabold mr-3" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
+        {t("Trợ lý CleanWise")}
+      </Text>
+      {children}
+    </View>
+  );
+}
+
 function CustomerChatbot({ userId }: { userId: number }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const chat = useChatbot(userId);
   const { openCard, opening } = useChatbotCardNavigation();
   const [historyVisible, setHistoryVisible] = useState(false);
@@ -53,7 +73,7 @@ function CustomerChatbot({ userId }: { userId: number }) {
       if (followLatest.current && !dragging.current)
         list.current?.scrollToOffset({ offset: 0, animated: true });
     }, 100);
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     followLatest.current = true;
@@ -79,7 +99,7 @@ function CustomerChatbot({ userId }: { userId: number }) {
     useCallback(() => {
       setFocused(true);
       return () => setFocused(false);
-    }, []),
+    }, [t]),
   );
   const { send } = chat;
   const canAnnounce =
@@ -96,19 +116,8 @@ function CustomerChatbot({ userId }: { userId: number }) {
 
   return (
     <KeyboardAvoidingView className="flex-1 bg-canvas" behavior="padding">
-      <TabScreenHeader
-        title="Trợ lý CleanWise"
-        subtitle="Tìm dịch vụ, đặt lịch và tra cứu đơn của bạn"
-      >
-        <View className="flex-row items-center mt-4" style={{ gap: 8 }}>
-          <TouchableOpacity
-            onPress={() => router.push("/help" as any)}
-            accessibilityRole="button"
-            accessibilityLabel="Mở hướng dẫn sử dụng"
-            className="p-3 rounded-xl border border-line bg-surface"
-          >
-            <Feather name="book-open" size={18} color={COLORS.primaryDark} />
-          </TouchableOpacity>
+      <ChatbotHeader>
+        <View className="flex-row" style={{ gap: 8 }}>
           <TouchableOpacity
             onPress={() => {
               Keyboard.dismiss();
@@ -116,13 +125,11 @@ function CustomerChatbot({ userId }: { userId: number }) {
             }}
             disabled={unavailable}
             accessibilityRole="button"
-            accessibilityLabel="Xem lịch sử trò chuyện"
-            className={`flex-row items-center bg-surface rounded-full px-3.5 py-2 border border-line ${unavailable ? "opacity-50" : ""}`}
+            accessibilityLabel={t("Xem lịch sử trò chuyện")}
+            hitSlop={2}
+            className={`w-10 h-10 rounded-full bg-surface border border-line items-center justify-center ${unavailable ? "opacity-50" : ""}`}
           >
-            <Feather name="clock" size={14} color={COLORS.primaryDark} />
-            <Text className="text-primary-dark font-semibold text-xs ml-1.5">
-              Lịch sử
-            </Text>
+            <Feather name="clock" size={18} color={COLORS.ink} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => {
@@ -131,30 +138,27 @@ function CustomerChatbot({ userId }: { userId: number }) {
             }}
             disabled={unavailable}
             accessibilityRole="button"
-            accessibilityLabel="Tạo cuộc trò chuyện mới"
-            className={`flex-row items-center bg-primary rounded-full px-3.5 py-2 ${unavailable ? "opacity-50" : ""}`}
+            accessibilityLabel={t("Tạo cuộc trò chuyện mới")}
+            hitSlop={2}
+            className={`w-10 h-10 rounded-full bg-surface border border-line items-center justify-center ${unavailable ? "opacity-50" : ""}`}
           >
-            <Feather name="plus" size={14} color={COLORS.white} />
-            <Text className="text-white font-semibold text-xs ml-1.5">
-              Trò chuyện mới
-            </Text>
+            <Feather name="edit" size={18} color={COLORS.ink} />
           </TouchableOpacity>
         </View>
-      </TabScreenHeader>
+      </ChatbotHeader>
 
       {chat.loading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color={COLORS.primary} size="large" />
           <Text className="text-ink-soft text-sm mt-3">
-            Đang tải cuộc trò chuyện...
-          </Text>
+            {t("Đang tải cuộc trò chuyện...")}</Text>
         </View>
       ) : chat.loadError && !chat.messages.length ? (
         <View className="flex-1 justify-center">
           <EmptyState
             icon="wifi-off"
             title={chat.loadError}
-            actionLabel="Thử lại"
+            actionLabel={t("Thử lại")}
             onAction={chat.reload}
           />
         </View>
@@ -165,7 +169,7 @@ function CustomerChatbot({ userId }: { userId: number }) {
             Platform.OS === "ios" ? "interactive" : "on-drag"
           }
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ flexGrow: 1, paddingVertical: 12 }}
+          contentContainerStyle={{ flexGrow: 1 }}
         >
           <ChatbotWelcome
             onAsk={(text) => {
@@ -246,8 +250,7 @@ function CustomerChatbot({ userId }: { userId: number }) {
                   <ActivityIndicator color={COLORS.primary} />
                 ) : (
                   <Text className="text-primary text-xs font-bold">
-                    Xem tin nhắn cũ
-                  </Text>
+                    {t("Xem tin nhắn cũ")}</Text>
                 )}
               </TouchableOpacity>
             ) : null
@@ -262,8 +265,7 @@ function CustomerChatbot({ userId }: { userId: number }) {
           className="bg-danger-light mx-4 mb-2 p-3 rounded-xl"
         >
           <Text className="text-danger text-xs">
-            Không tải được tin nhắn. Chạm để thử lại.
-          </Text>
+            {t("Không tải được tin nhắn. Chạm để thử lại.")}</Text>
         </TouchableOpacity>
       )}
       {chat.replyError && !chat.working && (
@@ -290,8 +292,7 @@ function CustomerChatbot({ userId }: { userId: number }) {
                 disabled={chat.working}
               >
                 <Text className="text-ink-soft text-xs font-semibold">
-                  Sửa câu hỏi
-                </Text>
+                  {t("Sửa câu hỏi")}</Text>
               </TouchableOpacity>
             )}
             {chat.conversation?.status !== "CLOSED" && (
@@ -301,8 +302,7 @@ function CustomerChatbot({ userId }: { userId: number }) {
                 disabled={chat.working}
               >
                 <Text className="text-primary-dark text-xs font-bold">
-                  Thử lại
-                </Text>
+                  {t("Thử lại")}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -334,16 +334,15 @@ function CustomerChatbot({ userId }: { userId: number }) {
 }
 
 export function ChatbotScreen() {
+  const { t } = useTranslation();
+
   const userId = useAppSelector((state) => state.auth.user?.id);
   if (!userId)
     return (
       <View className="flex-1 bg-canvas">
-        <TabScreenHeader
-          title="Trợ lý CleanWise"
-          subtitle="Dịch vụ và lịch của bạn, ngay trong cuộc trò chuyện"
-        />
+        <ChatbotHeader />
         <View className="flex-1 justify-center px-5">
-          <RequireLoginNotice message="Đăng nhập để trò chuyện với trợ lý và tra cứu đơn hàng, lịch dịch vụ của bạn." />
+          <RequireLoginNotice message={t("Đăng nhập để trò chuyện với trợ lý và tra cứu đơn hàng, lịch dịch vụ của bạn.")} />
         </View>
       </View>
     );

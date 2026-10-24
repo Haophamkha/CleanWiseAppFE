@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 // features/address/hooks/useAddressForm.ts
 import type { AddressFormValues } from "@/features/address/components/AddressForm";
 import type { Address, AddressPayload } from "@/features/address/types/Address";
@@ -23,6 +25,8 @@ const EMPTY_VALUES: AddressFormValues = {
 };
 
 export function useAddressForm(map: MapResultParams) {
+  const { t } = useTranslation();
+
   const [values, setValues] = useState<AddressFormValues>(EMPTY_VALUES);
   const [city, setCity] = useState("");
   const [ward, setWard] = useState("");
@@ -66,7 +70,7 @@ export function useAddressForm(map: MapResultParams) {
   useFocusEffect(
     useCallback(() => {
       setIsNavigating(false);
-    }, []),
+    }, [t]),
   );
 
   // Nhận kết quả từ màn chọn vị trí.
@@ -141,11 +145,11 @@ export function useAddressForm(map: MapResultParams) {
       ward,
     ].every((v) => v.trim());
     if (!ok) {
-      setError("Vui lòng nhập đầy đủ thông tin");
+      setError(t("Vui lòng nhập đầy đủ thông tin"));
       return false;
     }
     if (!wardCode) {
-      setError("Vui lòng chọn phường/xã từ danh sách");
+      setError(t("Vui lòng chọn phường/xã từ danh sách"));
       return false;
     }
     setError("");

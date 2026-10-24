@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+import { translate as t, getLocale } from "@/features/language/i18n";
 import type { FeatherName } from "@/components/ui/Input";
 import { useCreateBookingMutation } from "@/features/booking/api/bookingApi";
 import { useIdempotencyKey } from "@/features/booking/hooks/useIdempotencyKey";
@@ -27,11 +29,13 @@ export type PaymentOption = {
   disabled?: boolean;
 };
 
-export const PAYMENT_METHODS: PaymentOption[] = [
-  { value: "CASH", label: "Tiền mặt", icon: "cash" },
-  { value: "BANK_TRANSFER", label: "Chuyển khoản", icon: "bank" },
-  { value: "WALLET", label: "Ví CleanWise", icon: "wallet" },
-];
+export function getLocalizedPaymentMethods(): PaymentOption[] {
+  return [
+    { value: "CASH", label: t("Tiền mặt"), icon: "cash" },
+    { value: "BANK_TRANSFER", label: t("Chuyển khoản"), icon: "bank" },
+    { value: "WALLET", label: t("Ví CleanWise"), icon: "wallet" },
+  ];
+}
 
 export type ScheduleRow = { icon: FeatherName; text: string; error?: boolean };
 
@@ -45,12 +49,14 @@ const WEEKDAY_LABELS: Record<string, string> = {
   SUN: "CN",
 };
 
-const PACKAGE_LABELS: Record<string, string> = {
-  "1_MONTH": "1 tháng",
-  "2_MONTHS": "2 tháng",
-  "3_MONTHS": "3 tháng",
-  "6_MONTHS": "6 tháng",
-};
+function getLocalizedPackageLabels(): Record<string, string> {
+  return {
+    "1_MONTH": t("1 tháng"),
+    "2_MONTHS": t("2 tháng"),
+    "3_MONTHS": t("3 tháng"),
+    "6_MONTHS": t("6 tháng"),
+  };
+}
 
 function extractDurationHours(
   fields: { key: string; type: string }[],
@@ -75,9 +81,11 @@ const formatWeekdays = (weekdays?: string[]) =>
     : weekdays.map((d) => WEEKDAY_LABELS[d] ?? d).join(", ");
 
 const formatTime = (d: Date) =>
-  d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+  d.toLocaleTimeString(getLocale(), { hour: "2-digit", minute: "2-digit" });
 
 export function useBookingConfirm() {
+  const { t } = useTranslation();
+
   const dispatch = useAppDispatch();
   const draft = useAppSelector((s) => s.bookingDraft);
   const [createBooking, { isLoading }] = useCreateBookingMutation();
@@ -141,7 +149,7 @@ export function useBookingConfirm() {
       service.pricing_config,
       values,
     );
-  }, [service, values]);
+  }, [service, values, t]);
 
   const estimatedPrice = useMemo(() => {
     if (!service) return null;
@@ -150,7 +158,7 @@ export function useBookingConfirm() {
       service.pricing_config,
       values,
     );
-  }, [service, values]);
+  }, [service, values, t]);
 
   // Giá trước giảm: gói định kỳ lấy grossSubtotal, dịch vụ 1 lần = estimatedPrice.
   // estimatedPrice đã là giá SAU giảm gói nên totalAmount chỉ trừ thêm voucher.
@@ -193,17 +201,17 @@ export function useBookingConfirm() {
     if (!date || !time) return null;
     const parsed = new Date(`${date}T${time}:00`);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
-  }, [scheduleType, values]);
+  }, [scheduleType, values, t]);
 
   const durationHours = useMemo(() => {
     if (!service) return 2;
     return extractDurationHours(serviceFields, values);
-  }, [service, values]);
+  }, [service, values, t]);
 
   const scheduledEnd = useMemo(() => {
     if (!scheduledStart) return null;
     return new Date(scheduledStart.getTime() + durationHours * 60 * 60 * 1000);
-  }, [scheduledStart, durationHours]);
+  }, [scheduledStart, durationHours, t]);
 
   // Các dòng "Thời gian làm việc" đã format sẵn, màn hình chỉ việc render
   const scheduleRows = useMemo<ScheduleRow[]>(() => {
@@ -212,15 +220,15 @@ export function useBookingConfirm() {
         return [
           {
             icon: "calendar",
-            text: "Chưa chọn ngày/giờ ở trang dịch vụ",
+            text: t("Chưa chọn ngày/giờ ở trang dịch vụ"),
             error: true,
           },
         ];
       }
       const weekday = capitalizeFirst(
-        scheduledStart.toLocaleDateString("vi-VN", { weekday: "long" }),
+        scheduledStart.toLocaleDateString(getLocale(), { weekday: "long" }),
       );
-      const fullDate = scheduledStart.toLocaleDateString("vi-VN", {
+      const fullDate = scheduledStart.toLocaleDateString(getLocale(), {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
@@ -232,7 +240,7 @@ export function useBookingConfirm() {
         },
         {
           icon: "clock",
-          text: `${durationHours} giờ, ${formatTime(scheduledStart)} đến ${formatTime(scheduledEnd)}`,
+          text: t("{{value0}} giờ, {{value1}} đến {{value2}}", { value0: durationHours, value1: formatTime(scheduledStart), value2: formatTime(scheduledEnd) }),
         },
       ];
     }
@@ -246,18 +254,18 @@ export function useBookingConfirm() {
     } else {
       rows.push({
         icon: "repeat",
-        text: "Chưa chọn lịch định kỳ ở trang dịch vụ",
+        text: t("Chưa chọn lịch định kỳ ở trang dịch vụ"),
         error: true,
       });
     }
     if (values.package_duration) {
       rows.push({
         icon: "clock",
-        text: `Gói ${PACKAGE_LABELS[values.package_duration] ?? values.package_duration}, bắt đầu từ ngày mai`,
+        text: t("Gói {{value0}}, bắt đầu từ ngày mai", { value0: getLocalizedPackageLabels()[values.package_duration] ?? values.package_duration }),
       });
     }
     return rows;
-  }, [scheduleType, scheduledStart, scheduledEnd, durationHours, values]);
+  }, [scheduleType, scheduledStart, scheduledEnd, durationHours, values, t]);
 
   const summaryFields = serviceFields.filter(
     (f) =>
@@ -269,7 +277,7 @@ export function useBookingConfirm() {
 
   const paymentOptions = useMemo<PaymentOption[]>(
     () =>
-      PAYMENT_METHODS
+      getLocalizedPaymentMethods()
         // Dịch vụ định kỳ: ẩn hẳn tiền mặt
         .filter((m) => !(prepaidOnly && m.value === "CASH"))
         .map((m) => {
@@ -278,13 +286,11 @@ export function useBookingConfirm() {
             totalAmount != null && walletBalance < totalAmount;
           return {
             ...m,
-            subtitle: `Số dư ${formatVnd(walletBalance)}${
-              insufficient ? " · Không đủ" : ""
-            }`,
+            subtitle: t("Số dư {{value0}}{{value1}}", { value0: formatVnd(walletBalance), value1: insufficient ? t(" · Không đủ") : "" }),
             disabled: insufficient,
           };
         }),
-    [walletBalance, totalAmount, prepaidOnly],
+    [walletBalance, totalAmount, prepaidOnly, t],
   );
 
   const selectedPaymentMethod =
@@ -302,15 +308,15 @@ export function useBookingConfirm() {
 
     if (!pickupAddress) {
       Alert.alert(
-        "Thiếu địa chỉ",
-        "Vui lòng quay lại chọn địa chỉ thực hiện dịch vụ.",
+        t("Thiếu địa chỉ"),
+        t("Vui lòng quay lại chọn địa chỉ thực hiện dịch vụ."),
       );
       return;
     }
     if (isMovingService && !deliveryAddress) {
       Alert.alert(
-        "Thiếu địa chỉ",
-        "Vui lòng quay lại chọn địa chỉ chuyển đến.",
+        t("Thiếu địa chỉ"),
+        t("Vui lòng quay lại chọn địa chỉ chuyển đến."),
       );
       return;
     }
@@ -318,13 +324,13 @@ export function useBookingConfirm() {
     if (scheduleType === "ONCE") {
       if (!scheduledStart || !scheduledEnd) {
         Alert.alert(
-          "Thiếu thông tin",
-          "Vui lòng quay lại chọn ngày và giờ làm việc.",
+          t("Thiếu thông tin"),
+          t("Vui lòng quay lại chọn ngày và giờ làm việc."),
         );
         return;
       }
       if (scheduledStart.getTime() <= Date.now()) {
-        Alert.alert("Thời gian không hợp lệ", "Giờ bắt đầu phải ở tương lai.");
+        Alert.alert(t("Thời gian không hợp lệ"), t("Giờ bắt đầu phải ở tương lai."));
         return;
       }
     }
@@ -336,8 +342,8 @@ export function useBookingConfirm() {
         !values.package_duration
       ) {
         Alert.alert(
-          "Thiếu thông tin",
-          "Vui lòng quay lại chọn lịch làm việc định kỳ.",
+          t("Thiếu thông tin"),
+          t("Vui lòng quay lại chọn lịch làm việc định kỳ."),
         );
         return;
       }
@@ -358,10 +364,10 @@ export function useBookingConfirm() {
 
       if (missingFields.length > 0) {
         Alert.alert(
-          "Thiếu thông tin",
-          `Các trường bắt buộc chưa có dữ liệu:\n\n${missingFields
+          t("Thiếu thông tin"),
+          t("Các trường bắt buộc chưa có dữ liệu:\n\n{{value0}}", { value0: missingFields
             .map((field) => `• ${field.label} (${field.key})`)
-            .join("\n")}`,
+            .join("\n") }),
         );
         return;
       }
@@ -414,21 +420,21 @@ export function useBookingConfirm() {
         err?.data?.service_data?.__extra__ ||
         err?.data?.message ||
         (typeof err?.data === "string" ? err.data : null) ||
-        "Đặt lịch thất bại, vui lòng thử lại.";
+        t("Đặt lịch thất bại, vui lòng thử lại.");
 
       if (voucherError) clearSelectedVoucher();
       if (paymentError) setPaymentModalVisible(true);
       if (preferredError) setPreferredWorkerId(null);
       Alert.alert(
         voucherError
-          ? "Voucher không còn hợp lệ"
+          ? t("Voucher không còn hợp lệ")
           : paymentError
-            ? "Phương thức thanh toán"
+            ? t("Phương thức thanh toán")
             : preferredError
-              ? "Nhân viên yêu thích"
+              ? t("Nhân viên yêu thích")
               : amountError
-                ? "Ví không đủ tiền"
-                : "Không thể đặt lịch",
+                ? t("Ví không đủ tiền")
+                : t("Không thể đặt lịch"),
         Array.isArray(message) ? message.join("\n") : String(message),
       );
     }

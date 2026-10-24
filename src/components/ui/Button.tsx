@@ -1,4 +1,4 @@
-import { COLORS, SHADOWS } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Feather } from "@expo/vector-icons";
 import { ActivityIndicator, Text, TouchableOpacity } from "react-native";
 
@@ -15,10 +15,10 @@ type Props = {
 };
 
 const BOX: Record<Variant, string> = {
-  primary: "bg-primary",
+  primary: "bg-primary-fill",
   soft: "bg-primary-light",
   outline: "bg-surface border border-line",
-  danger: "bg-danger",
+  danger: "bg-danger-fill",
 };
 const LABEL: Record<Variant, string> = {
   primary: "text-white",
@@ -26,12 +26,7 @@ const LABEL: Record<Variant, string> = {
   outline: "text-ink",
   danger: "text-white",
 };
-const TINT: Record<Variant, string> = {
-  primary: COLORS.white,
-  soft: COLORS.primaryDark,
-  outline: COLORS.ink,
-  danger: COLORS.white,
-};
+
 
 export function Button({
   title,
@@ -42,6 +37,15 @@ export function Button({
   disabled,
   className = "",
 }: Props) {
+  const { COLORS, SHADOWS } = useAppTheme();
+
+  const TINT: Record<Variant, string> = {
+  primary: COLORS.white,
+  soft: COLORS.primaryDark,
+  outline: COLORS.ink,
+  danger: COLORS.white,
+};
+
   const inactive = disabled || loading;
   return (
     <TouchableOpacity

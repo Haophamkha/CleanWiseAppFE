@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+import { translate as t, getLocale } from "@/features/language/i18n";
 import type { BookingScheduleDetail } from "@/features/booking/types/Booking";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
@@ -6,26 +8,28 @@ export type ScheduleImage = NonNullable<
   BookingScheduleDetail["images"]
 >[number];
 
-const WEEKDAY_LABELS = [
-  "Chủ nhật",
-  "Thứ 2",
-  "Thứ 3",
-  "Thứ 4",
-  "Thứ 5",
-  "Thứ 6",
-  "Thứ 7",
-];
+function getLocalizedWeekdayLabels() {
+  return [
+    t("Chủ nhật"),
+    t("Thứ 2"),
+    t("Thứ 3"),
+    t("Thứ 4"),
+    t("Thứ 5"),
+    t("Thứ 6"),
+    t("Thứ 7"),
+  ];
+}
 
 export function formatFull(iso: string | null) {
   if (!iso) return null;
   const d = new Date(iso);
-  const weekday = WEEKDAY_LABELS[d.getDay()];
-  const dateStr = d.toLocaleDateString("vi-VN", {
+  const weekday = getLocalizedWeekdayLabels()[d.getDay()];
+  const dateStr = d.toLocaleDateString(getLocale(), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
-  const timeStr = d.toLocaleTimeString("vi-VN", {
+  const timeStr = d.toLocaleTimeString(getLocale(), {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -33,6 +37,8 @@ export function formatFull(iso: string | null) {
 }
 
 export function useScheduleDetail() {
+  const { t } = useTranslation();
+
   const { data, bookingId, bookingStatus } = useLocalSearchParams<{
     id: string;
     data: string;
@@ -50,7 +56,7 @@ export function useScheduleDetail() {
     } catch {
       return null;
     }
-  }, [data]);
+  }, [data, t]);
 
   const worker = schedule?.worker ?? null;
   const images: ScheduleImage[] = schedule?.images ?? [];
@@ -71,7 +77,7 @@ export function useScheduleDetail() {
 
   const fullName = worker
     ? `${worker.last_name ?? ""} ${worker.first_name ?? ""}`.trim() ||
-      "Nhân viên"
+      t("Nhân viên")
     : "";
 
   const goToWorker = () => {

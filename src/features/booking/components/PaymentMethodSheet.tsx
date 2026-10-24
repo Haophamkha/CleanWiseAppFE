@@ -1,4 +1,7 @@
-import { COLORS, OVERLAY, RADIUS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { OVERLAY, RADIUS } from "@/constants/theme";
 import type {
   PaymentMethodValue,
   PaymentOption,
@@ -22,6 +25,10 @@ export function PaymentMethodSheet({
   onSelect,
   onClose,
 }: Props) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const insets = useSafeAreaInsets();
 
   return (
@@ -56,8 +63,7 @@ export function PaymentMethodSheet({
               <View className="w-10 h-1 rounded-full bg-line" />
             </View>
             <Text className="text-base font-bold text-ink text-center py-3">
-              Phương thức thanh toán
-            </Text>
+              {t("Phương thức thanh toán")}</Text>
 
             {options.map((m) => {
               const selected = m.value === value;
@@ -76,7 +82,7 @@ export function PaymentMethodSheet({
                 >
                   <View
                     className={`w-11 h-11 rounded-full items-center justify-center mr-3 ${
-                      selected ? "bg-primary" : "bg-canvas"
+                      selected ? "bg-primary-fill" : "bg-canvas"
                     }`}
                   >
                     <MaterialCommunityIcons

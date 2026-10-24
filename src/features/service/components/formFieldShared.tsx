@@ -1,6 +1,10 @@
+import { useTranslation } from "react-i18next";
+import { getLocale } from "@/features/language/i18n";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 // src/components/service/formFieldShared.tsx
 import { BottomSheet } from "@/components/ui/BottomSheet";
-import { COLORS, SHADOWS } from "@/constants/theme";
+import { SHADOWS } from "@/constants/theme";
 import type {
   ConditionalOptionGroup,
   FieldOption,
@@ -21,8 +25,6 @@ import {
   View,
 } from "react-native";
 
-// COLORS giờ lấy từ theme: các file cũ import từ đây vẫn chạy và tự đổi theo theme.
-export { COLORS };
 
 export type Values = Record<string, any>;
 
@@ -70,9 +72,11 @@ export function buildCaption(
 
 // Ô chọn tròn: đã chọn = nền màu chính + dấu tích
 function Radio({ selected, size = 24 }: { selected: boolean; size?: number }) {
+  const { COLORS } = useAppTheme();
+
   return selected ? (
     <View
-      className="rounded-full bg-primary items-center justify-center"
+      className="rounded-full bg-primary-fill items-center justify-center"
       style={{ width: size, height: size }}
     >
       <Feather name="check" size={size * 0.58} color={COLORS.white} />
@@ -227,12 +231,14 @@ export function Pill({
   selected: boolean;
   onPress: () => void;
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
       className={`flex-row items-center px-4 py-2.5 rounded-full border mr-2 mb-2 ${
-        selected ? "bg-primary border-primary" : "bg-surface border-line"
+        selected ? "bg-primary-fill border-primary" : "bg-surface border-line"
       }`}
       style={[{ maxWidth: 240 }, selected ? SHADOWS.card : undefined]}
     >
@@ -294,7 +300,7 @@ export function TabBar({
             onPress={() => onChange(opt.value)}
             activeOpacity={0.85}
             className={`h-10 px-5 rounded-full items-center justify-center border ${
-              selected ? "bg-primary border-primary" : "bg-surface border-line"
+              selected ? "bg-primary-fill border-primary" : "bg-surface border-line"
             }`}
             style={selected ? SHADOWS.card : undefined}
           >
@@ -326,6 +332,8 @@ export function QuantityStepper({
   max?: number;
   onChange: (v: number) => void;
 }) {
+  const { COLORS } = useAppTheme();
+
   const atMin = value <= min;
   const atMax = value >= max;
   return (
@@ -346,7 +354,7 @@ export function QuantityStepper({
         onPress={() => onChange(Math.min(max, value + 1))}
         disabled={atMax}
         activeOpacity={0.8}
-        className="w-10 h-10 rounded-full bg-primary items-center justify-center"
+        className="w-10 h-10 rounded-full bg-primary-fill items-center justify-center"
         style={{ opacity: atMax ? 0.45 : 1 }}
       >
         <Feather name="plus" size={17} color={COLORS.white} />
@@ -369,6 +377,8 @@ export function BooleanToggleRow({
   value: boolean;
   onChange: (v: boolean) => void;
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       className={`flex-row items-center justify-between rounded-2xl border px-4 py-3.5 mb-3 ${
@@ -407,6 +417,8 @@ export function WeekdayRow({
   value: string[];
   onChange: (v: string[]) => void;
 }) {
+  useTranslation();
+  const weekdayCodes = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
   return (
     <View className="flex-row justify-between">
       {options.map((opt) => {
@@ -424,7 +436,7 @@ export function WeekdayRow({
             activeOpacity={0.85}
             className={`w-11 h-11 rounded-full items-center justify-center border ${
               isSelected
-                ? "bg-primary border-primary"
+                ? "bg-primary-fill border-primary"
                 : "bg-surface border-line"
             }`}
             style={isSelected ? SHADOWS.float : undefined}
@@ -434,7 +446,9 @@ export function WeekdayRow({
                 isSelected ? "text-white" : "text-ink-muted"
               }`}
             >
-              {opt.label.replace("Thứ ", "T")}
+              {getLocale() === "en-US" && weekdayCodes.includes(opt.value)
+                ? new Date(2024, 0, 7 + weekdayCodes.indexOf(opt.value)).toLocaleDateString(getLocale(), { weekday: "short" })
+                : opt.label.replace("Thứ ", "T")}
             </Text>
           </TouchableOpacity>
         );
@@ -462,6 +476,8 @@ function WheelColumn({
   onChangeIndex: (index: number) => void;
   formatItem: (v: number) => string;
 }) {
+  const { COLORS } = useAppTheme();
+
   const scrollRef = useRef<any>(null);
   const didMount = useRef(false);
   const isInternalUpdate = useRef(false);
@@ -574,6 +590,8 @@ function TimeWheelPicker({
   maxHour: number;
   onChange: (v: string) => void;
 }) {
+  const { t } = useTranslation();
+
   const hours = Array.from(
     { length: maxHour - minHour + 1 },
     (_, i) => minHour + i,
@@ -602,11 +620,9 @@ function TimeWheelPicker({
     <View>
       <View className="flex-row mb-2">
         <Text className="flex-1 text-center text-[15px] font-bold text-ink">
-          Giờ
-        </Text>
+          {t("Giờ")}</Text>
         <Text className="flex-1 text-center text-[15px] font-bold text-ink">
-          Phút
-        </Text>
+          {t("Phút")}</Text>
       </View>
 
       <View style={{ height: WHEEL_HEIGHT, flexDirection: "row" }}>
@@ -643,6 +659,10 @@ export function TimeField({
   minHour?: number;
   maxHour?: number;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const defaultValue = `${String(minHour).padStart(2, "0")}:00`;
   const displayValue = value ?? defaultValue;
 
@@ -671,13 +691,13 @@ export function TimeField({
           <Feather name="clock" size={19} color={COLORS.primaryDark} />
         </View>
         <View className="flex-1">
-          <Text className="text-xs text-ink-muted">Giờ bắt đầu</Text>
+          <Text className="text-xs text-ink-muted">{t("Giờ bắt đầu")}</Text>
           <Text className="text-[22px] font-extrabold text-ink">
             {displayValue}
           </Text>
         </View>
         <View className="px-3 py-1.5 rounded-full bg-primary-light">
-          <Text className="text-xs font-bold text-primary-dark">Đổi</Text>
+          <Text className="text-xs font-bold text-primary-dark">{t("Đổi")}</Text>
         </View>
       </TouchableOpacity>
 
@@ -692,9 +712,9 @@ export function TimeField({
           </TouchableOpacity>
 
           <View className="items-center">
-            <Text className="text-lg font-bold text-ink">Chọn giờ làm</Text>
+            <Text className="text-lg font-bold text-ink">{t("Chọn giờ làm")}</Text>
             <Text className="text-xs text-ink-muted mt-0.5">
-              Khung giờ {String(minHour).padStart(2, "0")}:00 -{" "}
+              {t("Khung giờ")}{" "}{String(minHour).padStart(2, "0")}:00 -{" "}
               {String(maxHour).padStart(2, "0")}:00
             </Text>
           </View>
@@ -756,6 +776,7 @@ export function DateStripField({
   rangeDays?: number;
   onChange: (v: string) => void;
 }) {
+  useTranslation();
   const dates = buildDateRange(minDaysFromNow, rangeDays);
 
   return (
@@ -774,7 +795,7 @@ export function DateStripField({
             onPress={() => onChange(key)}
             activeOpacity={0.85}
             className={`items-center justify-center border ${
-              selected ? "bg-primary border-primary" : "bg-surface border-line"
+              selected ? "bg-primary-fill border-primary" : "bg-surface border-line"
             }`}
             style={[
               { width: 60, height: 80, borderRadius: 20 },
@@ -786,7 +807,7 @@ export function DateStripField({
                 selected ? "text-white/80" : "text-ink-muted"
               }`}
             >
-              {VN_WEEKDAY_SHORT[d.getDay()]}
+              {getLocale() === "en-US" ? d.toLocaleDateString(getLocale(), { weekday: "short" }) : VN_WEEKDAY_SHORT[d.getDay()]}
             </Text>
             <Text
               className={`text-[22px] font-extrabold my-0.5 ${
@@ -800,7 +821,7 @@ export function DateStripField({
                 selected ? "text-white/70" : "text-ink-muted"
               }`}
             >
-              Th{d.getMonth() + 1}
+              {getLocale() === "en-US" ? d.toLocaleDateString(getLocale(), { month: "short" }) : `Th${d.getMonth() + 1}`}
             </Text>
           </TouchableOpacity>
         );
@@ -886,6 +907,10 @@ export function FieldControl({
   pricingConfig?: PricingConfig;
   onChange: (v: any) => void;
 }) {
+  const { mode: themeMode } = useAppTheme();
+
+  const { COLORS } = useAppTheme();
+
   const options = resolveOptions(field, siblingValues);
   const hasImages = options.some((o) => !!o.image);
 
@@ -989,7 +1014,7 @@ export function FieldControl({
     case "TEXT":
     case "TEXTAREA":
       return (
-        <TextInput
+        <TextInput keyboardAppearance={themeMode}
           className="rounded-2xl border border-line bg-surface px-4 py-3.5 text-[15px] text-ink"
           style={{
             minHeight: field.type === "TEXTAREA" ? 96 : undefined,

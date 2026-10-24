@@ -1,3 +1,6 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import type { PickedFile } from "@/features/complaint/types/Complaint";
 import { pickImage } from "@/utils/imagePicker";
 import { showErrorToast } from "@/utils/toast";
@@ -18,12 +21,16 @@ export function ComplaintAttachmentPicker({
   onChange: (files: PickedFile[]) => void;
   disabled?: boolean;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const handleAdd = async () => {
     if (disabled) return;
     if (images.length >= MAX_IMAGES) {
       showErrorToast(
-        "Quá số ảnh",
-        `Chỉ được đính kèm tối đa ${MAX_IMAGES} ảnh.`,
+        t("Quá số ảnh"),
+        t("Chỉ được đính kèm tối đa {{value0}} ảnh.", { value0: MAX_IMAGES }),
       );
       return;
     }
@@ -33,13 +40,13 @@ export function ComplaintAttachmentPicker({
     const mime = file.type?.toLowerCase();
     if (mime && mime.includes("/") && !ALLOWED_TYPES.includes(mime)) {
       showErrorToast(
-        "Ảnh không hợp lệ",
-        "Chỉ chấp nhận ảnh JPG, PNG hoặc WEBP.",
+        t("Ảnh không hợp lệ"),
+        t("Chỉ chấp nhận ảnh JPG, PNG hoặc WEBP."),
       );
       return;
     }
     if (file.size && file.size > MAX_BYTES) {
-      showErrorToast("Ảnh quá lớn", "Mỗi ảnh tối đa 5MB.");
+      showErrorToast(t("Ảnh quá lớn"), t("Mỗi ảnh tối đa 5MB."));
       return;
     }
     onChange([...images, file]);
@@ -57,7 +64,7 @@ export function ComplaintAttachmentPicker({
             <View
               key={file.uri}
               style={{ width: THUMB_SIZE, height: THUMB_SIZE }}
-              className="rounded-2xl overflow-hidden border border-[#F3F4F6] bg-[#F3F4F6]"
+              className="rounded-2xl overflow-hidden border border-surface-muted bg-surface-muted"
             >
               <Image
                 source={{ uri: file.uri }}
@@ -81,16 +88,15 @@ export function ComplaintAttachmentPicker({
             <Pressable
               onPress={handleAdd}
               style={{ width: THUMB_SIZE, height: THUMB_SIZE }}
-              className="rounded-2xl items-center justify-center border-2 border-dashed border-[#EF4444] bg-[#FEF2F2]"
+              className="rounded-2xl items-center justify-center border-2 border-dashed border-danger bg-danger-light"
             >
-              <Feather name="camera" size={20} color="#EF4444" />
+              <Feather name="camera" size={20} color={COLORS.danger} />
             </Pressable>
           )}
         </View>
       </ScrollView>
-      <Text className="text-[11px] text-gray-400 mt-2">
-        {images.length}/{MAX_IMAGES} ảnh · JPG, PNG, WEBP · tối đa 5MB mỗi ảnh
-      </Text>
+      <Text className="text-[11px] text-ink-muted mt-2">
+        {images.length}/{MAX_IMAGES} {t("ảnh · JPG, PNG, WEBP · tối đa 5MB mỗi ảnh")}</Text>
     </View>
   );
 }

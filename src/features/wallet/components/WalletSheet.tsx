@@ -1,4 +1,7 @@
-import { COLORS, OVERLAY, RADIUS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { OVERLAY, RADIUS } from "@/constants/theme";
 import type { ReactNode } from "react";
 import {
     ActivityIndicator,
@@ -23,6 +26,8 @@ export function WalletSheet({
   onClose: () => void;
   children: ReactNode;
 }) {
+  const { COLORS } = useAppTheme();
+
   const insets = useSafeAreaInsets();
   return (
     <Modal
@@ -96,6 +101,12 @@ export function AmountField({
   onChange: (v: string) => void;
   editable?: boolean;
 }) {
+  const { t } = useTranslation();
+
+  const { mode: themeMode } = useAppTheme();
+
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       style={{
@@ -118,9 +129,8 @@ export function AmountField({
           color: COLORS.inkMuted,
         }}
       >
-        đ
-      </Text>
-      <TextInput
+        {t("đ")}</Text>
+      <TextInput keyboardAppearance={themeMode}
         style={{
           flex: 1,
           paddingVertical: 16,
@@ -150,6 +160,8 @@ export function QuickAmounts({
   format: (v: number) => string;
   disabled?: boolean;
 }) {
+  const { COLORS } = useAppTheme();
+
   if (amounts.length === 0) return null;
   return (
     <View
@@ -202,6 +214,8 @@ export function SheetButton({
   loading?: boolean;
   variant?: "primary" | "soft";
 }) {
+  const { COLORS } = useAppTheme();
+
   const primary = variant === "primary";
   return (
     <TouchableOpacity
@@ -213,7 +227,7 @@ export function SheetButton({
         alignItems: "center",
         borderRadius: 16,
         marginBottom: 12,
-        backgroundColor: primary ? COLORS.primary : COLORS.primaryLight,
+        backgroundColor: primary ? COLORS.primaryFill : COLORS.primaryLight,
         opacity: loading ? 0.6 : 1,
       }}
     >
@@ -237,6 +251,8 @@ export function SheetButton({
 }
 
 export function ErrorBox({ text }: { text: string }) {
+  const { COLORS } = useAppTheme();
+
   if (!text) return null;
   return (
     <View

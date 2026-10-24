@@ -1,4 +1,5 @@
-import { COLORS } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { getHomeServiceIcon } from "@/features/home/utils/homeServiceIcon";
 import { ServiceIcon } from "@/features/service/components/ServiceIcon";
 import { getServiceGridVisual } from "@/features/service/utils/serviceVisuals";
@@ -14,7 +15,9 @@ type Props = {
 };
 
 export function ServiceCard({ code, sectionCode, name, icon, onPress }: Props) {
-  const fallback = getServiceGridVisual(code, sectionCode);
+  const { COLORS } = useAppTheme();
+
+  const fallback = getServiceGridVisual(code, sectionCode, COLORS);
   const mapped = getHomeServiceIcon(code, sectionCode);
 
   return (

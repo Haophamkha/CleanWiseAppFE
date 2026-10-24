@@ -1,5 +1,8 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { useSuccessSheet } from "@/components/common/SuccessSheet";
-import { COLORS } from "@/constants/theme";
+
 import {
   AuthScreen,
   PillButton,
@@ -14,6 +17,8 @@ import { Text, TouchableOpacity, View } from "react-native";
 const STEP_INDEX = { request: 0, verify: 1, reset: 2, done: 2 } as const;
 
 function StepBar({ current }: { current: number }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       style={{
@@ -30,7 +35,7 @@ function StepBar({ current }: { current: number }) {
             height: 4,
             borderRadius: 2,
             marginHorizontal: 4,
-            backgroundColor: i <= current ? COLORS.primary : COLORS.line,
+            backgroundColor: i <= current ? COLORS.primaryFill : COLORS.line,
           }}
         />
       ))}
@@ -39,6 +44,8 @@ function StepBar({ current }: { current: number }) {
 }
 
 function ErrorLine({ message }: { message?: string | null }) {
+  const { COLORS } = useAppTheme();
+
   if (!message) return null;
   return (
     <Text
@@ -55,6 +62,10 @@ function ErrorLine({ message }: { message?: string | null }) {
 }
 
 export default function ForgotPasswordScreen() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const f = useForgotPassword();
   const { show } = useSuccessSheet();
 
@@ -67,12 +78,12 @@ export default function ForgotPasswordScreen() {
     if (f.step === "done" && !shown.current) {
       shown.current = true;
       show({
-        title: "Đổi mật khẩu thành công!",
-        message: "Bạn có thể đăng nhập lại bằng mật khẩu mới.",
+        title: t("Đổi mật khẩu thành công!"),
+        message: t("Bạn có thể đăng nhập lại bằng mật khẩu mới."),
         onClose: () => goToLoginRef.current(),
       });
     }
-  }, [f.step, show]);
+  }, [f.step, show, t]);
 
   const stepIndex = STEP_INDEX[f.step as keyof typeof STEP_INDEX] ?? 0;
 
@@ -81,8 +92,8 @@ export default function ForgotPasswordScreen() {
     return (
       <AuthScreen
         icon="key"
-        title="Quên mật khẩu?"
-        subtitle="Nhập email đã đăng ký, chúng tôi sẽ gửi mã xác nhận để đặt lại mật khẩu."
+        title={t("Quên mật khẩu?")}
+        subtitle={t("Nhập email đã đăng ký, chúng tôi sẽ gửi mã xác nhận để đặt lại mật khẩu.")}
         onBack={() => router.back()}
         footer={
           <View
@@ -93,7 +104,7 @@ export default function ForgotPasswordScreen() {
             }}
           >
             <Text style={{ fontSize: 14, color: COLORS.inkSoft }}>
-              Nhớ mật khẩu rồi?{" "}
+              {t("Nhớ mật khẩu rồi?")}{" "}
             </Text>
             <Link href="/(auth)/login">
               <Text
@@ -103,8 +114,7 @@ export default function ForgotPasswordScreen() {
                   color: COLORS.primary,
                 }}
               >
-                Đăng nhập
-              </Text>
+                {t("Đăng nhập")}</Text>
             </Link>
           </View>
         }
@@ -120,7 +130,7 @@ export default function ForgotPasswordScreen() {
         />
         <ErrorLine message={f.error} />
         <PillButton
-          title={f.isSending ? "Đang gửi..." : "Gửi mã xác nhận"}
+          title={f.isSending ? t("Đang gửi...") : t("Gửi mã xác nhận")}
           onPress={f.sendCode}
           loading={f.isSending}
         />
@@ -133,15 +143,15 @@ export default function ForgotPasswordScreen() {
     return (
       <AuthScreen
         icon="mail"
-        title="Nhập mã xác nhận"
-        subtitle={`Mã xác nhận đã được gửi tới ${f.email}`}
+        title={t("Nhập mã xác nhận")}
+        subtitle={t("Mã xác nhận đã được gửi tới {{value0}}", { value0: f.email })}
         onBack={() => router.back()}
       >
         <StepBar current={stepIndex} />
         <OtpInput value={f.otp} onChange={f.setOtp} invalid={!!f.error} />
         <ErrorLine message={f.error} />
         <PillButton
-          title={f.isVerifying ? "Đang xác nhận..." : "Xác nhận"}
+          title={f.isVerifying ? t("Đang xác nhận...") : t("Xác nhận")}
           onPress={f.verifyOtp}
           loading={f.isVerifying}
         />
@@ -154,7 +164,7 @@ export default function ForgotPasswordScreen() {
           }}
         >
           <Text style={{ fontSize: 14, color: COLORS.inkSoft }}>
-            Không nhận được mã?{" "}
+            {t("Không nhận được mã?")}{" "}
           </Text>
           <TouchableOpacity
             onPress={f.sendCode}
@@ -167,7 +177,7 @@ export default function ForgotPasswordScreen() {
                 color: f.countdown > 0 ? COLORS.inkMuted : COLORS.primary,
               }}
             >
-              {f.countdown > 0 ? `Gửi lại sau ${f.countdown}s` : "Gửi lại mã"}
+              {f.countdown > 0 ? t("Gửi lại sau {{value0}}s", { value0: f.countdown }) : t("Gửi lại mã")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -182,14 +192,14 @@ export default function ForgotPasswordScreen() {
   return (
     <AuthScreen
       icon="lock"
-      title="Đặt mật khẩu mới"
-      subtitle="Nhập mật khẩu mới cho tài khoản của bạn."
+      title={t("Đặt mật khẩu mới")}
+      subtitle={t("Nhập mật khẩu mới cho tài khoản của bạn.")}
       onBack={() => router.back()}
     >
       <StepBar current={stepIndex} />
       <PillInput
         icon="lock"
-        placeholder="Mật khẩu mới"
+        placeholder={t("Mật khẩu mới")}
         password
         autoCapitalize="none"
         value={f.newPassword}
@@ -204,12 +214,11 @@ export default function ForgotPasswordScreen() {
           color: COLORS.inkMuted,
         }}
       >
-        Tối thiểu 8 ký tự, có chữ hoa và số
-      </Text>
+        {t("Tối thiểu 8 ký tự, có chữ hoa và số")}</Text>
 
       <PillInput
         icon="lock"
-        placeholder="Xác nhận mật khẩu mới"
+        placeholder={t("Xác nhận mật khẩu mới")}
         password
         autoCapitalize="none"
         invalid={mismatch}
@@ -226,13 +235,12 @@ export default function ForgotPasswordScreen() {
             color: COLORS.danger,
           }}
         >
-          Mật khẩu xác nhận chưa khớp
-        </Text>
+          {t("Mật khẩu xác nhận chưa khớp")}</Text>
       )}
 
       <ErrorLine message={f.error} />
       <PillButton
-        title={f.isResetting ? "Đang cập nhật..." : "Đặt lại mật khẩu"}
+        title={f.isResetting ? t("Đang cập nhật...") : t("Đặt lại mật khẩu")}
         onPress={f.submitNewPassword}
         loading={f.isResetting}
       />

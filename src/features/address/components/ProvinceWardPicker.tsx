@@ -1,6 +1,9 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 // components/address/ProvinceWardPicker.tsx
 import { EmptyState, Input } from "@/components/ui";
-import { COLORS } from "@/constants/theme";
+
 import {
   useGetAreaProvincesQuery,
   useGetAreaWardsQuery,
@@ -47,6 +50,8 @@ function PickerField({
   disabled?: boolean;
   onPress: () => void;
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View className="mb-4">
       <Text className="text-sm font-medium text-ink mb-2">{label}</Text>
@@ -77,6 +82,10 @@ export default function ProvinceWardPicker({
   initialWard = "",
   onSelect,
 }: Props) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const insets = useSafeAreaInsets();
   const [selectedProvince, setSelectedProvince] = useState<AreaProvince | null>(
     null,
@@ -176,16 +185,16 @@ export default function ProvinceWardPicker({
   return (
     <View>
       <PickerField
-        label="Tỉnh/Thành phố"
+        label={t("Tỉnh/Thành phố")}
         value={selectedProvince?.city}
-        placeholder="Chọn tỉnh/thành phố"
+        placeholder={t("Chọn tỉnh/thành phố")}
         onPress={() => setPickerVisible("province")}
       />
       <PickerField
-        label="Phường/Xã"
+        label={t("Phường/Xã")}
         value={selectedWard?.name}
         placeholder={
-          selectedProvince ? "Chọn phường/xã" : "Vui lòng chọn tỉnh/thành trước"
+          selectedProvince ? t("Chọn phường/xã") : t("Vui lòng chọn tỉnh/thành trước")
         }
         disabled={!selectedProvince}
         onPress={() => setPickerVisible("ward")}
@@ -202,7 +211,7 @@ export default function ProvinceWardPicker({
         >
           <View className="flex-row items-center justify-between px-5 py-3 border-b border-line">
             <Text className="text-lg font-bold text-ink">
-              {isProvince ? "Chọn tỉnh/thành phố" : "Chọn phường/xã"}
+              {isProvince ? t("Chọn tỉnh/thành phố") : t("Chọn phường/xã")}
             </Text>
             <TouchableOpacity
               onPress={closePicker}
@@ -216,7 +225,7 @@ export default function ProvinceWardPicker({
           <View className="px-5 pt-4">
             <Input
               icon="search"
-              placeholder="Tìm kiếm..."
+              placeholder={t("Tìm kiếm...")}
               value={search}
               onChangeText={setSearch}
               autoCorrect={false}
@@ -257,7 +266,7 @@ export default function ProvinceWardPicker({
                 </TouchableOpacity>
               )}
               ListEmptyComponent={
-                <EmptyState icon="search" title="Không tìm thấy dữ liệu" />
+                <EmptyState icon="search" title={t("Không tìm thấy dữ liệu")} />
               }
             />
           )}

@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import { useSuccessSheet } from "@/components/common/SuccessSheet";
 import { ROUTES } from "@/config/constants";
 import { saveTokens, useRegisterMutation } from "@/features/auth/api/authApi";
@@ -6,7 +8,7 @@ import { baseApi } from "@/store/baseApi";
 import { useAppDispatch } from "@/store/hooks";
 import { getApiErrorMessage } from "@/utils/apiError";
 import { showErrorToast } from "@/utils/toast";
-import { registerSchema } from "@/utils/validators";
+import { getLocalizedRegisterSchema } from "@/utils/validators";
 import { router } from "expo-router";
 import { useState } from "react";
 
@@ -23,6 +25,8 @@ const INITIAL_FORM = {
 export type RegisterFormKey = keyof typeof INITIAL_FORM;
 
 export function useRegister() {
+  const { t } = useTranslation();
+
   const [form, setForm] = useState(INITIAL_FORM);
   const [agree, setAgree] = useState(false);
   const [error, setError] = useState("");
@@ -34,13 +38,13 @@ export function useRegister() {
     setForm((prev) => ({ ...prev, [key]: value }));
 
   const submit = async () => {
-    const result = registerSchema.safeParse(form);
+    const result = getLocalizedRegisterSchema().safeParse(form);
     if (!result.success) {
       setError(result.error.issues[0].message);
       return;
     }
     if (!agree) {
-      setError("Bạn cần đồng ý điều khoản để tiếp tục");
+      setError(t("Bạn cần đồng ý điều khoản để tiếp tục"));
       return;
     }
     setError("");
@@ -54,10 +58,10 @@ export function useRegister() {
         .filter(Boolean)
         .join(" ");
       show({
-        title: "Tạo tài khoản thành công!",
+        title: t("Tạo tài khoản thành công!"),
         message: name
-          ? `Chào mừng ${name} đến với CleanWise.`
-          : "Chào mừng bạn đến với CleanWise.",
+          ? t("Chào mừng {{value0}} đến với CleanWise.", { value0: name })
+          : t("Chào mừng bạn đến với CleanWise."),
         onClose: () => {
           dispatch(setUser(res.user));
           router.replace(ROUTES.HOME);
@@ -66,10 +70,10 @@ export function useRegister() {
     } catch (e) {
       const message = getApiErrorMessage(
         e,
-        "Tạo tài khoản thất bại, vui lòng thử lại",
+        t("Tạo tài khoản thất bại, vui lòng thử lại"),
       );
       setError(message);
-      showErrorToast("Không thể tạo tài khoản", message);
+      showErrorToast(t("Không thể tạo tài khoản"), message);
     }
   };
 

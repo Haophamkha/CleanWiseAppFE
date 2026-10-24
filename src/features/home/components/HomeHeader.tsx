@@ -1,6 +1,9 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { NotificationBellButton } from "@/components/common/NotificationBellButton";
 import { GradientHeader } from "@/components/ui";
-import { COLORS } from "@/constants/theme";
+
 import { Feather } from "@expo/vector-icons";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
@@ -17,12 +20,18 @@ export function HomeHeader({
   query,
   onChangeQuery,
 }: Props) {
+  const { t } = useTranslation();
+
+  const { mode: themeMode } = useAppTheme();
+
+  const { COLORS } = useAppTheme();
+
   return (
     <GradientHeader>
       <View className="flex-row items-center justify-between">
         <View className="flex-1 mr-3">
           <Text className="text-sm text-ink-soft">
-            {isAuthenticated ? "Xin chào 👋" : "Chào mừng bạn đến với"}
+            {isAuthenticated ? t("Xin chào 👋") : t("Chào mừng bạn đến với")}
           </Text>
           <Text
             className="text-2xl font-bold text-ink"
@@ -42,9 +51,9 @@ export function HomeHeader({
 
       <View className="flex-row items-center bg-surface rounded-full px-4 py-3 mt-5">
         <Feather name="search" size={18} color={COLORS.inkMuted} />
-        <TextInput
+        <TextInput keyboardAppearance={themeMode}
           className="flex-1 ml-3 text-base text-ink"
-          placeholder="Tìm dịch vụ dọn dẹp..."
+          placeholder={t("Tìm dịch vụ dọn dẹp...")}
           placeholderTextColor={COLORS.inkMuted}
           value={query}
           onChangeText={onChangeQuery}

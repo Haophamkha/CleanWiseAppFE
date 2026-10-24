@@ -1,9 +1,16 @@
-import { COLORS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { Feather } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function BookingBottomBar({ onCancel }: { onCancel?: () => void }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const insets = useSafeAreaInsets();
 
   return (
@@ -18,8 +25,7 @@ export function BookingBottomBar({ onCancel }: { onCancel?: () => void }) {
       >
         <Feather name="x-circle" size={17} color={COLORS.danger} />
         <Text className="font-bold text-[14px] text-danger ml-2">
-          Hủy đơn hàng
-        </Text>
+          {t("Hủy đơn hàng")}</Text>
       </TouchableOpacity>
     </View>
   );

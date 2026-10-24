@@ -1,4 +1,7 @@
-import { COLORS, RADIUS, SHADOWS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { RADIUS, SHADOWS } from "@/constants/theme";
 import { useWorkerProfile } from "@/features/favorite-worker/hooks/useWorkerProfile";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -64,6 +67,8 @@ function FadeUp({
 }
 
 function Stars({ rating, active }: { rating: number; active: boolean }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View style={{ flexDirection: "row" }}>
       {[1, 2, 3, 4, 5].map((i) => {
@@ -103,6 +108,8 @@ function StatItem({
   tone: string;
   divider?: boolean;
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       style={{
@@ -158,6 +165,8 @@ function Section({
   title: string;
   children: ReactNode;
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       style={[
@@ -196,6 +205,8 @@ function Section({
 }
 
 function Highlight({ icon, label }: { icon: IconName; label: string }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       style={{
@@ -233,6 +244,8 @@ function StateScreen({
   actionLabel: string;
   onAction: () => void;
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       style={{
@@ -275,7 +288,7 @@ function StateScreen({
             paddingHorizontal: 30,
             paddingVertical: 13,
             borderRadius: 16,
-            backgroundColor: COLORS.primary,
+            backgroundColor: COLORS.primaryFill,
           },
           SHADOWS.float,
         ]}
@@ -291,6 +304,10 @@ function StateScreen({
 /* ───────────────────────── Màn hình ───────────────────────── */
 
 export function WorkerProfile() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const w = useWorkerProfile();
   const insets = useSafeAreaInsets();
 
@@ -325,8 +342,7 @@ export function WorkerProfile() {
       >
         <ActivityIndicator size="large" color={COLORS.primary} />
         <Text style={{ marginTop: 12, fontSize: 14, color: COLORS.inkMuted }}>
-          Đang tải hồ sơ nhân viên...
-        </Text>
+          {t("Đang tải hồ sơ nhân viên...")}</Text>
       </View>
     );
   }
@@ -337,10 +353,10 @@ export function WorkerProfile() {
         icon="alert-circle"
         title={
           w.isError
-            ? "Không tải được thông tin nhân viên"
-            : "Không tìm thấy thông tin nhân viên"
+            ? t("Không tải được thông tin nhân viên")
+            : t("Không tìm thấy thông tin nhân viên")
         }
-        actionLabel={w.isError ? "Thử lại" : "Quay lại"}
+        actionLabel={w.isError ? t("Thử lại") : t("Quay lại")}
         onAction={() => (w.isError ? w.refetch() : w.goBack())}
       />
     );
@@ -352,16 +368,16 @@ export function WorkerProfile() {
   // Điểm nổi bật: suy ra từ dữ liệu thật, chỉnh ngưỡng tuỳ ý
   const highlights: { icon: IconName; label: string }[] = [];
   if (w.hasRating && w.rating >= 4.5)
-    highlights.push({ icon: "award", label: "Được đánh giá cao" });
+    highlights.push({ icon: "award", label: t("Được đánh giá cao") });
   if (w.completedJobs >= 10)
     highlights.push({
       icon: "trending-up",
-      label: `${w.completedJobs}+ đơn hoàn thành`,
+      label: t("{{value0}}+ đơn hoàn thành", { value0: w.completedJobs }),
     });
   if (w.experienceYears >= 3)
     highlights.push({
       icon: "shield",
-      label: `${w.experienceYears} năm kinh nghiệm`,
+      label: t("{{value0}} năm kinh nghiệm", { value0: w.experienceYears , count: w.experienceYears}),
     });
 
   return (
@@ -375,7 +391,7 @@ export function WorkerProfile() {
           left: 0,
           right: 0,
           height: 320,
-          backgroundColor: COLORS.primary,
+          backgroundColor: COLORS.primaryFill,
         }}
       />
 
@@ -385,7 +401,7 @@ export function WorkerProfile() {
       >
         {/* ── Hero ── */}
         <LinearGradient
-          colors={[COLORS.primary, COLORS.primaryDark]}
+          colors={[COLORS.primaryFill, COLORS.primaryFillDark]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
@@ -463,8 +479,7 @@ export function WorkerProfile() {
                 color: COLORS.white,
               }}
             >
-              Hồ sơ nhân viên
-            </Text>
+              {t("Hồ sơ nhân viên")}</Text>
           </View>
 
           {/* Avatar + tên + đánh giá */}
@@ -546,8 +561,7 @@ export function WorkerProfile() {
                   color: COLORS.white,
                 }}
               >
-                Nhân viên CleanWise
-              </Text>
+                {t("Nhân viên CleanWise")}</Text>
             </View>
 
             <View
@@ -566,7 +580,7 @@ export function WorkerProfile() {
                   color: COLORS.white,
                 }}
               >
-                {w.hasRating ? w.rating.toFixed(1) : "Chưa có đánh giá"}
+                {w.hasRating ? w.rating.toFixed(1) : t("Chưa có đánh giá")}
               </Text>
               {w.hasRating && (
                 <Text
@@ -576,8 +590,7 @@ export function WorkerProfile() {
                     color: "rgba(255,255,255,0.8)",
                   }}
                 >
-                  ({w.completedJobs} đơn)
-                </Text>
+                  ({w.completedJobs} {t("đơn)")}</Text>
               )}
             </View>
           </View>
@@ -604,22 +617,22 @@ export function WorkerProfile() {
               <StatItem
                 icon="star"
                 value={w.hasRating ? w.rating.toFixed(1) : "—"}
-                label="Đánh giá"
+                label={t("Đánh giá")}
                 tint={COLORS.accentLight}
                 tone={COLORS.accentDark}
               />
               <StatItem
                 icon="check-circle"
                 value={`${w.completedJobs}`}
-                label="Đơn hoàn thành"
+                label={t("Đơn hoàn thành")}
                 tint={COLORS.primaryLight}
                 tone={COLORS.primaryDark}
                 divider
               />
               <StatItem
                 icon="briefcase"
-                value={`${w.experienceYears} năm`}
-                label="Kinh nghiệm"
+                value={t("{{value0}} năm", { value0: w.experienceYears , count: w.experienceYears})}
+                label={t("Kinh nghiệm")}
                 tint={COLORS.primaryLight}
                 tone={COLORS.primaryDark}
                 divider
@@ -646,7 +659,7 @@ export function WorkerProfile() {
 
           {!!worker.bio?.trim() && (
             <FadeUp delay={180}>
-              <Section icon="user" title="Giới thiệu">
+              <Section icon="user" title={t("Giới thiệu")}>
                 <Text
                   style={{
                     fontSize: 14.5,
@@ -662,7 +675,7 @@ export function WorkerProfile() {
 
           {!!worker.skills?.length && (
             <FadeUp delay={240}>
-              <Section icon="tool" title="Kỹ năng chuyên môn">
+              <Section icon="tool" title={t("Kỹ năng chuyên môn")}>
                 <View
                   style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}
                 >
@@ -706,7 +719,7 @@ export function WorkerProfile() {
           {/* Khu vực hoạt động — chỉ hiện khi API có dữ liệu */}
           {!!worker.work_area && (
             <FadeUp delay={300}>
-              <Section icon="map-pin" title="Khu vực hoạt động">
+              <Section icon="map-pin" title={t("Khu vực hoạt động")}>
                 <View
                   style={{
                     flexDirection: "row",
@@ -782,7 +795,7 @@ export function WorkerProfile() {
           style={{ flex: 1 }}
         >
           <LinearGradient
-            colors={[COLORS.primary, COLORS.primaryDark]}
+            colors={[COLORS.primaryFill, COLORS.primaryFillDark]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[
@@ -810,8 +823,7 @@ export function WorkerProfile() {
                 color: COLORS.white,
               }}
             >
-              Nhắn tin
-            </Text>
+              {t("Nhắn tin")}</Text>
           </LinearGradient>
         </TouchableOpacity>
 
@@ -823,7 +835,7 @@ export function WorkerProfile() {
             disabled={w.updatingFavorite}
             activeOpacity={0.85}
             accessibilityRole="button"
-            accessibilityLabel={w.liked ? "Bỏ yêu thích" : "Thêm vào yêu thích"}
+            accessibilityLabel={w.liked ? t("Bỏ yêu thích") : t("Thêm vào yêu thích")}
             style={{
               width: 54,
               height: 54,
@@ -832,7 +844,7 @@ export function WorkerProfile() {
               borderRadius: 18,
               borderWidth: w.liked ? 0 : 1.5,
               borderColor: COLORS.line,
-              backgroundColor: w.liked ? COLORS.danger : COLORS.surface,
+              backgroundColor: w.liked ? COLORS.dangerFill : COLORS.surface,
             }}
           >
             <Ionicons

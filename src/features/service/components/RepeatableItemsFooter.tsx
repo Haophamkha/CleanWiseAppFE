@@ -1,6 +1,9 @@
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 // src/components/service/RepeatableItemsFooter.tsx
 import { Button } from "@/components/ui/Button";
-import { COLORS, OVERLAY, RADIUS } from "@/constants/theme";
+import { OVERLAY, RADIUS } from "@/constants/theme";
 import type { FormField } from "@/features/service/types/Service";
 import { getItemTotalPrice } from "@/features/service/utils/servicePricing";
 import { useAppSelector } from "@/store/hooks";
@@ -36,11 +39,15 @@ export function RepeatableItemsFooter({
   onRemove,
   onSubmit,
   submitDisabled,
-  submitLabel = "Tiếp theo",
+  submitLabel = t("Tiếp theo"),
 }: Props) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const [expanded, setExpanded] = useState(false);
   const isAuthenticated = !!useAppSelector((state) => state.auth.user);
-  const displayedSubmitLabel = isAuthenticated ? submitLabel : "Đăng nhập ngay";
+  const displayedSubmitLabel = isAuthenticated ? submitLabel : t("Đăng nhập ngay");
   const insets = useSafeAreaInsets();
 
   const itemFields = groupField.item_fields ?? [];
@@ -119,14 +126,13 @@ export function RepeatableItemsFooter({
 
               <View className="flex-1">
                 <Text className="text-base font-bold text-ink">
-                  Thiết bị đã chọn
-                </Text>
+                  {t("Thiết bị đã chọn")}</Text>
                 <Text className="text-xs text-ink-muted mt-0.5">
-                  {expanded ? "Chạm để thu gọn" : "Chạm để xem chi tiết"}
+                  {expanded ? t("Chạm để thu gọn") : t("Chạm để xem chi tiết")}
                 </Text>
               </View>
 
-              <View className="min-w-[26px] h-[26px] px-2 rounded-full bg-primary items-center justify-center mr-2">
+              <View className="min-w-[26px] h-[26px] px-2 rounded-full bg-primary-fill items-center justify-center mr-2">
                 <Text className="text-white text-[12px] font-bold">
                   {totalQuantity}
                 </Text>
@@ -216,13 +222,13 @@ export function RepeatableItemsFooter({
           style={{ paddingBottom: insets.bottom + 12 }}
         >
           <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-ink-soft text-sm">Tổng tiền</Text>
+            <Text className="text-ink-soft text-sm">{t("Tổng tiền")}</Text>
             <Text
               className={`font-extrabold ${
                 hasItems ? "text-primary text-xl" : "text-ink-muted text-sm"
               }`}
             >
-              {hasItems ? formatVnd(totalPrice) : "Chưa đủ thông tin"}
+              {hasItems ? formatVnd(totalPrice) : t("Chưa đủ thông tin")}
             </Text>
           </View>
 

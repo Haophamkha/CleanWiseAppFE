@@ -1,4 +1,7 @@
-import { COLORS, SHADOWS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { SHADOWS } from "@/constants/theme";
 import { Feather } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
 
@@ -19,6 +22,10 @@ export function AddressSummaryCard({
   address: AddressLike;
   onEdit?: () => void;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       className="rounded-3xl bg-surface border border-line p-4"
@@ -30,7 +37,7 @@ export function AddressSummaryCard({
         </View>
         <View className="flex-1">
           <Text className="font-bold text-[15px] text-ink">
-            {address.label || "Địa chỉ"}
+            {address.label || t("Địa chỉ")}
           </Text>
           <Text className="text-[13px] leading-5 mt-0.5 text-ink-soft">
             {address.address_line}

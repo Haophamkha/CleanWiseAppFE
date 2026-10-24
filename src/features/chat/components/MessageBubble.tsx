@@ -1,5 +1,8 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Avatar } from "@/components/ui";
-import { COLORS } from "@/constants/theme";
+
 import type { UiChatMessage } from "@/features/chat/utils/chatUtils";
 import { Feather } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -36,16 +39,20 @@ export function MessageBubble({
   onToggle,
   onRetry,
 }: Props) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const failed = item.localStatus === "failed";
   const sending = item.localStatus === "sending";
 
   const statusLabel = sending
-    ? "Đang gửi"
+    ? t("Đang gửi")
     : failed
-      ? "Gửi lỗi, chạm để thử lại"
+      ? t("Gửi lỗi, chạm để thử lại")
       : item.is_read
-        ? "Đã xem"
-        : "Đã gửi";
+        ? t("Đã xem")
+        : t("Đã gửi");
   const statusIcon = failed ? "alert-circle" : sending ? "clock" : "check";
 
   return (
@@ -104,7 +111,7 @@ export function MessageBubble({
               paddingVertical: 3,
               borderRadius: 12,
               backgroundColor: failed
-                ? COLORS.danger
+                ? COLORS.dangerFill
                 : "rgba(100,110,120,0.55)",
             }}
           >

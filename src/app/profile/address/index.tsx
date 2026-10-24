@@ -1,3 +1,6 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import ScreenContainer from "@/components/ScreenContainer";
 import { useGetAddressesQuery } from "@/features/address/api/addressApi";
 import AddressCard from "@/features/address/components/AddressCard";
@@ -15,6 +18,10 @@ import {
 } from "react-native";
 
 export default function AddressListScreen() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const { pickerKey, title } = useLocalSearchParams<{
     pickerKey?: string;
     title?: string;
@@ -46,25 +53,24 @@ export default function AddressListScreen() {
 
   return (
     <ScreenContainer>
-      <View className="flex-1 bg-white">
-        <View className="flex-row items-center px-5 pt-4 pb-4 border-b border-gray-100">
+      <View className="flex-1 bg-surface">
+        <View className="flex-row items-center px-5 pt-4 pb-4 border-b border-line">
           <TouchableOpacity onPress={() => router.back()} className="mr-4">
             <Feather name="arrow-left" size={22} color="#111827" />
           </TouchableOpacity>
-          <Text className="text-lg font-bold text-gray-900">
-            {title || (isPicking ? "Chọn địa chỉ" : "Danh sách địa chỉ đã lưu")}
+          <Text className="text-lg font-bold text-ink">
+            {title || (isPicking ? t("Chọn địa chỉ") : t("Danh sách địa chỉ đã lưu"))}
           </Text>
         </View>
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#047857" />
+            <ActivityIndicator color={COLORS.success} />
           </View>
         ) : isError ? (
           <View className="items-center justify-center mt-20">
             <Text className="text-red-500">
-              Không tải được danh sách địa chỉ
-            </Text>
+              {t("Không tải được danh sách địa chỉ")}</Text>
           </View>
         ) : (
           <FlatList
@@ -80,14 +86,14 @@ export default function AddressListScreen() {
             )}
             ListEmptyComponent={
               <View className="items-center justify-center mt-20">
-                <Feather name="map-pin" size={40} color="#D1D5DB" />
-                <Text className="text-gray-400 mt-3">Chưa có địa chỉ nào</Text>
+                <Feather name="map-pin" size={40} color={COLORS.line} />
+                <Text className="text-ink-muted mt-3">{t("Chưa có địa chỉ nào")}</Text>
               </View>
             }
           />
         )}
 
-        <View className="px-6 pb-8 pt-4 border-t border-gray-100">
+        <View className="px-6 pb-8 pt-4 border-t border-line">
           <TouchableOpacity
             className="flex-row bg-emerald-700 rounded-xl py-4 items-center justify-center"
             onPress={handleAdd}
@@ -95,8 +101,7 @@ export default function AddressListScreen() {
           >
             <Feather name="plus" size={18} color="#fff" />
             <Text className="text-white font-bold text-base ml-2">
-              Thêm địa chỉ mới
-            </Text>
+              {t("Thêm địa chỉ mới")}</Text>
           </TouchableOpacity>
         </View>
       </View>

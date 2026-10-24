@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import {
   useCancelBookingMutation,
   useCancelScheduleMutation,
@@ -14,6 +16,8 @@ const CANCELLABLE_STATUSES = ["PENDING", "ASSIGNED"];
 const ACTIVE_STATUSES = ["PENDING", "ASSIGNED", "IN_PROGRESS"];
 
 export function useBookingDetail() {
+  const { t } = useTranslation();
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const bookingId = Number(id);
   const [cancelVisible, setCancelVisible] = useState(false);
@@ -69,15 +73,15 @@ export function useBookingDetail() {
       setCancelVisible(false);
       const refunded = Number(res?.refunded_amount ?? 0);
       Alert.alert(
-        "Đã hủy đơn",
+        t("Đã hủy đơn"),
         refunded > 0
-          ? `Đơn hàng đã được hủy. Đã hoàn ${formatVnd(refunded)} vào ví của bạn.`
-          : "Đơn hàng đã được hủy thành công.",
+          ? t("Đơn hàng đã được hủy. Đã hoàn {{value0}} vào ví của bạn.", { value0: formatVnd(refunded) })
+          : t("Đơn hàng đã được hủy thành công."),
       );
     } catch (err: any) {
       Alert.alert(
-        "Không thể hủy đơn",
-        getApiErrorMessage(err, "Không thể hủy đơn hàng, vui lòng thử lại."),
+        t("Không thể hủy đơn"),
+        getApiErrorMessage(err, t("Không thể hủy đơn hàng, vui lòng thử lại.")),
       );
     }
   };
@@ -94,19 +98,19 @@ export function useBookingDetail() {
       const refunded = Number(res?.refunded_amount ?? 0);
       const lines = [
         res?.booking_status === "CANCELLED"
-          ? "Đơn hàng đã được hủy."
-          : "Đã hủy buổi làm việc.",
+          ? t("Đơn hàng đã được hủy.")
+          : t("Đã hủy buổi làm việc."),
       ];
       if (refunded > 0) {
-        lines.push(`Đã hoàn ${formatVnd(refunded)} vào ví của bạn.`);
+        lines.push(t("Đã hoàn {{value0}} vào ví của bạn.", { value0: formatVnd(refunded) }));
       }
-      Alert.alert("Đã hủy buổi", lines.join(" "));
+      Alert.alert(t("Đã hủy buổi"), lines.join(" "));
     } catch (err: any) {
       Alert.alert(
-        "Không thể hủy buổi",
+        t("Không thể hủy buổi"),
         getApiErrorMessage(
           err,
-          "Không thể hủy buổi làm việc, vui lòng thử lại.",
+          t("Không thể hủy buổi làm việc, vui lòng thử lại."),
         ),
       );
     }

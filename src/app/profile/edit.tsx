@@ -1,3 +1,6 @@
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 // app/profile/edit.tsx
 import ScreenContainer from "@/components/ScreenContainer";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
@@ -9,7 +12,7 @@ import {
   Input,
   type FeatherName,
 } from "@/components/ui";
-import { COLORS } from "@/constants/theme";
+
 import {
   useEditProfile,
   type EditProfileKey,
@@ -31,44 +34,50 @@ type FieldConfig = {
   autoCapitalize?: "none" | "words";
 };
 
-const FIELDS: FieldConfig[] = [
-  {
-    key: "last_name",
-    label: "Họ và tên đệm",
-    icon: "user",
-    placeholder: "Nhập họ và tên đệm",
-    autoCapitalize: "words",
-  },
-  {
-    key: "first_name",
-    label: "Tên",
-    icon: "user",
-    placeholder: "Nhập tên",
-    autoCapitalize: "words",
-  },
-  {
-    key: "phone_number",
-    label: "Số điện thoại",
-    icon: "phone",
-    placeholder: "Nhập số điện thoại",
-    keyboardType: "phone-pad",
-  },
-  {
-    key: "email",
-    label: "Email",
-    icon: "mail",
-    placeholder: "Nhập email",
-    keyboardType: "email-address",
-    autoCapitalize: "none",
-  },
-];
+function getLocalizedFields(): FieldConfig[] {
+  return [
+    {
+      key: "last_name",
+      label: t("Họ và tên đệm"),
+      icon: "user",
+      placeholder: t("Nhập họ và tên đệm"),
+      autoCapitalize: "words",
+    },
+    {
+      key: "first_name",
+      label: t("Tên"),
+      icon: "user",
+      placeholder: t("Nhập tên"),
+      autoCapitalize: "words",
+    },
+    {
+      key: "phone_number",
+      label: t("Số điện thoại"),
+      icon: "phone",
+      placeholder: t("Nhập số điện thoại"),
+      keyboardType: "phone-pad",
+    },
+    {
+      key: "email",
+      label: "Email",
+      icon: "mail",
+      placeholder: t("Nhập email"),
+      keyboardType: "email-address",
+      autoCapitalize: "none",
+    },
+  ];
+}
 export default function EditProfileScreen() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const e = useEditProfile();
 
   return (
     <ScreenContainer>
       <ScreenHeader
-        title="Chỉnh sửa thông tin"
+        title={t("Chỉnh sửa thông tin")}
         onBack={e.goBack}
         disabled={e.isUpdating}
       />
@@ -80,8 +89,8 @@ export default function EditProfileScreen() {
       ) : e.loadError ? (
         <EmptyState
           icon="wifi-off"
-          title="Không tải được thông tin"
-          actionLabel="Thử lại"
+          title={t("Không tải được thông tin")}
+          actionLabel={t("Thử lại")}
           onAction={e.retry}
         />
       ) : (
@@ -112,7 +121,7 @@ export default function EditProfileScreen() {
                   onPress={e.pickAvatar}
                   disabled={e.isUpdating}
                   activeOpacity={0.85}
-                  className="absolute w-10 h-10 rounded-full bg-primary items-center justify-center border-2 border-surface"
+                  className="absolute w-10 h-10 rounded-full bg-primary-fill items-center justify-center border-2 border-surface"
                   style={{ right: 2, bottom: 2 }}
                 >
                   <Feather name="camera" size={17} color={COLORS.white} />
@@ -120,7 +129,7 @@ export default function EditProfileScreen() {
               </View>
             </View>
 
-            {FIELDS.map((field) => (
+            {getLocalizedFields().map((field) => (
               <Input
                 key={field.key}
                 label={field.label}
@@ -139,7 +148,7 @@ export default function EditProfileScreen() {
 
           <View className="px-5 pt-3 pb-4 bg-surface border-t border-line">
             <Button
-              title="Lưu thay đổi"
+              title={t("Lưu thay đổi")}
               onPress={e.submit}
               loading={e.isUpdating}
               disabled={!e.hasChanges}

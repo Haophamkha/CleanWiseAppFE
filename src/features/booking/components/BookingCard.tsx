@@ -1,11 +1,14 @@
-import { COLORS, SHADOWS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+import { getLocale } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { SHADOWS } from "@/constants/theme";
 import { ServiceThumb } from "@/features/booking/components/ServiceThumb";
 import type {
   BookingListItem,
   BookingStatus,
 } from "@/features/booking/types/Booking";
 import { getPaymentStatusMeta } from "@/features/booking/types/bookingStatus";
-import { BOOKING_STATUS_META } from "@/features/booking/utils/bookingStatus";
+import { getBookingStatusMap } from "@/features/booking/utils/bookingStatus";
 import { formatVnd } from "@/utils/currency";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -38,14 +41,14 @@ type BookingCardData = BookingListItem & {
 };
 
 const dateText = (iso: string) =>
-  new Date(iso).toLocaleDateString("vi-VN", {
+  new Date(iso).toLocaleDateString(getLocale(), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
 
 const dateTimeText = (iso: string) =>
-  new Date(iso).toLocaleString("vi-VN", {
+  new Date(iso).toLocaleString(getLocale(), {
     weekday: "short",
     day: "2-digit",
     month: "2-digit",
@@ -60,6 +63,9 @@ function MetaRow({
   icon: keyof typeof Feather.glyphMap;
   children: string;
 }) {
+  const { COLORS } = useAppTheme();
+
+
   return (
     <View className="flex-row items-center mt-2.5">
       <View
@@ -76,13 +82,18 @@ function MetaRow({
 }
 
 export function BookingCard({ item }: { item: BookingCardData }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
+  const BOOKING_STATUS_META = getBookingStatusMap(COLORS);
   const meta = BOOKING_STATUS_META[item.status] ?? {
     label: item.status,
     color: COLORS.inkSoft,
     bg: COLORS.line,
   };
   const icon = STATUS_ICON[item.status] ?? "clipboard";
-  const pay = getPaymentStatusMeta(item.payment_status);
+  const pay = getPaymentStatusMeta(item.payment_status, COLORS);
   const discount = Number(item.discount_amount) || 0;
 
   const isDead = item.status === "CANCELLED" || item.status === "FAILED";
@@ -114,8 +125,7 @@ export function BookingCard({ item }: { item: BookingCardData }) {
           className="text-[11px] font-bold mr-2"
           style={{ color: COLORS.primaryDark, opacity: 0.7 }}
         >
-          MÃ ĐƠN
-        </Text>
+          {t("MÃ ĐƠN")}</Text>
         <Text
           selectable
           className="text-[15px] font-extrabold"
@@ -166,7 +176,7 @@ export function BookingCard({ item }: { item: BookingCardData }) {
           <MetaRow icon="calendar">
             {item.next_schedule_start
               ? dateTimeText(item.next_schedule_start)
-              : `Đặt ngày ${dateText(item.created_at)}`}
+              : t("Đặt ngày {{value0}}", { value0: dateText(item.created_at) })}
           </MetaRow>
 
           {!!item.address_summary && (
@@ -175,24 +185,23 @@ export function BookingCard({ item }: { item: BookingCardData }) {
 
           {item.worker_name !== undefined && (
             <MetaRow icon="user">
-              {item.worker_name || "Đang tìm nhân viên"}
+              {item.worker_name || t("Đang tìm nhân viên")}
             </MetaRow>
           )}
 
           {hasProgress && (
             <View className="mt-3.5">
               <View className="flex-row items-center justify-between mb-1.5">
-                <Text className="text-[11.5px] text-ink-muted">Tiến độ</Text>
+                <Text className="text-[11.5px] text-ink-muted">{t("Tiến độ")}</Text>
                 <Text className="text-[11.5px] font-bold text-ink-soft">
-                  {item.done_sessions ?? 0}/{item.total_sessions} buổi
-                </Text>
+                  {item.done_sessions ?? 0}/{item.total_sessions} {t("buổi")}</Text>
               </View>
               <View className="h-1.5 rounded-full bg-line overflow-hidden">
                 <View
                   className="h-full rounded-full"
                   style={{
                     width: `${progress * 100}%`,
-                    backgroundColor: COLORS.primary,
+                    backgroundColor: COLORS.primaryFill,
                   }}
                 />
               </View>
@@ -219,17 +228,17 @@ export function BookingCard({ item }: { item: BookingCardData }) {
             )}
             {discount > 0 && (
               <Text className="text-[11.5px] text-success mt-1.5">
-                Tiết kiệm {formatVnd(discount)}
+                {t("Tiết kiệm")}{" "}{formatVnd(discount)}
               </Text>
             )}
           </View>
 
           <View className="items-end">
-            <Text className="text-ink-muted text-[11px]">Tổng thanh toán</Text>
+            <Text className="text-ink-muted text-[11px]">{t("Tổng thanh toán")}</Text>
             <Text className="text-primary font-extrabold text-[20px]">
               {item.total_amount
                 ? formatVnd(Number(item.total_amount))
-                : "Chờ báo giá"}
+                : t("Chờ báo giá")}
             </Text>
           </View>
         </View>

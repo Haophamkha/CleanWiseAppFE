@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 // components/address/LocationMapView.web.tsx
 import { forwardRef, useImperativeHandle } from "react";
 import { Text, View } from "react-native";
@@ -8,6 +10,8 @@ import {
 
 const LocationMapView = forwardRef<LocationMapViewHandle, LocationMapViewProps>(
   (_props, ref) => {
+  const { t } = useTranslation();
+
     useImperativeHandle(ref, () => ({
       animateToRegion: () => {
         // no-op trên web
@@ -17,9 +21,7 @@ const LocationMapView = forwardRef<LocationMapViewHandle, LocationMapViewProps>(
     return (
       <View className="flex-1 items-center justify-center bg-canvas px-8">
         <Text className="text-ink-soft text-center">
-          Bản đồ chỉ hỗ trợ trên ứng dụng di động (iOS/Android). Hãy chạy app
-          trên thiết bị hoặc simulator để dùng tính năng chọn vị trí.
-        </Text>
+          {t("Bản đồ chỉ hỗ trợ trên ứng dụng di động (iOS/Android). Hãy chạy app trên thiết bị hoặc simulator để dùng tính năng chọn vị trí.")}</Text>
       </View>
     );
   },

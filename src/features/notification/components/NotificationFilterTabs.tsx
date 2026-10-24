@@ -1,6 +1,7 @@
+import { useTranslation } from "react-i18next";
 import { SHADOWS } from "@/constants/theme";
 import { NotificationType } from "@/features/notification/types/Notification";
-import { NOTIFICATION_FILTER_OPTIONS } from "@/features/notification/utils/notificationMeta";
+import { getLocalizedNotificationFilterOptions } from "@/features/notification/utils/notificationMeta";
 import { ScrollView, Text, TouchableOpacity } from "react-native";
 
 export type NotificationFilter = "ALL" | NotificationType;
@@ -14,6 +15,8 @@ export default function NotificationFilterTabs({
   value,
   onChange,
 }: NotificationFilterTabsProps) {
+  const { t } = useTranslation();
+
   return (
     <ScrollView
       horizontal
@@ -26,7 +29,7 @@ export default function NotificationFilterTabs({
         alignItems: "center",
       }}
     >
-      {NOTIFICATION_FILTER_OPTIONS.map((option) => {
+      {getLocalizedNotificationFilterOptions().map((option) => {
         const isActive = option.value === value;
         return (
           <TouchableOpacity
@@ -34,7 +37,7 @@ export default function NotificationFilterTabs({
             onPress={() => onChange(option.value as NotificationFilter)}
             activeOpacity={0.8}
             className={`h-10 px-5 rounded-full border items-center justify-center ${
-              isActive ? "bg-primary border-primary" : "bg-surface border-line"
+              isActive ? "bg-primary-fill border-primary" : "bg-surface border-line"
             }`}
             style={isActive ? SHADOWS.float : undefined}
           >

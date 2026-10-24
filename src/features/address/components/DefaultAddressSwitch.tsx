@@ -1,5 +1,8 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 // components/address/DefaultAddressSwitch.tsx
-import { COLORS } from "@/constants/theme";
+
 import { Feather } from "@expo/vector-icons";
 import { Switch, Text, View } from "react-native";
 
@@ -16,6 +19,10 @@ export default function DefaultAddressSwitch({
   isCurrentDefault = false,
   isEditMode = false,
 }: DefaultAddressSwitchProps) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   // Đã là mặc định thì không tắt trực tiếp được, phải chọn địa chỉ khác làm mặc định
   const locked = isEditMode && isCurrentDefault;
   const active = locked ? true : isDefault;
@@ -35,12 +42,10 @@ export default function DefaultAddressSwitch({
       </View>
       <View className="flex-1 mr-3">
         <Text className="text-base font-medium text-ink">
-          Đặt làm địa chỉ mặc định
-        </Text>
+          {t("Đặt làm địa chỉ mặc định")}</Text>
         {locked && (
           <Text className="text-xs text-ink-muted mt-0.5">
-            Địa chỉ này đang là mặc định. Chọn địa chỉ khác làm mặc định để đổi.
-          </Text>
+            {t("Địa chỉ này đang là mặc định. Chọn địa chỉ khác làm mặc định để đổi.")}</Text>
         )}
       </View>
       <Switch

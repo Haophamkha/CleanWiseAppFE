@@ -1,9 +1,16 @@
-import { COLORS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
 import { Animated, Text, View } from "react-native";
 
 export function ChatbotThinkingIndicator() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const dots = useRef([
     new Animated.Value(0),
     new Animated.Value(0),
@@ -44,10 +51,10 @@ export function ChatbotThinkingIndicator() {
       </View>
       <View
         accessible
-        accessibilityLabel="Đang suy nghĩ"
+        accessibilityLabel={t("Đang suy nghĩ")}
         className="flex-row items-center rounded-2xl bg-surface border border-line px-4 py-3"
       >
-        <Text className="text-ink-soft text-xs mr-2">Đang suy nghĩ</Text>
+        <Text className="text-ink-soft text-xs mr-2">{t("Đang suy nghĩ")}</Text>
         {dots.map((dot, index) => (
           <Animated.View
             key={index}

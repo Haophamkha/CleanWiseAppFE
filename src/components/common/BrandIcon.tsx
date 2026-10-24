@@ -1,4 +1,4 @@
-import { COLORS } from "@/constants/theme";
+
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 
@@ -8,7 +8,7 @@ export const BRAND_COLORS: Record<BrandName, string> = {
   zalo: "#0068FF",
   facebook: "#1877F2",
   email: "#EA4335",
-  phone: COLORS.success,
+  phone: "#16A34A",
 };
 
 type Props = { name: BrandName; size?: number };

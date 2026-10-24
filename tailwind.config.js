@@ -2,11 +2,12 @@ const tokens = require("./tokens");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: "class",
   content: ["./src/app/**/*.{js,jsx,ts,tsx}", "./src/**/*.{js,jsx,ts,tsx}"],
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
-      colors: tokens.colors,
+      colors: tokens.tailwindColors,
       fontSize: {
         xs: ["12px", "16px"],
         sm: ["14px", "20px"],
@@ -19,5 +20,5 @@ module.exports = {
       borderRadius: { sm: "8px", md: "12px", lg: "16px", xl: "24px" },
     },
   },
-  plugins: [],
+  plugins: [({ addBase }) => addBase({ ":root": tokens.variables.light, ".dark:root": tokens.variables.dark })],
 };

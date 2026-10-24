@@ -1,4 +1,8 @@
-import { COLORS, RADIUS, SHADOWS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import type { ThemeColors } from "@/constants/theme";
+import { RADIUS, SHADOWS } from "@/constants/theme";
 import type {
   ComplaintListItem,
   ComplaintStatus,
@@ -13,7 +17,7 @@ const MONO = Platform.select({
   default: "monospace",
 });
 
-export const COMPLAINT_STATUS_META: Record<
+export function getComplaintStatusMap(COLORS: ThemeColors): Record<
   ComplaintStatus,
   {
     label: string;
@@ -22,43 +26,45 @@ export const COMPLAINT_STATUS_META: Record<
     icon: keyof typeof Feather.glyphMap;
     hint: string;
   }
-> = {
+> {
+  return {
   PENDING: {
-    label: "Chờ xử lý",
+    label: t("Chờ xử lý"),
     color: COLORS.accentDark,
     bg: COLORS.accentLight,
     icon: "clock",
-    hint: "Khiếu nại đã gửi, đang chờ CleanWise tiếp nhận.",
+    hint: t("Khiếu nại đã gửi, đang chờ CleanWise tiếp nhận."),
   },
   IN_REVIEW: {
-    label: "Đang xem xét",
+    label: t("Đang xem xét"),
     color: COLORS.infoDark,
     bg: COLORS.infoLight,
     icon: "search",
-    hint: "CleanWise đang xem xét khiếu nại của bạn.",
+    hint: t("CleanWise đang xem xét khiếu nại của bạn."),
   },
   RESOLVED: {
-    label: "Đã giải quyết",
+    label: t("Đã giải quyết"),
     color: COLORS.success,
     bg: COLORS.successLight,
     icon: "check-circle",
-    hint: "Khiếu nại đã được giải quyết.",
+    hint: t("Khiếu nại đã được giải quyết."),
   },
   REJECTED: {
-    label: "Bị từ chối",
+    label: t("Bị từ chối"),
     color: COLORS.danger,
     bg: COLORS.dangerLight,
     icon: "x-circle",
-    hint: "Khiếu nại không được chấp nhận.",
+    hint: t("Khiếu nại không được chấp nhận."),
   },
   CANCELLED: {
-    label: "Đã hủy",
+    label: t("Đã hủy"),
     color: COLORS.inkSoft,
     bg: COLORS.line,
     icon: "slash",
-    hint: "Bạn đã hủy khiếu nại này.",
+    hint: t("Bạn đã hủy khiếu nại này."),
   },
 };
+}
 
 export function ComplaintCard({
   item,
@@ -67,6 +73,12 @@ export function ComplaintCard({
   item: ComplaintListItem;
   onPress: () => void;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
+  const COMPLAINT_STATUS_META = getComplaintStatusMap(COLORS);
+
   const meta = COMPLAINT_STATUS_META[item.status] ?? {
     label: item.status_label,
     color: COLORS.inkSoft,
@@ -94,8 +106,7 @@ export function ComplaintCard({
           className="text-[10.5px] font-bold"
           style={{ color: meta.color, letterSpacing: 0.5 }}
         >
-          MÃ KHIẾU NẠI
-        </Text>
+          {t("MÃ KHIẾU NẠI")}</Text>
 
         <Text
           selectable
@@ -110,9 +121,9 @@ export function ComplaintCard({
           style={{ color: meta.color }}
           numberOfLines={1}
         >
-          Đơn {item.booking_code}
+          {t("Đơn")}{" "}{item.booking_code}
           {item.schedule_sequence_no != null
-            ? `  ·  Buổi ${item.schedule_sequence_no}`
+            ? t("  ·  Buổi {{value0}}", { value0: item.schedule_sequence_no })
             : ""}
         </Text>
       </View>

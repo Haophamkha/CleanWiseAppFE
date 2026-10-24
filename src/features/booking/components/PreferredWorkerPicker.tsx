@@ -1,4 +1,7 @@
-import { COLORS, SHADOWS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { SHADOWS } from "@/constants/theme";
 import type { FavoriteWorker } from "@/features/favorite-worker/types/FavoriteWorker";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -11,13 +14,17 @@ type Props = {
 };
 
 const fullName = (w: FavoriteWorker) =>
-  `${w.last_name ?? ""} ${w.first_name ?? ""}`.trim() || "Nhân viên";
+  `${w.last_name ?? ""} ${w.first_name ?? ""}`.trim() || t("Nhân viên");
 
 export function PreferredWorkerPicker({
   workers,
   selectedId,
   onSelect,
 }: Props) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const selected = workers.find((w) => w.worker_id === selectedId);
 
   return (
@@ -43,7 +50,7 @@ export function PreferredWorkerPicker({
               style={SHADOWS.card}
             >
               {isSelected && (
-                <View className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary items-center justify-center z-10">
+                <View className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary-fill items-center justify-center z-10">
                   <Feather name="check" size={12} color={COLORS.white} />
                 </View>
               )}
@@ -74,10 +81,9 @@ export function PreferredWorkerPicker({
                 <Text className="text-ink-muted text-[11px] ml-1">
                   {Number.isFinite(rating) && rating > 0
                     ? rating.toFixed(1)
-                    : "Mới"}
+                    : t("Mới")}
                   {" · "}
-                  {w.total_completed_jobs ?? 0} đơn
-                </Text>
+                  {w.total_completed_jobs ?? 0} {t("đơn")}</Text>
               </View>
             </TouchableOpacity>
           );
@@ -86,8 +92,8 @@ export function PreferredWorkerPicker({
 
       <Text className="text-ink-muted text-xs mt-2">
         {selected
-          ? `Yêu cầu sẽ gửi riêng cho ${fullName(selected)}. Sau 1 giờ nếu chưa nhận hoặc bị từ chối, đơn sẽ mở cho tất cả nhân viên. Chạm lại để bỏ chọn.`
-          : "Chọn một nhân viên yêu thích để gửi yêu cầu riêng, hoặc bỏ qua để hệ thống tìm giúp bạn."}
+          ? t("Yêu cầu sẽ gửi riêng cho {{value0}}. Sau 1 giờ nếu chưa nhận hoặc bị từ chối, đơn sẽ mở cho tất cả nhân viên. Chạm lại để bỏ chọn.", { value0: fullName(selected) })
+          : t("Chọn một nhân viên yêu thích để gửi yêu cầu riêng, hoặc bỏ qua để hệ thống tìm giúp bạn.")}
       </Text>
     </View>
   );

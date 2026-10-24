@@ -1,17 +1,20 @@
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Avatar } from "@/components/ui";
-import { COLORS } from "@/constants/theme";
+
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 function shortTime(iso?: string | null) {
   if (!iso) return "";
   const d = new Date(iso);
   const min = Math.floor((Date.now() - d.getTime()) / 60000);
-  if (min < 1) return "Vừa xong";
-  if (min < 60) return `${min} phút`;
+  if (min < 1) return t("Vừa xong");
+  if (min < 60) return t("{{value0}} phút", { value0: min });
   const h = Math.floor(min / 60);
-  if (h < 24) return `${h} giờ`;
+  if (h < 24) return t("{{value0}} giờ", { value0: h });
   const days = Math.floor(h / 24);
-  if (days < 7) return `${days} ngày`;
+  if (days < 7) return t("{{value0}} ngày", { value0: days , count: days});
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
@@ -22,6 +25,10 @@ export function ConversationItem({
   item: any;
   onPress: () => void;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const last = item.last_message;
   const preview: string =
     typeof last === "string"
@@ -110,7 +117,7 @@ export function ConversationItem({
               fontWeight: hasUnread ? "600" : "400",
             }}
           >
-            {preview || "Chưa có tin nhắn"}
+            {preview || t("Chưa có tin nhắn")}
           </Text>
           {hasUnread && (
             <View
@@ -120,7 +127,7 @@ export function ConversationItem({
                 height: 20,
                 paddingHorizontal: 6,
                 borderRadius: 10,
-                backgroundColor: COLORS.danger,
+                backgroundColor: COLORS.dangerFill,
                 alignItems: "center",
                 justifyContent: "center",
               }}

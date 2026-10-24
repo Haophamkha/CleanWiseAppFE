@@ -1,8 +1,12 @@
+import { useTranslation } from "react-i18next";
+
 import { Image, Text, TouchableOpacity } from "react-native";
 
 type Props = { onPress: () => void; disabled?: boolean; loading?: boolean };
 
 export function GoogleButton({ onPress, disabled, loading }: Props) {
+  const { t } = useTranslation();
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -17,7 +21,7 @@ export function GoogleButton({ onPress, disabled, loading }: Props) {
         style={{ width: 18, height: 18, marginRight: 10 }}
       />
       <Text className="text-base font-medium text-ink">
-        {loading ? "Đang đăng nhập..." : "Google"}
+        {loading ? t("Đang đăng nhập...") : "Google"}
       </Text>
     </TouchableOpacity>
   );

@@ -1,6 +1,9 @@
+import { useTranslation } from "react-i18next";
+import { getLocale } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { EmptyState } from "@/components/ui";
-import { COLORS } from "@/constants/theme";
+
 import { Feather } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -36,6 +39,10 @@ export function ChatbotHistorySheet({
   onSelect,
   onDeleted,
 }: Props) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const { height } = useWindowDimensions();
   const [page, setPage] = useState(1);
   const [items, setItems] = useState<ChatbotConversation[]>([]);
@@ -55,12 +62,12 @@ export function ChatbotHistorySheet({
 
   const confirmDelete = (item: ChatbotConversation) => {
     Alert.alert(
-      "Xóa cuộc trò chuyện?",
-      `Toàn bộ tin nhắn trong “${item.title || "Cuộc trò chuyện mới"}” sẽ bị xóa và không thể khôi phục.`,
+      t("Xóa cuộc trò chuyện?"),
+      t("Toàn bộ tin nhắn trong “{{value0}}” sẽ bị xóa và không thể khôi phục.", { value0: item.title || t("Cuộc trò chuyện mới") }),
       [
-        { text: "Hủy", style: "cancel" },
+        { text: t("Hủy"), style: "cancel" },
         {
-          text: "Xóa",
+          text: t("Xóa"),
           style: "destructive",
           onPress: async () => {
             if (deleting.current || !alive.current) return;
@@ -73,13 +80,13 @@ export function ChatbotHistorySheet({
               const status = (error as { status?: number })?.status;
               if (status !== 404) {
                 Alert.alert(
-                  "Không thể xóa cuộc trò chuyện",
+                  t("Không thể xóa cuộc trò chuyện"),
                   status === 409 ||
                     status === 401 ||
                     status === 403 ||
                     status === 429
                     ? chatbotErrorMessage(error)
-                    : "Vui lòng kiểm tra kết nối và thử lại.",
+                    : t("Vui lòng kiểm tra kết nối và thử lại."),
                 );
                 return;
               }
@@ -139,17 +146,15 @@ export function ChatbotHistorySheet({
       <View className="flex-row items-center justify-between px-5 pt-3 pb-4">
         <View>
           <Text className="text-ink text-xl font-extrabold">
-            Lịch sử trò chuyện
-          </Text>
+            {t("Lịch sử trò chuyện")}</Text>
           <Text className="text-ink-soft text-xs mt-1">
-            Tiếp tục câu chuyện cùng trợ lý
-          </Text>
+            {t("Tiếp tục câu chuyện cùng trợ lý")}</Text>
         </View>
         <TouchableOpacity
           onPress={onClose}
           disabled={deletingId !== null}
           accessibilityRole="button"
-          accessibilityLabel="Đóng lịch sử"
+          accessibilityLabel={t("Đóng lịch sử")}
           className="w-10 h-10 rounded-full bg-canvas items-center justify-center"
         >
           <Feather name="x" size={20} color={COLORS.inkSoft} />
@@ -181,11 +186,11 @@ export function ChatbotHistorySheet({
                   className="text-ink font-semibold text-sm"
                   numberOfLines={2}
                 >
-                  {item.title || "Cuộc trò chuyện mới"}
+                  {item.title || t("Cuộc trò chuyện mới")}
                 </Text>
                 <Text className="text-ink-muted text-xs mt-1">
-                  {new Date(item.updated_at).toLocaleDateString("vi-VN")}
-                  {item.status === "CLOSED" ? " · Đã đóng" : ""}
+                  {new Date(item.updated_at).toLocaleDateString(getLocale())}
+                  {item.status === "CLOSED" ? t(" · Đã đóng") : ""}
                 </Text>
               </View>
               <Feather
@@ -198,7 +203,7 @@ export function ChatbotHistorySheet({
               onPress={() => confirmDelete(item)}
               disabled={deletingId !== null}
               accessibilityRole="button"
-              accessibilityLabel={`Xóa cuộc trò chuyện ${item.title || "mới"}`}
+              accessibilityLabel={t("Xóa cuộc trò chuyện {{value0}}", { value0: item.title || t("mới") })}
               className="w-11 h-11 mr-2 items-center justify-center rounded-xl"
             >
               {deletingId === item.id ? (
@@ -215,7 +220,7 @@ export function ChatbotHistorySheet({
           ) : !isError ? (
             <EmptyState
               icon="message-circle"
-              title="Chưa có cuộc trò chuyện. Hãy gửi câu hỏi đầu tiên cho trợ lý."
+              title={t("Chưa có cuộc trò chuyện. Hãy gửi câu hỏi đầu tiên cho trợ lý.")}
             />
           ) : null
         }
@@ -223,8 +228,8 @@ export function ChatbotHistorySheet({
           isError ? (
             <EmptyState
               icon="wifi-off"
-              title="Không tải được lịch sử trò chuyện."
-              actionLabel="Thử lại"
+              title={t("Không tải được lịch sử trò chuyện.")}
+              actionLabel={t("Thử lại")}
               onAction={() => {
                 void refetch();
               }}
@@ -240,8 +245,7 @@ export function ChatbotHistorySheet({
                 <ActivityIndicator color={COLORS.primary} />
               ) : (
                 <Text className="text-primary font-semibold text-sm">
-                  Xem thêm hội thoại
-                </Text>
+                  {t("Xem thêm hội thoại")}</Text>
               )}
             </TouchableOpacity>
           ) : null

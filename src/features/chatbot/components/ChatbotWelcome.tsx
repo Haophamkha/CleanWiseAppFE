@@ -1,6 +1,10 @@
-import { COLORS } from "@/constants/theme";
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState } from "react";
+import { router } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 
 type Suggestion = {
@@ -9,61 +13,65 @@ type Suggestion = {
   text: string;
 };
 
-const QUESTIONS: Suggestion[] = [
-  {
-    icon: "calendar",
-    title: "Đặt lịch dịch vụ",
-    text: "Tôi muốn đặt lịch dịch vụ.",
-  },
-  {
-    icon: "grid",
-    title: "Tìm dịch vụ phù hợp",
-    text: "CleanWise có những dịch vụ nào?",
-  },
-  {
-    icon: "package",
-    title: "Tra đơn và lịch sắp tới",
-    text: "Cho tôi xem đơn gần nhất và lịch dịch vụ sắp tới.",
-  },
-  {
-    icon: "credit-card",
-    title: "Hướng dẫn thanh toán",
-    text: "Hướng dẫn tôi các phương thức và các bước thanh toán dịch vụ trên CleanWise.",
-  },
-];
+function getLocalizedQuestions(): Suggestion[] {
+  return [
+    {
+      icon: "calendar",
+      title: t("Đặt lịch dịch vụ"),
+      text: t("Tôi muốn đặt lịch dịch vụ."),
+    },
+    {
+      icon: "grid",
+      title: t("Tìm dịch vụ phù hợp"),
+      text: t("CleanWise có những dịch vụ nào?"),
+    },
+    {
+      icon: "package",
+      title: t("Tra đơn và lịch sắp tới"),
+      text: t("Cho tôi xem đơn gần nhất và lịch dịch vụ sắp tới."),
+    },
+    {
+      icon: "credit-card",
+      title: t("Hướng dẫn thanh toán"),
+      text: t("Hướng dẫn tôi các phương thức và các bước thanh toán dịch vụ trên CleanWise."),
+    },
+  ];
+}
 
-const MORE_QUESTIONS: Suggestion[] = [
-  {
-    icon: "rotate-ccw",
-    title: "Đặt lại đơn cũ",
-    text: "Đặt lại như lần trước giúp tôi.",
-  },
-  {
-    icon: "x-circle",
-    title: "Hủy đơn hoặc hủy buổi",
-    text: "Tôi muốn hủy một đơn.",
-  },
-  {
-    icon: "map-pin",
-    title: "Thêm địa chỉ mới",
-    text: "Tôi muốn thêm một địa chỉ mới.",
-  },
-  {
-    icon: "dollar-sign",
-    title: "Xem số dư ví",
-    text: "Ví CleanWise của tôi còn bao nhiêu?",
-  },
-  {
-    icon: "credit-card",
-    title: "Kiểm tra thanh toán",
-    text: "Đơn gần nhất của tôi đã thanh toán chưa?",
-  },
-  {
-    icon: "book-open",
-    title: "Hướng dẫn đặt dịch vụ",
-    text: "Hướng dẫn tôi các bước đặt đơn dịch vụ.",
-  },
-];
+function getLocalizedMoreQuestions(): Suggestion[] {
+  return [
+    {
+      icon: "rotate-ccw",
+      title: t("Đặt lại đơn cũ"),
+      text: t("Đặt lại như lần trước giúp tôi."),
+    },
+    {
+      icon: "x-circle",
+      title: t("Hủy đơn hoặc hủy buổi"),
+      text: t("Tôi muốn hủy một đơn."),
+    },
+    {
+      icon: "map-pin",
+      title: t("Thêm địa chỉ mới"),
+      text: t("Tôi muốn thêm một địa chỉ mới."),
+    },
+    {
+      icon: "dollar-sign",
+      title: t("Xem số dư ví"),
+      text: t("Ví CleanWise của tôi còn bao nhiêu?"),
+    },
+    {
+      icon: "credit-card",
+      title: t("Kiểm tra thanh toán"),
+      text: t("Đơn gần nhất của tôi đã thanh toán chưa?"),
+    },
+    {
+      icon: "book-open",
+      title: t("Hướng dẫn đặt dịch vụ"),
+      text: t("Hướng dẫn tôi các bước đặt đơn dịch vụ."),
+    },
+  ];
+}
 
 export function ChatbotWelcome({
   onAsk,
@@ -72,25 +80,36 @@ export function ChatbotWelcome({
   onAsk: (text: string) => void;
   disabled: boolean;
 }) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const [expanded, setExpanded] = useState(false);
-  const questions = expanded ? [...QUESTIONS, ...MORE_QUESTIONS] : QUESTIONS;
+  const questions = expanded ? [...getLocalizedQuestions(), ...getLocalizedMoreQuestions()] : getLocalizedQuestions();
   return (
     <View className="px-5 py-6">
-      <View className="w-16 h-16 rounded-3xl bg-primary-light items-center justify-center mb-4">
-        <MaterialCommunityIcons
-          name="robot-happy-outline"
-          size={36}
-          color={COLORS.primaryDark}
-        />
+      <View className="flex-row items-center mb-4" style={{ gap: 12 }}>
+        <View className="w-16 h-16 rounded-3xl bg-primary-light items-center justify-center">
+          <MaterialCommunityIcons
+            name="robot-happy-outline"
+            size={36}
+            color={COLORS.primaryDark}
+          />
+        </View>
+        <TouchableOpacity
+          onPress={() => router.push("/help" as any)}
+          accessibilityRole="button"
+          accessibilityLabel={t("Mở hướng dẫn sử dụng")}
+          activeOpacity={0.8}
+          className="w-11 h-11 rounded-full bg-surface border border-line items-center justify-center"
+        >
+          <Feather name="book-open" size={20} color={COLORS.primaryDark} />
+        </TouchableOpacity>
       </View>
       <Text className="text-ink text-[23px] font-extrabold">
-        Tôi có thể giúp gì cho bạn?
-      </Text>
+        {t("Tôi có thể giúp gì cho bạn?")}</Text>
       <Text className="text-ink-soft text-sm leading-6 mt-2 mb-5">
-        Tìm dịch vụ, đặt lịch, hủy đơn, xem đơn hàng và ví, hoặc hỏi hướng dẫn
-        có nguồn tham khảo. Với đặt lịch và hủy đơn, tôi luôn hỏi xác nhận trước
-        khi thực hiện.
-      </Text>
+        {t("Tìm dịch vụ, đặt lịch, hủy đơn, xem đơn hàng và ví, hoặc hỏi hướng dẫn có nguồn tham khảo. Với đặt lịch và hủy đơn, tôi luôn hỏi xác nhận trước khi thực hiện.")}</Text>
       <View style={{ gap: 10 }}>
         {questions.map((question) => (
           <TouchableOpacity
@@ -119,12 +138,12 @@ export function ChatbotWelcome({
           onPress={() => setExpanded((value) => !value)}
           activeOpacity={0.8}
           accessibilityRole="button"
-          accessibilityLabel={expanded ? "Thu gọn gợi ý" : "Xem thêm gợi ý"}
+          accessibilityLabel={expanded ? t("Thu gọn gợi ý") : t("Xem thêm gợi ý")}
           accessibilityState={{ expanded }}
           className="flex-row items-center justify-center py-3"
         >
           <Text className="text-primary-dark font-semibold text-sm mr-2">
-            {expanded ? "Thu gọn gợi ý" : "Xem thêm gợi ý"}
+            {expanded ? t("Thu gọn gợi ý") : t("Xem thêm gợi ý")}
           </Text>
           <Feather
             name={expanded ? "chevron-up" : "chevron-down"}

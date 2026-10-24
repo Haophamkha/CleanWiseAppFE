@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 // app/profile/address/add.tsx
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import ScreenContainer from "@/components/ScreenContainer";
@@ -11,11 +13,13 @@ import { useAddAddress } from "@/features/address/hooks/useAddAddress";
 import { ScrollView, View } from "react-native";
 
 export default function AddAddressScreen() {
+  const { t } = useTranslation();
+
   const a = useAddAddress();
 
   return (
     <ScreenContainer>
-      <ScreenHeader title="Thêm địa chỉ" />
+      <ScreenHeader title={t("Thêm địa chỉ")} />
 
       <ScrollView
         className="flex-1 bg-surface"
@@ -23,19 +27,19 @@ export default function AddAddressScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <FormSectionTitle>Khu vực</FormSectionTitle>
+        <FormSectionTitle>{t("Khu vực")}</FormSectionTitle>
         <ProvinceWardPicker
           initialProvince={a.city}
           initialWard={a.ward}
           onSelect={a.pickProvinceWard}
         />
         <MapPickButton
-          label="Hoặc chọn trên bản đồ"
+          label={t("Hoặc chọn trên bản đồ")}
           onPress={a.goToMap}
           disabled={a.isNavigating}
         />
 
-        <FormSectionTitle>Thông tin người nhận</FormSectionTitle>
+        <FormSectionTitle>{t("Thông tin người nhận")}</FormSectionTitle>
         <AddressForm
           values={a.values}
           onChange={a.change}
@@ -49,7 +53,7 @@ export default function AddAddressScreen() {
       </ScrollView>
 
       <View className="px-5 pt-3 pb-4 bg-surface border-t border-line">
-        <Button title="Thêm địa chỉ" onPress={a.submit} loading={a.isLoading} />
+        <Button title={t("Thêm địa chỉ")} onPress={a.submit} loading={a.isLoading} />
       </View>
     </ScreenContainer>
   );

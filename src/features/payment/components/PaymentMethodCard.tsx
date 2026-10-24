@@ -1,5 +1,8 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Badge } from "@/components/ui/Badge";
-import { COLORS, SHADOWS } from "@/constants/theme";
+import { SHADOWS } from "@/constants/theme";
 import type { PaymentMethod } from "@/features/payment/types/PaymentMethod";
 import { Feather } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -19,17 +22,21 @@ export default function PaymentMethodCard({
   onDelete,
   onVerify,
 }: Props) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const verified = method.verification_status === "VERIFIED";
   const sandboxVerified = method.verification_status === "SANDBOX_VERIFIED";
   const failed = method.verification_status === "FAILED";
   const pending = method.verification_status === "PENDING";
   const statusLabel = verified
-    ? "Đã xác minh"
+    ? t("Đã xác minh")
     : sandboxVerified
-      ? "Đã test Sandbox · chưa dùng để rút tiền"
+      ? t("Đã test Sandbox · chưa dùng để rút tiền")
     : failed
-      ? "Xác minh thất bại"
-      : pending ? "Đang xác minh" : "Chưa xác minh";
+      ? t("Xác minh thất bại")
+      : pending ? t("Đang xác minh") : t("Chưa xác minh");
   const statusTone = verified ? "success" : failed ? "danger" : "accent";
   const statusIcon = verified ? "check-circle" : failed ? "x-circle" : "clock";
   const statusColor = verified
@@ -54,7 +61,7 @@ export default function PaymentMethodCard({
             width: 52,
             height: 52,
             backgroundColor: method.is_default
-              ? COLORS.primary
+              ? COLORS.primaryFill
               : COLORS.primaryLight,
           }}
         >
@@ -75,11 +82,10 @@ export default function PaymentMethodCard({
         </View>
 
         {method.is_default && (
-          <View className="flex-row items-center bg-primary rounded-full px-2.5 py-1 ml-2">
+          <View className="flex-row items-center bg-primary-fill rounded-full px-2.5 py-1 ml-2">
             <Feather name="star" size={11} color={COLORS.white} />
             <Text className="text-white text-[11px] font-bold ml-1">
-              Mặc định
-            </Text>
+              {t("Mặc định")}</Text>
           </View>
         )}
       </View>
@@ -107,7 +113,7 @@ export default function PaymentMethodCard({
           >
             <Feather name={pending ? "refresh-cw" : "shield"} size={16} color={COLORS.primaryDark} />
             <Text className="text-primary-dark font-bold ml-2">
-              {pending ? "Tiếp tục xác minh" : sandboxVerified ? "Test lại Sandbox" : "Xác minh Sandbox TINGEE"}
+              {pending ? t("Tiếp tục xác minh") : sandboxVerified ? t("Test lại Sandbox") : t("Xác minh Sandbox TINGEE")}
             </Text>
           </TouchableOpacity>
         )}
@@ -121,8 +127,7 @@ export default function PaymentMethodCard({
           >
             <Feather name="check-circle" size={16} color={COLORS.primaryDark} />
             <Text className="text-primary-dark font-bold ml-2">
-              Đặt mặc định
-            </Text>
+              {t("Đặt mặc định")}</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity
@@ -135,7 +140,7 @@ export default function PaymentMethodCard({
           style={{ opacity: disabled ? 0.5 : 1 }}
         >
           <Feather name="trash-2" size={16} color={COLORS.danger} />
-          <Text className="text-danger font-bold ml-2">Xóa</Text>
+          <Text className="text-danger font-bold ml-2">{t("Xóa")}</Text>
         </TouchableOpacity>
       </View>
     </View>

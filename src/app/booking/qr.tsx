@@ -1,6 +1,9 @@
+import { useTranslation } from "react-i18next";
+import { translate as t } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { Card } from "@/components/ui/Card";
-import { COLORS, RADIUS, SHADOWS } from "@/constants/theme";
+import { RADIUS, SHADOWS } from "@/constants/theme";
 import { BookingCodeCard } from "@/features/booking/components/BookingCodeCard";
 import { OpenBankAppButtons } from "@/features/booking/components/OpenBankAppButtons";
 import { useBookingPayment } from "@/features/booking/hooks/useBookingPayment";
@@ -18,11 +21,13 @@ import {
 import QRCode from "react-native-qrcode-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const STEPS = [
-  "Chọn app ngân hàng của bạn ở bên dưới (hoặc nhấn “Mở trang thanh toán”)",
-  "Kiểm tra số tiền và nội dung chuyển khoản",
-  "Xác nhận thanh toán trong app ngân hàng",
-];
+function getLocalizedSteps() {
+  return [
+    t("Chọn app ngân hàng của bạn ở bên dưới (hoặc nhấn “Mở trang thanh toán”)"),
+    t("Kiểm tra số tiền và nội dung chuyển khoản"),
+    t("Xác nhận thanh toán trong app ngân hàng"),
+  ];
+}
 
 function PulseDot() {
   const pulse = useRef(new Animated.Value(0.6)).current;
@@ -52,13 +57,17 @@ function PulseDot() {
 
   return (
     <Animated.View
-      className="w-2 h-2 rounded-full bg-primary mr-2"
+      className="w-2 h-2 rounded-full bg-primary-fill mr-2"
       style={{ opacity: pulse }}
     />
   );
 }
 
 export default function BookingQrScreen() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const insets = useSafeAreaInsets();
 
   const {
@@ -83,7 +92,7 @@ export default function BookingQrScreen() {
   return (
     <View className="flex-1 bg-canvas">
       <View className="bg-surface" style={{ paddingTop: insets.top }}>
-        <ScreenHeader title="Thanh toán đơn hàng" />
+        <ScreenHeader title={t("Thanh toán đơn hàng")} />
       </View>
 
       <ScrollView
@@ -100,10 +109,9 @@ export default function BookingQrScreen() {
           className="bg-surface border border-line overflow-hidden"
           style={[{ borderRadius: RADIUS.hero - 4 }, SHADOWS.float]}
         >
-          <View className="bg-primary items-center py-6">
+          <View className="bg-primary-fill items-center py-6">
             <Text className="text-white/80 text-xs font-semibold">
-              Số tiền cần thanh toán
-            </Text>
+              {t("Số tiền cần thanh toán")}</Text>
 
             <Text className="text-white font-extrabold text-[32px] mt-1">
               {totalText}
@@ -116,8 +124,7 @@ export default function BookingQrScreen() {
                 <ActivityIndicator size="large" color={COLORS.primary} />
 
                 <Text className="text-ink-muted text-[13px] mt-3">
-                  Đang tạo link thanh toán...
-                </Text>
+                  {t("Đang tạo link thanh toán...")}</Text>
               </View>
             )}
 
@@ -132,19 +139,17 @@ export default function BookingQrScreen() {
                 </View>
 
                 <Text className="text-danger text-center text-[13px] font-medium mb-4">
-                  Không tạo được link thanh toán, vui lòng thử lại.
-                </Text>
+                  {t("Không tạo được link thanh toán, vui lòng thử lại.")}</Text>
 
                 <TouchableOpacity
                   onPress={refreshLink}
                   activeOpacity={0.85}
-                  className="flex-row items-center h-11 px-5 rounded-full bg-primary"
+                  className="flex-row items-center h-11 px-5 rounded-full bg-primary-fill"
                 >
                   <Feather name="refresh-cw" size={15} color={COLORS.white} />
 
                   <Text className="text-white font-bold ml-2 text-[13px]">
-                    Thử lại
-                  </Text>
+                    {t("Thử lại")}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -155,7 +160,7 @@ export default function BookingQrScreen() {
                   onPress={openCheckout}
                   activeOpacity={0.85}
                   disabled={opening}
-                  className="flex-row items-center justify-center w-full h-14 rounded-2xl bg-primary"
+                  className="flex-row items-center justify-center w-full h-14 rounded-2xl bg-primary-fill"
                 >
                   {opening ? (
                     <ActivityIndicator size="small" color={COLORS.white} />
@@ -168,15 +173,13 @@ export default function BookingQrScreen() {
                       />
 
                       <Text className="text-white font-bold ml-2 text-[15px]">
-                        Mở trang thanh toán
-                      </Text>
+                        {t("Mở trang thanh toán")}</Text>
                     </>
                   )}
                 </TouchableOpacity>
 
                 <Text className="text-ink-muted text-xs text-center mt-3 px-2">
-                  Thanh toán bằng chuyển khoản ngân hàng (VietQR)
-                </Text>
+                  {t("Thanh toán bằng chuyển khoản ngân hàng (VietQR)")}</Text>
 
                 {/* Mở thẳng app ngân hàng, chỉ hiện khi BE đã trả thông tin chuyển khoản */}
                 {!!link?.account_number && <OpenBankAppButtons info={link} />}
@@ -184,7 +187,7 @@ export default function BookingQrScreen() {
                 <View
                   className={`flex-row items-center mt-4 px-3 py-1.5 rounded-full border ${
                     isUrgent
-                      ? "bg-danger border-danger"
+                      ? "bg-danger-fill border-danger"
                       : "bg-primary-light border-primary-border"
                   }`}
                 >
@@ -199,7 +202,7 @@ export default function BookingQrScreen() {
                       isUrgent ? "text-white" : "text-primary-dark"
                     }`}
                   >
-                    Còn {countdownText}
+                    {t("Còn")}{" "}{countdownText}
                   </Text>
                 </View>
 
@@ -209,7 +212,7 @@ export default function BookingQrScreen() {
                   className="flex-row items-center mt-5"
                 >
                   <Text className="text-[13px] font-semibold text-ink-soft">
-                    {showQr ? "Ẩn mã QR" : "Hoặc quét mã QR"}
+                    {showQr ? t("Ẩn mã QR") : t("Hoặc quét mã QR")}
                   </Text>
 
                   <Feather
@@ -221,8 +224,8 @@ export default function BookingQrScreen() {
                 </TouchableOpacity>
 
                 {showQr && link?.qr_code && (
-                  <View className="mt-4 p-4 rounded-3xl border border-line bg-white">
-                    <QRCode value={link.qr_code} size={200} />
+                  <View className="mt-4 p-4 rounded-3xl border border-line" style={{ backgroundColor: "#FFFFFF" }}>
+                    <QRCode value={link.qr_code} size={200} color="#000000" backgroundColor="#FFFFFF" />
                   </View>
                 )}
 
@@ -231,8 +234,7 @@ export default function BookingQrScreen() {
                     <PulseDot />
 
                     <Text className="text-ink-muted text-[13px]">
-                      Đang chờ thanh toán...
-                    </Text>
+                      {t("Đang chờ thanh toán...")}</Text>
                   </View>
                 </View>
               </>
@@ -243,23 +245,20 @@ export default function BookingQrScreen() {
                 <ActivityIndicator color={COLORS.primary} />
 
                 <Text className="text-ink text-[14px] font-semibold mt-3">
-                  Link thanh toán đã hết hạn
-                </Text>
+                  {t("Link thanh toán đã hết hạn")}</Text>
 
                 <Text className="text-ink-muted text-xs mt-1 mb-4">
-                  Đang tạo link mới...
-                </Text>
+                  {t("Đang tạo link mới...")}</Text>
 
                 <TouchableOpacity
                   onPress={refreshLink}
                   activeOpacity={0.85}
-                  className="flex-row items-center h-11 px-5 rounded-full bg-primary"
+                  className="flex-row items-center h-11 px-5 rounded-full bg-primary-fill"
                 >
                   <Feather name="refresh-cw" size={15} color={COLORS.white} />
 
                   <Text className="text-white font-bold ml-2 text-[13px]">
-                    Lấy link mới
-                  </Text>
+                    {t("Lấy link mới")}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -271,17 +270,15 @@ export default function BookingQrScreen() {
                 </View>
 
                 <Text className="text-ink text-[14px] font-semibold text-center">
-                  Đơn đã hết hạn hoặc đã hủy, vui lòng đặt lại
-                </Text>
+                  {t("Đơn đã hết hạn hoặc đã hủy, vui lòng đặt lại")}</Text>
 
                 <TouchableOpacity
                   onPress={goBackToConfirm}
                   activeOpacity={0.85}
-                  className="flex-row items-center h-11 px-5 rounded-full bg-primary mt-4"
+                  className="flex-row items-center h-11 px-5 rounded-full bg-primary-fill mt-4"
                 >
                   <Text className="text-white font-bold text-[13px]">
-                    Đặt lại
-                  </Text>
+                    {t("Đặt lại")}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -291,14 +288,13 @@ export default function BookingQrScreen() {
         {/* Hướng dẫn */}
         <Card className="mt-4">
           <Text className="font-bold text-[14px] text-ink mb-3">
-            Hướng dẫn thanh toán
-          </Text>
+            {t("Hướng dẫn thanh toán")}</Text>
 
-          {STEPS.map((text, i) => (
+          {getLocalizedSteps().map((text, i) => (
             <View
               key={i}
               className={`flex-row items-center ${
-                i === STEPS.length - 1 ? "" : "mb-3"
+                i === getLocalizedSteps().length - 1 ? "" : "mb-3"
               }`}
             >
               <View className="w-7 h-7 rounded-full bg-primary-light items-center justify-center mr-3">
@@ -325,8 +321,7 @@ export default function BookingQrScreen() {
           <Feather name="repeat" size={15} color={COLORS.inkSoft} />
 
           <Text className="font-semibold text-[14px] text-ink-soft ml-2">
-            Đổi phương thức thanh toán khác
-          </Text>
+            {t("Đổi phương thức thanh toán khác")}</Text>
         </TouchableOpacity>
       </View>
     </View>

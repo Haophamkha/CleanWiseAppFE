@@ -1,8 +1,11 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 // app/profile/address/choose-method.tsx
 import ScreenContainer from "@/components/ScreenContainer";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import type { FeatherName } from "@/components/ui";
-import { COLORS } from "@/constants/theme";
+
 import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useRef } from "react";
@@ -21,6 +24,8 @@ function MethodCard({
   description: string;
   onPress: () => void;
 }) {
+  const { COLORS } = useAppTheme();
+
   // 0 = bình thường, 1 = đang nhấn
   const press = useRef(new Animated.Value(0)).current;
 
@@ -75,7 +80,7 @@ function MethodCard({
               StyleSheet.absoluteFill,
               {
                 borderRadius: RADIUS,
-                backgroundColor: COLORS.primary,
+                backgroundColor: COLORS.primaryFill,
                 opacity: tintOpacity,
               },
             ]}
@@ -110,7 +115,7 @@ function MethodCard({
                 StyleSheet.absoluteFill,
                 {
                   borderRadius: 26,
-                  backgroundColor: COLORS.primary,
+                  backgroundColor: COLORS.primaryFill,
                   opacity: 0.12,
                 },
               ]}
@@ -135,18 +140,20 @@ function MethodCard({
 }
 
 export default function ChooseAddressMethodScreen() {
+  const { t } = useTranslation();
+
   const { pickerKey } = useLocalSearchParams<{ pickerKey?: string }>();
   const params = pickerKey ? { pickerKey } : {};
 
   return (
     <ScreenContainer>
-      <ScreenHeader title="Chọn địa chỉ mới" />
+      <ScreenHeader title={t("Chọn địa chỉ mới")} />
 
       <View className="flex-1 px-5 pt-6" style={{ gap: 16 }}>
         <MethodCard
           icon="map-pin"
-          title="Chọn trên bản đồ"
-          description="Ghim vị trí, hệ thống tự điền địa chỉ giúp bạn"
+          title={t("Chọn trên bản đồ")}
+          description={t("Ghim vị trí, hệ thống tự điền địa chỉ giúp bạn")}
           onPress={() =>
             router.push({
               pathname: "/profile/address/select-location",
@@ -156,8 +163,8 @@ export default function ChooseAddressMethodScreen() {
         />
         <MethodCard
           icon="edit-3"
-          title="Nhập thủ công"
-          description="Tự chọn tỉnh/thành, phường/xã và nhập địa chỉ"
+          title={t("Nhập thủ công")}
+          description={t("Tự chọn tỉnh/thành, phường/xã và nhập địa chỉ")}
           onPress={() =>
             router.push({ pathname: "/profile/address/add", params })
           }

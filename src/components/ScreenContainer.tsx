@@ -1,4 +1,5 @@
-import { COLORS } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import React from "react";
 import { KeyboardAvoidingView, Platform, ViewStyle } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context"; // Hoặc từ "react-native" nếu không dùng package ngoài
@@ -12,6 +13,8 @@ export default function ScreenContainer({
   children,
   style,
 }: ScreenContainerProps) {
+  const { COLORS } = useAppTheme();
+
   return (
     <SafeAreaView
       style={[{ flex: 1, backgroundColor: COLORS.canvas }, style]}

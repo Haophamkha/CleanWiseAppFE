@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import { useUpdateReviewMutation } from "@/features/review/api/reviewApi";
 import type { Review, ReviewPickedImage } from "@/features/review/types/Review";
 import { canEditReview } from "@/features/review/utils/reviewFormat";
@@ -8,6 +10,8 @@ import { useEffect, useRef, useState } from "react";
 import { Platform } from "react-native";
 
 export function useEditReview(review: Review, onClose: () => void) {
+  const { t } = useTranslation();
+
   const [rating, setRating] = useState(review.rating);
   const [comment, setComment] = useState(review.comment ?? "");
   const [deletedIds, setDeletedIds] = useState<number[]>([]);
@@ -54,14 +58,14 @@ export function useEditReview(review: Review, onClose: () => void) {
           type: image.type ?? "image/jpeg",
         };
         if (!["image/jpeg", "image/png", "image/webp"].includes(picked.type)) {
-          setError("Ảnh chỉ hỗ trợ JPG, PNG hoặc WEBP.");
+          setError(t("Ảnh chỉ hỗ trợ JPG, PNG hoặc WEBP."));
         } else {
           setNewImages((current) => [...current, picked]);
           setError("");
         }
       }
     } catch {
-      if (!closedRef.current) setError("Không thể chọn ảnh. Vui lòng thử lại.");
+      if (!closedRef.current) setError(t("Không thể chọn ảnh. Vui lòng thử lại."));
     } finally {
       pickingRef.current = false;
       if (!closedRef.current) setPicking(false);
@@ -72,7 +76,7 @@ export function useEditReview(review: Review, onClose: () => void) {
     if (savingRef.current || pickingRef.current) return;
     if (!canEditReview(review)) {
       setError(
-        "Đã hết thời hạn chỉnh sửa đánh giá (30 ngày kể từ lần gửi đầu tiên).",
+        t("Đã hết thời hạn chỉnh sửa đánh giá (30 ngày kể từ lần gửi đầu tiên)."),
       );
       return;
     }
@@ -94,15 +98,15 @@ export function useEditReview(review: Review, onClose: () => void) {
       }
       await updateReview({ id: review.id, data }).unwrap();
       showSuccessToast(
-        "Đã cập nhật đánh giá",
-        "Cảm ơn bạn đã chia sẻ trải nghiệm.",
+        t("Đã cập nhật đánh giá"),
+        t("Cảm ơn bạn đã chia sẻ trải nghiệm."),
       );
       onClose();
     } catch (err) {
       setError(
         getApiErrorMessage(
           err,
-          "Không thể cập nhật đánh giá. Vui lòng thử lại.",
+          t("Không thể cập nhật đánh giá. Vui lòng thử lại."),
         ),
       );
     } finally {

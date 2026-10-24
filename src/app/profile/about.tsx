@@ -1,3 +1,6 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import {
     BRAND_COLORS,
     BrandIcon,
@@ -5,9 +8,9 @@ import {
 } from "@/components/common/BrandIcon";
 import { MenuGroup } from "@/components/common/MenuGroup";
 import { MenuListItem } from "@/components/common/MenuListItem";
-import { APP_INFO } from "@/config/appInfo";
+import { getLocalizedAppInfo } from "@/config/appInfo";
 import { ROUTES } from "@/config/constants";
-import { COLORS, ON_DARK, RADIUS, SHADOWS } from "@/constants/theme";
+import { ON_DARK, RADIUS, SHADOWS } from "@/constants/theme";
 import { Feather } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { LinearGradient } from "expo-linear-gradient";
@@ -61,6 +64,10 @@ function ChannelTile({
 }
 
 export default function AboutScreen() {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const insets = useSafeAreaInsets();
   const version = Constants.expoConfig?.version ?? "1.0.0";
 
@@ -75,7 +82,7 @@ export default function AboutScreen() {
       >
         {/* Hero đậm để chữ trắng đọc rõ */}
         <LinearGradient
-          colors={[COLORS.primary, COLORS.primaryDark]}
+          colors={[COLORS.primaryFill, COLORS.primaryFillDark]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
@@ -137,13 +144,13 @@ export default function AboutScreen() {
               className="text-3xl font-bold mt-4"
               style={{ color: ON_DARK.text }}
             >
-              {APP_INFO.name}
+              {getLocalizedAppInfo().name}
             </Text>
             <Text
               className="text-sm mt-1 text-center"
               style={{ color: ON_DARK.textSoft }}
             >
-              {APP_INFO.tagline}
+              {getLocalizedAppInfo().tagline}
             </Text>
             <View
               className="rounded-full px-3 py-1 mt-4 border"
@@ -156,7 +163,7 @@ export default function AboutScreen() {
                 className="text-xs font-semibold"
                 style={{ color: ON_DARK.text }}
               >
-                Phiên bản {version}
+                {t("Phiên bản")}{" "}{version}
               </Text>
             </View>
           </View>
@@ -172,22 +179,22 @@ export default function AboutScreen() {
               isFirst
               brand="zalo"
               label="Zalo"
-              onPress={() => open(APP_INFO.zalo)}
+              onPress={() => open(getLocalizedAppInfo().zalo)}
             />
             <ChannelTile
               brand="phone"
-              label="Gọi"
-              onPress={() => open(`tel:${APP_INFO.hotline}`)}
+              label={t("Gọi")}
+              onPress={() => open(`tel:${getLocalizedAppInfo().hotline}`)}
             />
             <ChannelTile
               brand="email"
               label="Email"
-              onPress={() => open(`mailto:${APP_INFO.email}`)}
+              onPress={() => open(`mailto:${getLocalizedAppInfo().email}`)}
             />
             <ChannelTile
               brand="facebook"
               label="Facebook"
-              onPress={() => open(APP_INFO.facebook)}
+              onPress={() => open(getLocalizedAppInfo().facebook)}
             />
           </View>
 
@@ -196,14 +203,14 @@ export default function AboutScreen() {
             className="bg-surface p-5"
             style={[...CARD, { marginBottom: 20 }]}
           >
-            <Text className="text-lg font-bold text-ink">Về chúng tôi</Text>
+            <Text className="text-lg font-bold text-ink">{t("Về chúng tôi")}</Text>
             <Text className="text-sm text-ink-soft leading-6 mt-2">
-              {APP_INFO.description}
+              {getLocalizedAppInfo().description}
             </Text>
 
             <View className="h-px bg-line" style={{ marginVertical: 16 }} />
 
-            {APP_INFO.highlights.map((h, i) => (
+            {getLocalizedAppInfo().highlights.map((h, i) => (
               <View
                 key={h.title}
                 className="flex-row items-center"
@@ -234,13 +241,13 @@ export default function AboutScreen() {
               <Feather name="code" size={22} color={COLORS.primary} />
             </View>
             <View className="flex-1" style={{ marginLeft: 12, marginRight: 8 }}>
-              <Text className="text-xs text-ink-muted">Phát triển bởi</Text>
+              <Text className="text-xs text-ink-muted">{t("Phát triển bởi")}</Text>
               <Text className="font-semibold text-ink" style={{ marginTop: 2 }}>
-                {APP_INFO.developer}
+                {getLocalizedAppInfo().developer}
               </Text>
             </View>
             <TouchableOpacity
-              onPress={() => open(APP_INFO.zalo)}
+              onPress={() => open(getLocalizedAppInfo().zalo)}
               activeOpacity={0.8}
               className="flex-row items-center rounded-full px-3 py-2"
               style={{ backgroundColor: `${BRAND_COLORS.zalo}1A` }}
@@ -250,21 +257,20 @@ export default function AboutScreen() {
                 className="text-xs font-semibold"
                 style={{ color: BRAND_COLORS.zalo, marginLeft: 6 }}
               >
-                Nhắn tin
-              </Text>
+                {t("Nhắn tin")}</Text>
             </TouchableOpacity>
           </View>
 
-          <MenuGroup title="Pháp lý">
+          <MenuGroup title={t("Pháp lý")}>
             <MenuListItem
               icon="file-text"
-              label="Điều khoản dịch vụ"
-              onPress={() => open(APP_INFO.terms)}
+              label={t("Điều khoản dịch vụ")}
+              onPress={() => open(getLocalizedAppInfo().terms)}
             />
             <MenuListItem
               icon="lock"
-              label="Chính sách bảo mật"
-              onPress={() => open(APP_INFO.privacy)}
+              label={t("Chính sách bảo mật")}
+              onPress={() => open(getLocalizedAppInfo().privacy)}
             />
           </MenuGroup>
 

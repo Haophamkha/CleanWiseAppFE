@@ -1,4 +1,5 @@
-import { COLORS } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
+
 import { Feather } from "@expo/vector-icons";
 import { ReactNode, useState } from "react";
 import {
@@ -31,13 +32,15 @@ export function Input({
   onBlur,
   ...rest
 }: InputProps) {
+  const { mode: themeMode, COLORS, isDark } = useAppTheme();
+
   const [focused, setFocused] = useState(false);
 
   const border = invalid
     ? "border-danger bg-danger-light"
     : focused
       ? "border-primary bg-surface"
-      : "border-line bg-canvas";
+      : isDark ? "border-line bg-surface-muted" : "border-line bg-canvas";
 
   return (
     <View className="mb-4">
@@ -60,7 +63,7 @@ export function Input({
             color={focused ? COLORS.primary : COLORS.inkMuted}
           />
         )}
-        <TextInput
+        <TextInput keyboardAppearance={themeMode}
           className={`flex-1 text-base text-ink ${icon ? "ml-3" : ""}`}
           placeholderTextColor={COLORS.inkMuted}
           onFocus={(e) => {
@@ -82,6 +85,8 @@ export function Input({
 export function PasswordInput(
   props: Omit<InputProps, "secureTextEntry" | "right">,
 ) {
+  const { COLORS } = useAppTheme();
+
   const [show, setShow] = useState(false);
   return (
     <Input

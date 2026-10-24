@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import { baseApi } from "@/store/baseApi";
 import { useAppDispatch } from "@/store/hooks";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -29,6 +31,8 @@ type Phase = "idle" | "sending" | "processing" | "failed";
 const RECOVERY_WINDOW_MS = 180000;
 
 export function useChatbot(userId: number) {
+  const { t } = useTranslation();
+
   const [listConversations] = useLazyGetChatbotConversationsQuery();
   const [getConversation] = useLazyGetChatbotConversationQuery();
   const [getMessages] = useLazyGetChatbotMessagesQuery();
@@ -46,7 +50,7 @@ export function useChatbot(userId: number) {
         "MyVouchers",
       ]),
     );
-  }, [dispatch]);
+  }, [dispatch, t]);
   const [conversation, setConversation] = useState<ChatbotConversation | null>(
     null,
   );
@@ -81,11 +85,11 @@ export function useChatbot(userId: number) {
   const setPhase = useCallback((next: Phase) => {
     phaseRef.current = next;
     if (alive.current) setPhaseState(next);
-  }, []);
+  }, [t]);
   const setPending = useCallback((next: PendingChatbotMessage | null) => {
     pendingRef.current = next;
     if (alive.current) setPendingState(next);
-  }, []);
+  }, [t]);
   const clearPending = useCallback(() => {
     setPending(null);
     // Transcript is authoritative if local cleanup is interrupted.
@@ -94,7 +98,7 @@ export function useChatbot(userId: number) {
       .catch(() => {});
     setPhase("idle");
     if (alive.current) setReplyError(null);
-  }, [setPending, setPhase, storageKey]);
+  }, [setPending, setPhase, storageKey, t]);
 
   const readLatest = useCallback(
     async (id: number) => {
@@ -117,7 +121,7 @@ export function useChatbot(userId: number) {
         olderPage: lastPage - 2,
       };
     },
-    [getMessages],
+    [getMessages, t],
   );
 
   const reconcile = useCallback(
@@ -167,11 +171,11 @@ export function useChatbot(userId: number) {
         setReplyError(
           (current) =>
             current ??
-            "Câu hỏi chưa có câu trả lời. Bạn có thể thử lại hoặc sửa câu hỏi.",
+            t("Câu hỏi chưa có câu trả lời. Bạn có thể thử lại hoặc sửa câu hỏi."),
         );
       }
     },
-    [clearPending, invalidateBotData, setPending, setPhase],
+    [clearPending, invalidateBotData, setPending, setPhase, t],
   );
 
   const openConversation = useCallback(
@@ -213,7 +217,7 @@ export function useChatbot(userId: number) {
       reconcile,
       setPending,
       setPhase,
-    ],
+    , t],
   );
 
   const initialize = useCallback(async () => {
@@ -255,7 +259,7 @@ export function useChatbot(userId: number) {
     openConversation,
     storageKey,
     userId,
-  ]);
+  , t]);
 
   useEffect(() => {
     alive.current = true;
@@ -270,7 +274,7 @@ export function useChatbot(userId: number) {
     useCallback(() => {
       setFocused(true);
       return () => setFocused(false);
-    }, []),
+    }, [t]),
   );
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) =>
@@ -343,7 +347,7 @@ export function useChatbot(userId: number) {
     readLatest,
     reconcile,
     setPhase,
-  ]);
+  , t]);
 
   const refreshRef = useRef(refresh);
   useEffect(() => {
@@ -390,7 +394,7 @@ export function useChatbot(userId: number) {
       );
       clearPending();
     },
-    [clearPending, sendMessage, setPending, setPhase, storageKey],
+    [clearPending, sendMessage, setPending, setPhase, storageKey, t],
   );
 
   const send = useCallback(
@@ -474,7 +478,7 @@ export function useChatbot(userId: number) {
       reconcile,
       setPending,
       setPhase,
-    ],
+    , t],
   );
 
   const loadOlder = useCallback(async () => {
@@ -495,7 +499,7 @@ export function useChatbot(userId: number) {
     } finally {
       if (alive.current) setLoadingOlder(false);
     }
-  }, [conversation, getMessages, loadingOlder, olderPage]);
+  }, [conversation, getMessages, loadingOlder, olderPage, t]);
 
   const newConversation = useCallback(() => {
     if (busy.current || loading || phaseRef.current === "processing") return;
@@ -508,7 +512,7 @@ export function useChatbot(userId: number) {
     setOlderPage(0);
     setLoading(false);
     setLoadError(null);
-  }, [clearPending, loading]);
+  }, [clearPending, loading, t]);
 
   const working = phase === "sending" || phase === "processing";
   const displayMessages: DisplayChatbotMessage[] = messages.map((message) =>

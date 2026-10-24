@@ -1,6 +1,7 @@
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 // components/common/ScreenHeader.tsx
 import { ROUTES } from "@/config/constants";
-import { COLORS } from "@/constants/theme";
+
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import type { ReactNode } from "react";
@@ -11,9 +12,12 @@ type Props = {
   onBack?: () => void;
   right?: ReactNode;
   disabled?: boolean;
+  minimal?: boolean;
 };
 
-export function ScreenHeader({ title, onBack, right, disabled }: Props) {
+export function ScreenHeader({ title, onBack, right, disabled, minimal = false }: Props) {
+  const { COLORS } = useAppTheme();
+
   const back =
     onBack ??
     (() => {
@@ -22,21 +26,22 @@ export function ScreenHeader({ title, onBack, right, disabled }: Props) {
     });
 
   return (
-    <View className="flex-row items-center px-5 py-3 bg-surface border-b border-line">
+    <View className={`flex-row items-center px-5 py-3 ${minimal ? "bg-canvas" : "bg-surface border-b border-line"}`}>
       <TouchableOpacity
         onPress={back}
         disabled={disabled}
         hitSlop={8}
         activeOpacity={0.7}
-        className="w-10 h-10 rounded-full bg-canvas items-center justify-center mr-3"
+        className={`w-10 h-10 items-center justify-center mr-3 ${minimal ? "rounded-xl bg-surface-muted" : "rounded-full bg-canvas"}`}
+        style={minimal ? { borderRadius: 12 } : undefined}
       >
         <Feather
           name="arrow-left"
           size={20}
-          color={disabled ? COLORS.inkMuted : COLORS.ink}
+          color={minimal || disabled ? COLORS.inkMuted : COLORS.ink}
         />
       </TouchableOpacity>
-      <Text className="flex-1 text-lg font-bold text-ink" numberOfLines={1}>
+      <Text className={`flex-1 font-bold text-ink ${minimal ? "text-[22px]" : "text-lg"}`} numberOfLines={1}>
         {title}
       </Text>
       {right}

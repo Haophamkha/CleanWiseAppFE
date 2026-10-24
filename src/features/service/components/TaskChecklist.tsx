@@ -1,3 +1,6 @@
+import { useTranslation } from "react-i18next";
+
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 // src/components/service/TaskChecklist.tsx
 import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
@@ -9,13 +12,17 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { COLORS } from "./formFieldShared";
+
 
 type Props = {
   content?: string;
 };
 
 export function TaskChecklist({ content }: Props) {
+  const { t } = useTranslation();
+
+  const { COLORS } = useAppTheme();
+
   const [visible, setVisible] = useState(false);
 
   if (!content) return null;
@@ -50,8 +57,7 @@ export function TaskChecklist({ content }: Props) {
           className="flex-1 text-[15px] font-semibold"
           style={{ color: COLORS.text }}
         >
-          Chi tiết công việc
-        </Text>
+          {t("Chi tiết công việc")}</Text>
         <Feather name="chevron-right" size={18} color={COLORS.textMuted} />
       </TouchableOpacity>
 
@@ -93,8 +99,7 @@ export function TaskChecklist({ content }: Props) {
               className="text-center text-[20px] font-bold px-6 pt-2 pb-5"
               style={{ color: COLORS.text }}
             >
-              Chi tiết công việc
-            </Text>
+              {t("Chi tiết công việc")}</Text>
 
             <ScrollView
               style={{ maxHeight: 420 }}
@@ -116,7 +121,7 @@ export function TaskChecklist({ content }: Props) {
                   >
                     <View
                       className="w-7 h-7 rounded-full items-center justify-center mr-3"
-                      style={{ backgroundColor: "#FFF7ED" }}
+                      style={{ backgroundColor: COLORS.accentLight }}
                     >
                       <Feather name="star" size={14} color="#F59E0B" />
                     </View>
@@ -142,8 +147,7 @@ export function TaskChecklist({ content }: Props) {
                   className="font-semibold text-[15px]"
                   style={{ color: COLORS.primary }}
                 >
-                  Đóng
-                </Text>
+                  {t("Đóng")}</Text>
               </TouchableOpacity>
             </View>
           </Pressable>
