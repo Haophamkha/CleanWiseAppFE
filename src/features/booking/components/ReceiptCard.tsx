@@ -38,7 +38,7 @@ export function ReceiptCard({ booking }: { booking: BookingDetail }) {
   const { COLORS } = useAppTheme();
 
   const payment = booking.payment;
-  const paymentStatus = getPaymentStatusMeta(booking.payment_status, COLORS);
+  const paymentStatus = getPaymentStatusMeta(booking.payment_status, COLORS, t);
   const discount = Number(booking.discount_amount);
   const refunded = Number(booking.refunded_amount ?? 0);
 
@@ -100,15 +100,15 @@ export function ReceiptCard({ booking }: { booking: BookingDetail }) {
           label={t("Giá dịch vụ")}
           value={
             booking.subtotal_amount
-              ? formatVnd(Number(booking.subtotal_amount))
+              ? formatVnd(Number(booking.subtotal_amount), t)
               : t("Chờ báo giá")
           }
         />
         {discount > 0 && (
-          <LineRow label={t("Giảm giá")} value={`-${formatVnd(discount)}`} accent />
+          <LineRow label={t("Giảm giá")} value={`-${formatVnd(discount, t)}`} accent />
         )}
         {refunded > 0 && (
-          <LineRow label={t("Đã hoàn vào ví")} value={formatVnd(refunded)} accent />
+          <LineRow label={t("Đã hoàn vào ví")} value={formatVnd(refunded, t)} accent />
         )}
       </View>
 
@@ -116,7 +116,7 @@ export function ReceiptCard({ booking }: { booking: BookingDetail }) {
         <Text className="font-bold text-[14px] text-ink">{t("Tổng thanh toán")}</Text>
         <Text className="font-extrabold text-xl text-primary">
           {booking.total_amount
-            ? formatVnd(Number(booking.total_amount))
+            ? formatVnd(Number(booking.total_amount), t)
             : t("Chờ báo giá")}
         </Text>
       </View>

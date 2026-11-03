@@ -1,3 +1,4 @@
+import { localizeAddressLabel } from "@/features/address/utils/addressLabel";
 import { useTranslation } from "react-i18next";
 
 // components/address/AddressForm.tsx
@@ -69,7 +70,7 @@ export default function AddressForm({
       <Input
         icon="tag"
         placeholder={t("Hoặc tự đặt tên, vd: Nhà bố mẹ")}
-        value={values.label}
+        value={localizeAddressLabel(values.label, t)}
         onChangeText={(v) => onChange("label", v)}
       />
 

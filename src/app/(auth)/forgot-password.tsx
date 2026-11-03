@@ -1,3 +1,4 @@
+import { localizeKnownMessage } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -44,6 +45,7 @@ function StepBar({ current }: { current: number }) {
 }
 
 function ErrorLine({ message }: { message?: string | null }) {
+  const { t } = useTranslation();
   const { COLORS } = useAppTheme();
 
   if (!message) return null;
@@ -56,7 +58,7 @@ function ErrorLine({ message }: { message?: string | null }) {
         textAlign: "center",
       }}
     >
-      {message}
+      {localizeKnownMessage(message, t)}
     </Text>
   );
 }

@@ -1,5 +1,6 @@
+import { translate as defaultTranslate, getLocale } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t, getLocale } from "@/features/language/i18n";
+
 import type { FeatherName } from "@/components/ui/Input";
 import { useCreateBookingMutation } from "@/features/booking/api/bookingApi";
 import { useIdempotencyKey } from "@/features/booking/hooks/useIdempotencyKey";
@@ -29,11 +30,11 @@ export type PaymentOption = {
   disabled?: boolean;
 };
 
-export function getLocalizedPaymentMethods(): PaymentOption[] {
+export function getLocalizedPaymentMethods(translateText = defaultTranslate): PaymentOption[] {
   return [
-    { value: "CASH", label: t("Tiền mặt"), icon: "cash" },
-    { value: "BANK_TRANSFER", label: t("Chuyển khoản"), icon: "bank" },
-    { value: "WALLET", label: t("Ví CleanWise"), icon: "wallet" },
+    { value: "CASH", label: translateText("Tiền mặt"), icon: "cash" },
+    { value: "BANK_TRANSFER", label: translateText("Chuyển khoản"), icon: "bank" },
+    { value: "WALLET", label: translateText("Ví CleanWise"), icon: "wallet" },
   ];
 }
 
@@ -49,12 +50,12 @@ const WEEKDAY_LABELS: Record<string, string> = {
   SUN: "CN",
 };
 
-function getLocalizedPackageLabels(): Record<string, string> {
+function getLocalizedPackageLabels(translateText = defaultTranslate): Record<string, string> {
   return {
-    "1_MONTH": t("1 tháng"),
-    "2_MONTHS": t("2 tháng"),
-    "3_MONTHS": t("3 tháng"),
-    "6_MONTHS": t("6 tháng"),
+    "1_MONTH": translateText("1 tháng"),
+    "2_MONTHS": translateText("2 tháng"),
+    "3_MONTHS": translateText("3 tháng"),
+    "6_MONTHS": translateText("6 tháng"),
   };
 }
 
@@ -75,13 +76,13 @@ function extractDurationHours(
 
 const capitalizeFirst = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-const formatWeekdays = (weekdays?: string[]) =>
+const formatWeekdays = (weekdays?: string[], translateText = defaultTranslate) =>
   !weekdays || weekdays.length === 0
     ? "—"
-    : weekdays.map((d) => t(WEEKDAY_LABELS[d] ?? d)).join(", ");
+    : weekdays.map((d) => translateText(WEEKDAY_LABELS[d] ?? d)).join(", ");
 
-const formatTime = (d: Date) =>
-  d.toLocaleTimeString(getLocale(), { hour: "2-digit", minute: "2-digit" });
+const formatTime = (d: Date, translateText = defaultTranslate) =>
+  d.toLocaleTimeString(getLocale(translateText), { hour: "2-digit", minute: "2-digit" });
 
 export function useBookingConfirm() {
   const { t } = useTranslation();
@@ -226,9 +227,9 @@ export function useBookingConfirm() {
         ];
       }
       const weekday = capitalizeFirst(
-        scheduledStart.toLocaleDateString(getLocale(), { weekday: "long" }),
+        scheduledStart.toLocaleDateString(getLocale(t), { weekday: "long" }),
       );
-      const fullDate = scheduledStart.toLocaleDateString(getLocale(), {
+      const fullDate = scheduledStart.toLocaleDateString(getLocale(t), {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
@@ -236,11 +237,11 @@ export function useBookingConfirm() {
       return [
         {
           icon: "calendar",
-          text: `${weekday}, ${formatTime(scheduledStart)} - ${fullDate}`,
+          text: `${weekday}, ${formatTime(scheduledStart, t)} - ${fullDate}`,
         },
         {
           icon: "clock",
-          text: t("{{value0}} giờ, {{value1}} đến {{value2}}", { value0: durationHours, value1: formatTime(scheduledStart), value2: formatTime(scheduledEnd) }),
+          text: t("{{value0}} giờ, {{value1}} đến {{value2}}", { value0: durationHours, value1: formatTime(scheduledStart, t), value2: formatTime(scheduledEnd, t) }),
         },
       ];
     }
@@ -249,7 +250,7 @@ export function useBookingConfirm() {
     if (values.weekdays?.length && values.start_time) {
       rows.push({
         icon: "repeat",
-        text: `${formatWeekdays(values.weekdays)}, ${values.start_time}`,
+        text: `${formatWeekdays(values.weekdays, t)}, ${values.start_time}`,
       });
     } else {
       rows.push({
@@ -261,7 +262,7 @@ export function useBookingConfirm() {
     if (values.package_duration) {
       rows.push({
         icon: "clock",
-        text: t("Gói {{value0}}, bắt đầu từ ngày mai", { value0: getLocalizedPackageLabels()[values.package_duration] ?? values.package_duration }),
+        text: t("Gói {{value0}}, bắt đầu từ ngày mai", { value0: getLocalizedPackageLabels(t)[values.package_duration] ?? values.package_duration }),
       });
     }
     return rows;
@@ -277,7 +278,7 @@ export function useBookingConfirm() {
 
   const paymentOptions = useMemo<PaymentOption[]>(
     () =>
-      getLocalizedPaymentMethods()
+      getLocalizedPaymentMethods(t)
         // Dịch vụ định kỳ: ẩn hẳn tiền mặt
         .filter((m) => !(prepaidOnly && m.value === "CASH"))
         .map((m) => {
@@ -286,7 +287,7 @@ export function useBookingConfirm() {
             totalAmount != null && walletBalance < totalAmount;
           return {
             ...m,
-            subtitle: t("Số dư {{value0}}{{value1}}", { value0: formatVnd(walletBalance), value1: insufficient ? t(" · Không đủ") : "" }),
+            subtitle: t("Số dư {{value0}}{{value1}}", { value0: formatVnd(walletBalance, t), value1: insufficient ? t(" · Không đủ") : "" }),
             disabled: insufficient,
           };
         }),

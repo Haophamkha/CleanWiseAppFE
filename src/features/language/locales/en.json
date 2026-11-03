@@ -1250,5 +1250,8 @@
   "Nạp tiền vào ví (mã {{value0}})": "Wallet top-up (code {{value0}})",
   "Rút tiền về {{value0}}": "Withdrawal to {{value0}}",
   "Thanh toán đến sau khi đơn đã hủy/hết hạn - {{value0}}": "Payment received after booking was canceled/expired - {{value0}}",
-  "Chuyển thiếu ({{value0}} / {{value1}}){{value2}}": "Underpayment ({{value0}} / {{value1}}){{value2}}"
+  "Chuyển thiếu ({{value0}} / {{value1}}){{value2}}": "Underpayment ({{value0}} / {{value1}}){{value2}}",
+  "Liên hệ": "Contact",
+  "© {{value0}} CleanWise. Bảo lưu mọi quyền.": "© {{value0}} CleanWise. All rights reserved.",
+  "CCCD/CMND Sandbox": "Sandbox national ID card"
 }

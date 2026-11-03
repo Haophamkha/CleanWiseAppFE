@@ -67,7 +67,7 @@ export function useEditProfile() {
   };
 
   const pickAvatar = async () => {
-    const file = await pickImage({ square: true });
+    const file = await pickImage({ square: true }, t);
     if (file) setAvatar(file);
   };
 
@@ -96,7 +96,7 @@ export function useEditProfile() {
       setError(
         getApiErrorMessage(
           e,
-          t("Không thể cập nhật thông tin. Vui lòng thử lại."),
+          t("Không thể cập nhật thông tin. Vui lòng thử lại."), t,
         ),
       );
     }

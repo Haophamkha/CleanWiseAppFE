@@ -64,7 +64,7 @@ export function useChatRoom(id: number) {
   const moderation = localModeration ?? conversation?.moderation;
   const canSend = !!conversation?.can_send && !moderation?.is_locked;
   const restrictionNotice = moderation?.is_locked && moderation.locked_until
-    ? t("Bạn bị tạm khóa gửi chat đến {{value0}}. Bạn vẫn có thể đọc, nhận tin và liên hệ hỗ trợ.", { value0: new Date(moderation.locked_until).toLocaleString(getLocale()) })
+    ? t("Bạn bị tạm khóa gửi chat đến {{value0}}. Bạn vẫn có thể đọc, nhận tin và liên hệ hỗ trợ.", { value0: new Date(moderation.locked_until).toLocaleString(getLocale(t)) })
     : undefined;
   const moderationNotice = !moderation?.is_locked && moderation?.violation_count
     ? t("Bạn đã vi phạm {{value0}} lần trong {{value1}} ngày. Không chia sẻ SĐT, email hoặc liên kết ngoài ứng dụng.", { value0: moderation.violation_count, value1: moderation.window_days })
@@ -295,7 +295,7 @@ export function useChatRoom(id: number) {
       }
       scrollToLatest();
     } catch (error) {
-      const blockedMessage = getChatBlockedMessage(error);
+      const blockedMessage = getChatBlockedMessage(error, t);
       if (blockedMessage) {
         requestKeys.current.delete(localId);
         const status = getChatModerationStatus(error);

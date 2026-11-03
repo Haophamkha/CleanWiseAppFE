@@ -1,4 +1,5 @@
-import { translate as t } from "@/features/language/i18n";
+import { translate as defaultTranslate } from "@/features/language/i18n";
+
 // utils/imagePicker.ts
 import type { PickedFile } from "@/features/complaint/types/Complaint";
 import * as ImagePicker from "expo-image-picker";
@@ -8,12 +9,12 @@ type Options = {
   square?: boolean;
 };
 
-export async function pickImage(options?: Options): Promise<PickedFile | null> {
+export async function pickImage(options?: Options, translateText = defaultTranslate): Promise<PickedFile | null> {
   const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!permission.granted) {
     Alert.alert(
-      t("Cần quyền truy cập"),
-      t("Vui lòng cho phép ứng dụng truy cập thư viện ảnh."),
+      translateText("Cần quyền truy cập"),
+      translateText("Vui lòng cho phép ứng dụng truy cập thư viện ảnh."),
     );
     return null;
   }

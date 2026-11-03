@@ -1,5 +1,6 @@
+import { translate as defaultTranslate } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { EmptyState } from "@/components/ui";
 
@@ -23,21 +24,22 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-function dayLabel(iso?: string | null) {
+function dayLabel(iso?: string | null, translateText = defaultTranslate) {
   if (!iso) return "";
   const d = new Date(iso);
   const time = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   const today = new Date();
   const yest = new Date();
   yest.setDate(today.getDate() - 1);
-  if (d.toDateString() === today.toDateString()) return t("{{value0}} Hôm nay", { value0: time });
-  if (d.toDateString() === yest.toDateString()) return t("{{value0}} Hôm qua", { value0: time });
+  if (d.toDateString() === today.toDateString()) return translateText("{{value0}} Hôm nay", { value0: time });
+  if (d.toDateString() === yest.toDateString()) return translateText("{{value0}} Hôm qua", { value0: time });
   const dd = String(d.getDate()).padStart(2, "0");
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   return `${time} ${dd}/${mm}/${d.getFullYear()}`;
 }
 
 function DaySeparator({ iso }: { iso?: string | null }) {
+  const { t } = useTranslation();
   return (
     <View style={{ alignItems: "center", marginVertical: 10 }}>
       <View
@@ -48,7 +50,7 @@ function DaySeparator({ iso }: { iso?: string | null }) {
           backgroundColor: "rgba(100,110,120,0.45)",
         }}
       >
-        <Text style={{ fontSize: 12, color: "#fff" }}>{dayLabel(iso)}</Text>
+        <Text style={{ fontSize: 12, color: "#fff" }}>{dayLabel(iso, t)}</Text>
       </View>
     </View>
   );

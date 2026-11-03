@@ -186,7 +186,7 @@ export function useWithdraw(balance: number, onClose: () => void) {
     } catch (err: any) {
       if (err?.status === 429) return; // interceptor đã báo toast
       setErrorText(
-        getApiErrorMessage(err, t("Không gửi được mã OTP, vui lòng thử lại.")),
+        getApiErrorMessage(err, t("Không gửi được mã OTP, vui lòng thử lại."), t),
       );
     }
   };
@@ -206,13 +206,13 @@ export function useWithdraw(balance: number, onClose: () => void) {
     }
     if (!amount || amount < WITHDRAW_MIN) {
       setErrorText(
-        t("Số tiền rút tối thiểu là {{value0}}đ.", { value0: WITHDRAW_MIN.toLocaleString(getLocale()) }),
+        t("Số tiền rút tối thiểu là {{value0}}đ.", { value0: WITHDRAW_MIN.toLocaleString(getLocale(t)) }),
       );
       return;
     }
     if (amount > WITHDRAW_MAX) {
       setErrorText(
-        t("Mỗi lần rút tối đa {{value0}}đ.", { value0: WITHDRAW_MAX.toLocaleString(getLocale()) }),
+        t("Mỗi lần rút tối đa {{value0}}đ.", { value0: WITHDRAW_MAX.toLocaleString(getLocale(t)) }),
       );
       return;
     }
@@ -259,7 +259,7 @@ export function useWithdraw(balance: number, onClose: () => void) {
         setErrorText(
           getApiErrorMessage(
             err,
-            t("Không thể gửi yêu cầu rút tiền, vui lòng thử lại."),
+            t("Không thể gửi yêu cầu rút tiền, vui lòng thử lại."), t,
           ),
         );
       }
@@ -375,12 +375,12 @@ export function useTopup(onClose: () => void) {
     setErrorText("");
     if (!amount || amount < TOPUP_MIN) {
       setErrorText(
-        t("Số tiền nạp tối thiểu là {{value0}}đ.", { value0: TOPUP_MIN.toLocaleString(getLocale()) }),
+        t("Số tiền nạp tối thiểu là {{value0}}đ.", { value0: TOPUP_MIN.toLocaleString(getLocale(t)) }),
       );
       return;
     }
     if (amount > TOPUP_MAX) {
-      setErrorText(t("Mỗi lần nạp tối đa {{value0}}đ.", { value0: TOPUP_MAX.toLocaleString(getLocale()) }));
+      setErrorText(t("Mỗi lần nạp tối đa {{value0}}đ.", { value0: TOPUP_MAX.toLocaleString(getLocale(t)) }));
       return;
     }
     try {
@@ -408,7 +408,7 @@ export function useTopup(onClose: () => void) {
         setErrorText(
           getApiErrorMessage(
             err,
-            t("Không thể tạo liên kết nạp tiền, vui lòng thử lại."),
+            t("Không thể tạo liên kết nạp tiền, vui lòng thử lại."), t,
           ),
         );
       }
@@ -421,7 +421,7 @@ export function useTopup(onClose: () => void) {
       await mockConfirm(topupId).unwrap();
       refetch();
     } catch (err: any) {
-      setErrorText(getApiErrorMessage(err, t("Giả lập thanh toán thất bại.")));
+      setErrorText(getApiErrorMessage(err, t("Giả lập thanh toán thất bại."), t));
     }
   };
 

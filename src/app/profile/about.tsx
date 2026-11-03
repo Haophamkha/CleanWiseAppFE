@@ -72,7 +72,7 @@ export default function AboutScreen() {
   const { t } = useTranslation();
   const { COLORS, SHADOWS, GRADIENTS, isDark } = useAppTheme();
   const insets = useSafeAreaInsets();
-  const info = getLocalizedAppInfo();
+  const info = getLocalizedAppInfo(t);
   const version = Constants.expoConfig?.version ?? "1.0.0";
 
   return (
@@ -330,7 +330,7 @@ export default function AboutScreen() {
             className="text-center text-ink-muted"
             style={{ fontSize: 12, marginTop: 4 }}
           >
-            © {new Date().getFullYear()} CleanWise. All rights reserved.
+            {t("© {{value0}} CleanWise. Bảo lưu mọi quyền.", { value0: new Date().getFullYear() })}
           </Text>
         </View>
       </ScrollView>

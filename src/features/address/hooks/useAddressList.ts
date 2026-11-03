@@ -38,7 +38,7 @@ export function useAddressList() {
     });
 
   return {
-    title: title || (isPicking ? t("Chọn địa chỉ") : t("Danh sách địa chỉ đã lưu")),
+    title: (title ? t(title) : "") || (isPicking ? t("Chọn địa chỉ") : t("Danh sách địa chỉ đã lưu")),
     addresses: data ?? [],
     isPicking,
     isLoading,

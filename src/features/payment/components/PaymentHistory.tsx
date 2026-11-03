@@ -1,6 +1,7 @@
+import { translate as defaultTranslate, getLocale } from "@/features/language/i18n";
 import { localizeTransactionNote } from "@/features/payment/utils/localizeTransactionNote";
 import { useTranslation } from "react-i18next";
-import { translate as t, getLocale } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -37,43 +38,43 @@ type IconName = React.ComponentProps<typeof Feather>["name"];
 
 type FilterOption<T extends string> = { key: T; label: string; icon: IconName };
 
-function getLocalizedSourceOptions(): FilterOption<PaymentHistorySource>[] {
+function getLocalizedSourceOptions(translateText = defaultTranslate): FilterOption<PaymentHistorySource>[] {
   return [
-    { key: "all", label: t("Tất cả loại"), icon: "layers" },
-    { key: "wallet", label: t("Qua ví"), icon: "briefcase" },
+    { key: "all", label: translateText("Tất cả loại"), icon: "layers" },
+    { key: "wallet", label: translateText("Qua ví"), icon: "briefcase" },
     { key: "online", label: "Online", icon: "credit-card" },
   ];
 }
 
-function getLocalizedStatusOptions(): FilterOption<PaymentHistoryStatusFilter>[] {
+function getLocalizedStatusOptions(translateText = defaultTranslate): FilterOption<PaymentHistoryStatusFilter>[] {
   return [
-    { key: "all", label: t("Mọi trạng thái"), icon: "list" },
-    { key: "paid", label: t("Đã thanh toán"), icon: "check-circle" },
-    { key: "pending", label: t("Chờ thanh toán"), icon: "clock" },
-    { key: "cancelled", label: t("Đã hủy"), icon: "x-circle" },
-    { key: "refunded", label: t("Đã hoàn"), icon: "rotate-ccw" },
+    { key: "all", label: translateText("Mọi trạng thái"), icon: "list" },
+    { key: "paid", label: translateText("Đã thanh toán"), icon: "check-circle" },
+    { key: "pending", label: translateText("Chờ thanh toán"), icon: "clock" },
+    { key: "cancelled", label: translateText("Đã hủy"), icon: "x-circle" },
+    { key: "refunded", label: translateText("Đã hoàn"), icon: "rotate-ccw" },
   ];
 }
 
-function getLocalizedEmptyText(): Record<PaymentHistorySource, string> {
+function getLocalizedEmptyText(translateText = defaultTranslate): Record<PaymentHistorySource, string> {
   return {
-    all: t("Chưa có giao dịch thanh toán nào."),
-    wallet: t("Chưa có giao dịch nào qua ví."),
-    online: t("Chưa có thanh toán online nào."),
+    all: translateText("Chưa có giao dịch thanh toán nào."),
+    wallet: translateText("Chưa có giao dịch nào qua ví."),
+    online: translateText("Chưa có thanh toán online nào."),
   };
 }
 
 // Trạng thái khác SUCCESS thì hiện badge; SUCCESS thì không cần.
 
 
-const dayLabel = (iso: string) => {
+const dayLabel = (iso: string, translateText = defaultTranslate) => {
   const d = new Date(iso);
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
-  if (d.toDateString() === today.toDateString()) return t("Hôm nay");
-  if (d.toDateString() === yesterday.toDateString()) return t("Hôm qua");
-  return d.toLocaleDateString(getLocale(), {
+  if (d.toDateString() === today.toDateString()) return translateText("Hôm nay");
+  if (d.toDateString() === yesterday.toDateString()) return translateText("Hôm qua");
+  return d.toLocaleDateString(getLocale(translateText), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -82,10 +83,10 @@ const dayLabel = (iso: string) => {
 
 type Section = { title: string; data: PaymentHistoryItem[] };
 
-function groupByDay(list: PaymentHistoryItem[]): Section[] {
+function groupByDay(list: PaymentHistoryItem[], translateText = defaultTranslate): Section[] {
   const groups: Section[] = [];
   for (const item of list) {
-    const title = dayLabel(item.created_at);
+    const title = dayLabel(item.created_at, translateText);
     const last = groups[groups.length - 1];
     if (last && last.title === title) last.data.push(item);
     else groups.push({ title, data: [item] });
@@ -391,14 +392,14 @@ function SummaryCard({ totals }: { totals: PaymentHistoryTotals }) {
           color: ON_DARK.text,
         }}
       >
-        {formatVnd(totals.paid)}
+        {formatVnd(totals.paid, t)}
       </Text>
 
       <View style={{ flexDirection: "row", gap: 10, marginTop: 18 }}>
         <StatTile
           icon="rotate-ccw"
           label={t("Đã hoàn về ví")}
-          value={formatVnd(totals.refunded)}
+          value={formatVnd(totals.refunded, t)}
         />
         <StatTile
           icon="hash"
@@ -487,7 +488,7 @@ function HistoryRow({
           style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}
         >
           <Text style={{ fontSize: 12, color: COLORS.inkMuted }}>
-            {t(item.method_display)} · {formatMessageTime(item.created_at)}
+            {t(item.method_display)} · {formatMessageTime(item.created_at, t)}
           </Text>
           {badge && (
             <View
@@ -527,7 +528,7 @@ function HistoryRow({
           }}
         >
           {isRefund ? "+" : "-"}
-          {formatVnd(Number(item.amount))}
+          {formatVnd(Number(item.amount), t)}
         </Text>
         {!!onPress && (
           <Feather
@@ -631,7 +632,7 @@ function PaymentHistoryList({
 
   const insets = useSafeAreaInsets();
   const h = usePaymentHistory(source, status);
-  const sections = useMemo(() => groupByDay(h.items), [h.items, t]);
+  const sections = useMemo(() => groupByDay(h.items, t), [h.items, t]);
   const filtering = source !== "all" || status !== "all";
 
   if (h.isInitialLoading) return <SkeletonList />;
@@ -705,7 +706,7 @@ function PaymentHistoryList({
           title={
             filtering
               ? t("Không có giao dịch phù hợp với bộ lọc.")
-              : getLocalizedEmptyText().all
+              : getLocalizedEmptyText(t).all
           }
           actionLabel={filtering ? t("Xóa bộ lọc") : undefined}
           onAction={filtering ? onResetFilters : undefined}
@@ -791,13 +792,13 @@ export function PaymentHistory() {
         <FilterDropdown
           caption={t("Loại")}
           value={source}
-          options={getLocalizedSourceOptions()}
+          options={getLocalizedSourceOptions(t)}
           onChange={setSource}
         />
         <FilterDropdown
           caption={t("Trạng thái")}
           value={status}
-          options={getLocalizedStatusOptions()}
+          options={getLocalizedStatusOptions(t)}
           onChange={setStatus}
         />
       </View>

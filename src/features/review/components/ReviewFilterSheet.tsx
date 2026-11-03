@@ -1,3 +1,4 @@
+import { localizeKnownMessage } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -113,11 +114,11 @@ export function ReviewFilterSheet({
         </View>
         <Text className="font-semibold text-ink mb-3">{t("Thời gian đánh giá")}</Text>
         <View className="flex-row flex-wrap mb-3">
-          {(Object.keys(getLocalizedReviewPeriodLabels()) as ReviewFilters["period"][]).map(
+          {(Object.keys(getLocalizedReviewPeriodLabels(t)) as ReviewFilters["period"][]).map(
             (period) => (
               <Choice
                 key={period}
-                title={getLocalizedReviewPeriodLabels()[period]}
+                title={getLocalizedReviewPeriodLabels(t)[period]}
                 selected={draft.period === period}
                 onPress={() => {
                   setError("");
@@ -186,7 +187,7 @@ export function ReviewFilterSheet({
         </View>
         {!!error && (
           <Text accessibilityRole="alert" className="text-danger text-sm mt-2">
-            {error}
+            {localizeKnownMessage(error, t)}
           </Text>
         )}
       </ScrollView>

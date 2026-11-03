@@ -94,7 +94,7 @@ function VoucherOption({
   const { COLORS } = useAppTheme();
 
   const voucher = item.voucher;
-  const unavailableReason = getUnavailableReason(item, subtotalAmount);
+  const unavailableReason = getUnavailableReason(item, subtotalAmount, t);
   const disabled = unavailableReason !== null;
   const isPercent = voucher.discount_type === "PERCENT";
   const daysLeft = getVoucherDaysLeft(voucher.end_at);
@@ -158,7 +158,7 @@ function VoucherOption({
           >
             {isPercent
               ? `${Number(voucher.discount_value)}%`
-              : formatVoucherMoney(voucher.discount_value)}
+              : formatVoucherMoney(voucher.discount_value, t)}
           </Text>
         </LinearGradient>
 
@@ -206,7 +206,7 @@ function VoucherOption({
                     color: COLORS.primaryDark,
                   }}
                 >
-                  {t("Giảm")}{" "}{formatVoucherMoney(String(Math.round(saving)))} {t("cho đơn này")}</Text>
+                  {t("Giảm")}{" "}{formatVoucherMoney(String(Math.round(saving)), t)} {t("cho đơn này")}</Text>
               )}
             </View>
 
@@ -267,14 +267,14 @@ function VoucherOption({
                 ? daysLeft === 0
                   ? t("Hết hạn hôm nay")
                   : t("Còn {{value0}} ngày", { value0: daysLeft , count: daysLeft})
-                : `HSD ${formatVoucherDate(voucher.end_at)}`}
+                : `HSD ${formatVoucherDate(voucher.end_at, t)}`}
             </Text>
           </View>
 
           <Text style={{ marginTop: 6, fontSize: 11.5, color: COLORS.inkSoft }}>
-            {t("Đơn tối thiểu")}{" "}{formatVoucherMoney(voucher.min_order_amount)}
+            {t("Đơn tối thiểu")}{" "}{formatVoucherMoney(voucher.min_order_amount, t)}
             {isPercent && voucher.max_discount_amount
-              ? t(" · Tối đa {{value0}}", { value0: formatVoucherMoney(voucher.max_discount_amount) })
+              ? t(" · Tối đa {{value0}}", { value0: formatVoucherMoney(voucher.max_discount_amount, t) })
               : ""}
           </Text>
 
@@ -403,7 +403,7 @@ export function BookingVoucherModal(props: Props) {
 
   // Voucher tiết kiệm nhất trong số các voucher dùng được
   const usable = b.sortedVouchers.filter(
-    (i) => getUnavailableReason(i, subtotalAmount) === null,
+    (i) => getUnavailableReason(i, subtotalAmount, t) === null,
   );
   const bestId =
     usable.length > 1
@@ -497,7 +497,7 @@ export function BookingVoucherModal(props: Props) {
                 >
                   {t("Giá trị đơn dịch vụ")}{" "}
                   <Text style={{ fontWeight: "700", color: COLORS.inkSoft }}>
-                    {formatVoucherMoney(String(subtotalAmount))}
+                    {formatVoucherMoney(String(subtotalAmount), t)}
                   </Text>
                 </Text>
               </View>
@@ -615,7 +615,7 @@ export function BookingVoucherModal(props: Props) {
                     color: COLORS.primaryDark,
                   }}
                 >
-                  -{formatVoucherMoney(String(Math.round(pendingSaving)))}
+                  -{formatVoucherMoney(String(Math.round(pendingSaving)), t)}
                 </Text>
               </View>
             )}

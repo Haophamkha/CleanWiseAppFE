@@ -47,7 +47,7 @@ export function useCreateReview(
     picking.current = true;
     setPicking(true);
     try {
-      const image = await pickImage();
+      const image = await pickImage(undefined, t);
       if (image && !closed.current) {
         const picked = {
           uri: image.uri,
@@ -101,7 +101,7 @@ export function useCreateReview(
     } catch (err) {
       if (!closed.current)
         setError(
-          getApiErrorMessage(err, t("Không thể gửi đánh giá. Vui lòng thử lại.")),
+          getApiErrorMessage(err, t("Không thể gửi đánh giá. Vui lòng thử lại."), t),
         );
     } finally {
       saving.current = false;

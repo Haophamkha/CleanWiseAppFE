@@ -21,7 +21,7 @@ export default function NotificationItem({
 
   const { COLORS } = useAppTheme();
 
-  const meta = getNotificationTypeMeta(notification.type, COLORS);
+  const meta = getNotificationTypeMeta(notification.type, COLORS, t);
   const isUnread = !notification.is_read;
 
   const route = getNotificationRoute(notification);
@@ -63,7 +63,7 @@ export default function NotificationItem({
           </Text>
 
           <Text className="text-[11px] text-ink-muted">
-            {formatNotificationTime(notification.created_at)}
+            {formatNotificationTime(notification.created_at, t)}
           </Text>
         </View>
 

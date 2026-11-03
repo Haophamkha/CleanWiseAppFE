@@ -1,3 +1,4 @@
+import { localizeAddressLabel } from "@/features/address/utils/addressLabel";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -49,7 +50,7 @@ export default function AddressCard({
           <View className="flex-1 pr-2">
             <View className="flex-row items-center mb-1">
               <Text className="text-base font-bold text-ink" numberOfLines={1}>
-                {address.label || t("Địa chỉ")}
+                {localizeAddressLabel(address.label, t) || t("Địa chỉ")}
               </Text>
               {address.is_default && (
                 <View className="ml-2">

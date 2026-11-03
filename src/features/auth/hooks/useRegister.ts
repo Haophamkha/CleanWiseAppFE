@@ -38,7 +38,7 @@ export function useRegister() {
     setForm((prev) => ({ ...prev, [key]: value }));
 
   const submit = async () => {
-    const result = getLocalizedRegisterSchema().safeParse(form);
+    const result = getLocalizedRegisterSchema(t).safeParse(form);
     if (!result.success) {
       setError(result.error.issues[0].message);
       return;
@@ -70,7 +70,7 @@ export function useRegister() {
     } catch (e) {
       const message = getApiErrorMessage(
         e,
-        t("Tạo tài khoản thất bại, vui lòng thử lại"),
+        t("Tạo tài khoản thất bại, vui lòng thử lại"), t,
       );
       setError(message);
       showErrorToast(t("Không thể tạo tài khoản"), message);

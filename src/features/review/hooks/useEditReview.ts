@@ -50,7 +50,7 @@ export function useEditReview(review: Review, onClose: () => void) {
     pickingRef.current = true;
     setPicking(true);
     try {
-      const image = await pickImage();
+      const image = await pickImage(undefined, t);
       if (image && !closedRef.current) {
         const picked: ReviewPickedImage = {
           uri: image.uri,
@@ -106,7 +106,7 @@ export function useEditReview(review: Review, onClose: () => void) {
       setError(
         getApiErrorMessage(
           err,
-          t("Không thể cập nhật đánh giá. Vui lòng thử lại."),
+          t("Không thể cập nhật đánh giá. Vui lòng thử lại."), t,
         ),
       );
     } finally {

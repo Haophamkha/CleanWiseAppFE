@@ -1,5 +1,6 @@
+import { translate as defaultTranslate, getLocale } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t, getLocale } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Card } from "@/components/ui/Card";
 
@@ -25,26 +26,26 @@ import { SectionTitle } from "./SectionTitle";
 
 type FeatherName = keyof typeof Feather.glyphMap;
 
-function getLocalizedImageTypeOrder(): { type: string; label: string; icon: FeatherName }[] {
+function getLocalizedImageTypeOrder(translateText = defaultTranslate): { type: string; label: string; icon: FeatherName }[] {
   return [
-    { type: "BEFORE", label: t("Trước khi làm"), icon: "image" },
-    { type: "AFTER", label: t("Sau khi làm"), icon: "image" },
-    { type: "ISSUE", label: t("Báo cáo sự cố"), icon: "alert-triangle" },
+    { type: "BEFORE", label: translateText("Trước khi làm"), icon: "image" },
+    { type: "AFTER", label: translateText("Sau khi làm"), icon: "image" },
+    { type: "ISSUE", label: translateText("Báo cáo sự cố"), icon: "alert-triangle" },
   ];
 }
 
-function getLocalizedImageTypeLabel(): Record<string, string> {
-  return { OTHER: t("Khác") };
+function getLocalizedImageTypeLabel(translateText = defaultTranslate): Record<string, string> {
+  return { OTHER: translateText("Khác") };
 }
 
-const timeText = (iso: string) =>
-  new Date(iso).toLocaleTimeString(getLocale(), {
+const timeText = (iso: string, translateText = defaultTranslate) =>
+  new Date(iso).toLocaleTimeString(getLocale(translateText), {
     hour: "2-digit",
     minute: "2-digit",
   });
 
-function formatTime(iso: string | null) {
-  return iso ? timeText(iso) : null;
+function formatTime(iso: string | null, translateText = defaultTranslate) {
+  return iso ? timeText(iso, translateText) : null;
 }
 
 function InfoRow({
@@ -228,8 +229,8 @@ export function SingleScheduleSection({
   );
   const otherImages = groupedImages.OTHER ?? [];
 
-  const actualStart = formatTime(schedule.actual_start);
-  const actualEnd = formatTime(schedule.actual_end);
+  const actualStart = formatTime(schedule.actual_start, t);
+  const actualEnd = formatTime(schedule.actual_end, t);
 
   const infoRows: {
     icon: FeatherName;
@@ -383,7 +384,7 @@ export function SingleScheduleSection({
 
           {photosOpen && (
             <View className="px-3.5 pt-3 pb-1 bg-surface">
-              {getLocalizedImageTypeOrder().map(({ type, label, icon }) => (
+              {getLocalizedImageTypeOrder(t).map(({ type, label, icon }) => (
                 <PhotoRow
                   key={type}
                   label={label}
@@ -393,7 +394,7 @@ export function SingleScheduleSection({
                 />
               ))}
               <PhotoRow
-                label={getLocalizedImageTypeLabel().OTHER}
+                label={getLocalizedImageTypeLabel(t).OTHER}
                 icon="image"
                 images={otherImages}
                 onOpen={setViewerImage}

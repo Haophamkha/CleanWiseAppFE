@@ -1,5 +1,6 @@
+import { translate as defaultTranslate } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { SHADOWS } from "@/constants/theme";
 import type { FavoriteWorker } from "@/features/favorite-worker/types/FavoriteWorker";
@@ -13,8 +14,8 @@ type Props = {
   onSelect: (id: number | null) => void;
 };
 
-const fullName = (w: FavoriteWorker) =>
-  `${w.last_name ?? ""} ${w.first_name ?? ""}`.trim() || t("Nhân viên");
+const fullName = (w: FavoriteWorker, translateText = defaultTranslate) =>
+  `${w.last_name ?? ""} ${w.first_name ?? ""}`.trim() || translateText("Nhân viên");
 
 export function PreferredWorkerPicker({
   workers,
@@ -73,7 +74,7 @@ export function PreferredWorkerPicker({
                 className="text-ink font-semibold text-[13px] mt-2"
                 numberOfLines={1}
               >
-                {fullName(w)}
+                {fullName(w, t)}
               </Text>
 
               <View className="flex-row items-center mt-1">
@@ -92,7 +93,7 @@ export function PreferredWorkerPicker({
 
       <Text className="text-ink-muted text-xs mt-2">
         {selected
-          ? t("Yêu cầu sẽ gửi riêng cho {{value0}}. Sau 1 giờ nếu chưa nhận hoặc bị từ chối, đơn sẽ mở cho tất cả nhân viên. Chạm lại để bỏ chọn.", { value0: fullName(selected) })
+          ? t("Yêu cầu sẽ gửi riêng cho {{value0}}. Sau 1 giờ nếu chưa nhận hoặc bị từ chối, đơn sẽ mở cho tất cả nhân viên. Chạm lại để bỏ chọn.", { value0: fullName(selected, t) })
           : t("Chọn một nhân viên yêu thích để gửi yêu cầu riêng, hoặc bỏ qua để hệ thống tìm giúp bạn.")}
       </Text>
     </View>

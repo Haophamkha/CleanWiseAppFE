@@ -1,8 +1,9 @@
+import { translate as defaultTranslate, getLocale } from "@/features/language/i18n";
 import { ServiceThumb } from "@/features/booking/components/ServiceThumb";
 import type { BookingListItem } from "@/features/booking/types/Booking";
 import { getPaymentStatusMeta } from "@/features/booking/types/bookingStatus";
 import { getBookingStatusMap } from "@/features/booking/utils/bookingStatus";
-import { getLocale } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { formatVnd } from "@/utils/currency";
 import { Feather } from "@expo/vector-icons";
@@ -28,15 +29,15 @@ type BookingCardData = BookingListItem & {
   total_sessions?: number;
 };
 
-const dateText = (iso: string) =>
-  new Date(iso).toLocaleDateString(getLocale(), {
+const dateText = (iso: string, translateText = defaultTranslate) =>
+  new Date(iso).toLocaleDateString(getLocale(translateText), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
 
-const dateTimeText = (iso: string) =>
-  new Date(iso).toLocaleString(getLocale(), {
+const dateTimeText = (iso: string, translateText = defaultTranslate) =>
+  new Date(iso).toLocaleString(getLocale(translateText), {
     weekday: "short",
     day: "2-digit",
     month: "2-digit",
@@ -76,12 +77,12 @@ export function BookingCard({ item }: { item: BookingCardData }) {
   const { t } = useTranslation();
   const { COLORS, SHADOWS } = useAppTheme();
 
-  const meta = getBookingStatusMap(COLORS)[item.status] ?? {
+  const meta = getBookingStatusMap(COLORS, t)[item.status] ?? {
     label: item.status,
     color: COLORS.inkSoft,
     bg: COLORS.line,
   };
-  const pay = getPaymentStatusMeta(item.payment_status, COLORS);
+  const pay = getPaymentStatusMeta(item.payment_status, COLORS, t);
   const discount = Number(item.discount_amount) || 0;
 
   const isDead = item.status === "CANCELLED" || item.status === "FAILED";
@@ -202,8 +203,8 @@ export function BookingCard({ item }: { item: BookingCardData }) {
         >
           <MetaRow icon="calendar">
             {item.next_schedule_start
-              ? dateTimeText(item.next_schedule_start)
-              : t("Đặt ngày {{value0}}", { value0: dateText(item.created_at) })}
+              ? dateTimeText(item.next_schedule_start, t)
+              : t("Đặt ngày {{value0}}", { value0: dateText(item.created_at, t) })}
           </MetaRow>
 
           {!!item.address_summary && (
@@ -288,7 +289,7 @@ export function BookingCard({ item }: { item: BookingCardData }) {
                 className="text-success"
                 style={{ fontSize: 11.5, marginTop: 6 }}
               >
-                {t("Tiết kiệm")} {formatVnd(discount)}
+                {t("Tiết kiệm")} {formatVnd(discount, t)}
               </Text>
             )}
           </View>
@@ -302,7 +303,7 @@ export function BookingCard({ item }: { item: BookingCardData }) {
               style={{ fontSize: 22, lineHeight: 28 }}
             >
               {item.total_amount
-                ? formatVnd(Number(item.total_amount))
+                ? formatVnd(Number(item.total_amount), t)
                 : t("Chờ báo giá")}
             </Text>
           </View>

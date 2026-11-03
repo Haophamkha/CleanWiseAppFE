@@ -1,4 +1,5 @@
-import { getLocale } from "@/features/language/i18n";
+import { translate as defaultTranslate, getLocale } from "@/features/language/i18n";
+
 import type { Review } from "@/features/review/types/Review";
 
 export function canEditReview(review: Review) {
@@ -7,8 +8,8 @@ export function canEditReview(review: Review) {
   );
 }
 
-export function formatReviewDate(value: string) {
-  return new Date(value).toLocaleString(getLocale(), {
+export function formatReviewDate(value: string, translateText = defaultTranslate) {
+  return new Date(value).toLocaleString(getLocale(translateText), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

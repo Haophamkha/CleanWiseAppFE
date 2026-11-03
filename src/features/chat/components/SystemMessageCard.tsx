@@ -90,7 +90,7 @@ export function SystemMessageCard({
           {message.message}
         </Text>
         <Text style={{ fontSize: 12, marginTop: 4, color: COLORS.inkMuted }}>
-          {formatFullDateTime(message.created_at)}
+          {formatFullDateTime(message.created_at, t)}
         </Text>
       </View>
     </View>

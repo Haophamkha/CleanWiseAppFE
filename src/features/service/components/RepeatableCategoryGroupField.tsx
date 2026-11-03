@@ -164,7 +164,7 @@ export function RepeatableCategoryGroupField({
                     className="text-[13px] font-bold mr-2"
                     style={{ color: COLORS.primary }}
                   >
-                    {formatVnd(unitPrice)}
+                    {formatVnd(unitPrice, t)}
                   </Text>
                 )}
                 <Feather
@@ -210,7 +210,7 @@ export function RepeatableCategoryGroupField({
                     className="text-[12px] mt-0.5"
                     style={{ color: COLORS.textMuted }}
                   >
-                    {t("Đơn giá")}{" "}{formatVnd(unitPrice)}
+                    {t("Đơn giá")}{" "}{formatVnd(unitPrice, t)}
                   </Text>
                 )}
               </View>
@@ -264,7 +264,7 @@ export function RepeatableCategoryGroupField({
                       className="text-[15px] font-bold"
                       style={{ color: COLORS.primary }}
                     >
-                      {formatVnd(subtotal)}
+                      {formatVnd(subtotal, t)}
                     </Text>
                   )}
                 </View>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useGetMyReviewsQuery } from "@/features/review/api/reviewApi";
 import type { Review } from "@/features/review/types/Review";
 import type { ReviewFilters } from "@/features/review/types/ReviewFilters";
@@ -9,6 +10,7 @@ import {
 } from "@/features/review/utils/reviewFilters";
 
 export function useMyReviews() {
+  const { t } = useTranslation();
   const isAuthenticated = !!useAppSelector((state) => state.auth.user);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -48,8 +50,8 @@ export function useMyReviews() {
       setFilters(next);
       setFilterOpen(false);
     },
-    filterLabels: reviewFilterLabels(filters),
-    hasFilters: !!search.trim() || reviewFilterLabels(filters).length > 0,
+    filterLabels: reviewFilterLabels(filters, t),
+    hasFilters: !!search.trim() || reviewFilterLabels(filters, t).length > 0,
     clearFilters: () => {
       setSearch("");
       setDebouncedSearch("");

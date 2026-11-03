@@ -27,7 +27,7 @@ export function useClearNotifications(onDone?: () => void) {
             } catch (e) {
               showErrorToast(
                 t("Không thể xoá thông báo"),
-                getApiErrorMessage(e, t("Vui lòng thử lại.")),
+                getApiErrorMessage(e, t("Vui lòng thử lại."), t),
               );
             }
           },

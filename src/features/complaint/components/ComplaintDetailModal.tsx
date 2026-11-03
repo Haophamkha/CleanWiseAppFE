@@ -41,7 +41,7 @@ export function ComplaintDetailModal({
   );
   const [cancel, { isLoading: cancelling }] = useCancelComplaintMutation();
 
-  const COMPLAINT_STATUS_META = getComplaintStatusMap(COLORS);
+  const COMPLAINT_STATUS_META = getComplaintStatusMap(COLORS, t);
   const meta = data ? COMPLAINT_STATUS_META[data.status] : undefined;
   const refund = Number(data?.refund_amount) || 0;
 
@@ -163,7 +163,7 @@ export function ComplaintDetailModal({
               {data.stage_label}
             </Text>
             <Text className="text-ink-muted text-xs mt-0.5">
-              {t("Gửi lúc")}{" "}{formatReviewDate(data.created_at)}
+              {t("Gửi lúc")}{" "}{formatReviewDate(data.created_at, t)}
             </Text>
 
             {!!data.worker_name && (
@@ -210,11 +210,11 @@ export function ComplaintDetailModal({
                 )}
                 {refund > 0 && (
                   <Text className="text-success font-bold text-sm mt-2">
-                    {t("Đã hoàn")}{" "}{formatVnd(refund)} {t("vào ví")}</Text>
+                    {t("Đã hoàn")}{" "}{formatVnd(refund, t)} {t("vào ví")}</Text>
                 )}
                 {!!data.resolved_at && (
                   <Text className="text-ink-muted text-xs mt-2">
-                    {t("Xử lý lúc")}{" "}{formatReviewDate(data.resolved_at)}
+                    {t("Xử lý lúc")}{" "}{formatReviewDate(data.resolved_at, t)}
                   </Text>
                 )}
               </View>

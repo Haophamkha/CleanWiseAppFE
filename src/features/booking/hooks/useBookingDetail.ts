@@ -75,13 +75,13 @@ export function useBookingDetail() {
       Alert.alert(
         t("Đã hủy đơn"),
         refunded > 0
-          ? t("Đơn dịch vụ đã được hủy. Đã hoàn {{value0}} vào ví của bạn.", { value0: formatVnd(refunded) })
+          ? t("Đơn dịch vụ đã được hủy. Đã hoàn {{value0}} vào ví của bạn.", { value0: formatVnd(refunded, t) })
           : t("Đơn dịch vụ đã được hủy thành công."),
       );
     } catch (err: any) {
       Alert.alert(
         t("Không thể hủy đơn"),
-        getApiErrorMessage(err, t("Không thể hủy đơn dịch vụ, vui lòng thử lại.")),
+        getApiErrorMessage(err, t("Không thể hủy đơn dịch vụ, vui lòng thử lại."), t),
       );
     }
   };
@@ -102,7 +102,7 @@ export function useBookingDetail() {
           : t("Đã hủy buổi làm việc."),
       ];
       if (refunded > 0) {
-        lines.push(t("Đã hoàn {{value0}} vào ví của bạn.", { value0: formatVnd(refunded) }));
+        lines.push(t("Đã hoàn {{value0}} vào ví của bạn.", { value0: formatVnd(refunded, t) }));
       }
       Alert.alert(t("Đã hủy buổi"), lines.join(" "));
     } catch (err: any) {
@@ -110,7 +110,7 @@ export function useBookingDetail() {
         t("Không thể hủy buổi"),
         getApiErrorMessage(
           err,
-          t("Không thể hủy buổi làm việc, vui lòng thử lại."),
+          t("Không thể hủy buổi làm việc, vui lòng thử lại."), t,
         ),
       );
     }

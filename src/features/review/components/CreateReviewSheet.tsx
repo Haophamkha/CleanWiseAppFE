@@ -1,3 +1,4 @@
+import { localizeKnownMessage } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -65,7 +66,7 @@ export function CreateReviewSheet({
         </Text>
         <Text className="text-ink-soft text-xs mt-1 mb-4">
           {a.booking_code}  {t("· Buổi")} {a.schedule.sequence_no} ·{" "}
-          {formatReviewDate(a.schedule.scheduled_start)}
+          {formatReviewDate(a.schedule.scheduled_start, t)}
         </Text>
         <View className="items-center mb-4">
           <ReviewStars
@@ -127,7 +128,7 @@ export function CreateReviewSheet({
           {t("Mỗi buổi chỉ được đánh giá một lần. Bạn có thể chỉnh sửa trong 30 ngày sau khi gửi; không thể xóa đánh giá.")}</Text>
         {!!r.error && (
           <Text accessibilityRole="alert" className="text-danger text-sm mt-3">
-            {r.error}
+            {localizeKnownMessage(r.error, t)}
           </Text>
         )}
       </ScrollView>

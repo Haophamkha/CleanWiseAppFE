@@ -1,5 +1,6 @@
+import { translate as defaultTranslate } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { ON_DARK } from "@/constants/theme";
 import type { Voucher } from "@/features/voucher/types/Voucher";
@@ -31,10 +32,10 @@ const shortDate = (iso: string) => {
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
 };
 
-const expiry = (iso: string) => {
+const expiry = (iso: string, translateText = defaultTranslate) => {
   const ms = new Date(iso).getTime() - Date.now();
   const days = Math.ceil(ms / 86400000);
-  if (ms > 0 && days <= 3) return { text: t("Còn {{value0}} ngày", { value0: days , count: days}), urgent: true };
+  if (ms > 0 && days <= 3) return { text: translateText("Còn {{value0}} ngày", { value0: days , count: days}), urgent: true };
   return { text: `HSD ${shortDate(iso)}`, urgent: false };
 };
 
@@ -69,7 +70,7 @@ export function HomeVoucherCard({
   }
   const condition = parts.join(" · ");
 
-  const exp = expiry(voucher.end_at);
+  const exp = expiry(voucher.end_at, t);
 
   return (
     <Pressable

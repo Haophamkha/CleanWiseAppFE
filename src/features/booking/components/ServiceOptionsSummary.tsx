@@ -66,7 +66,7 @@ export function ServiceOptionsSummary({
                     subtitle={[opt?.label, t("Số lượng: {{value0}}", { value0: item.quantity ?? 1 })]
                       .filter(Boolean)
                       .join(" · ")}
-                    trailing={price != null ? formatVnd(price) : undefined}
+                    trailing={price != null ? formatVnd(price, t) : undefined}
                   />
                 );
               })}
@@ -80,7 +80,7 @@ export function ServiceOptionsSummary({
         if (field.type === "SINGLE_SELECT") {
           const opt = getSelectedOption(field, values);
           if (!opt) return null;
-          const caption = buildCaption(opt, false, pricingConfig);
+          const caption = buildCaption(opt, false, pricingConfig, t);
           return (
             <View key={field.key}>
               <SectionLabel label={field.label} />
@@ -103,7 +103,7 @@ export function ServiceOptionsSummary({
               {selected.map((v) => {
                 const opt = options.find((o) => o.value === v);
                 if (!opt) return null;
-                const caption = buildCaption(opt, true, pricingConfig);
+                const caption = buildCaption(opt, true, pricingConfig, t);
                 return (
                   <InfoRow
                     key={v}

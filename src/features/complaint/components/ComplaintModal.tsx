@@ -1,3 +1,4 @@
+import { localizeKnownMessage } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -166,7 +167,7 @@ export function ComplaintModal({
     } catch (err: any) {
       const message = getApiErrorMessage(
         err,
-        t("Gửi phản hồi thất bại, vui lòng thử lại"),
+        t("Gửi phản hồi thất bại, vui lòng thử lại"), t,
       );
 
       setError(message);
@@ -277,7 +278,7 @@ export function ComplaintModal({
               className="text-[15px] font-extrabold"
               style={{ color: COLORS.violet }}
             >
-              {formatVnd(Number(existingComplaint.refund_amount))}
+              {formatVnd(Number(existingComplaint.refund_amount), t)}
             </Text>
           </View>
         )}
@@ -451,7 +452,7 @@ export function ComplaintModal({
 
         {!!error && (
           <Text className="text-[13px] mt-3" style={{ color: COLORS.danger }}>
-            {error}
+            {localizeKnownMessage(error, t)}
           </Text>
         )}
 

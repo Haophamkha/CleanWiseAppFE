@@ -1,4 +1,5 @@
-import { translate as t } from "@/features/language/i18n";
+import { translate as defaultTranslate } from "@/features/language/i18n";
+
 import { useTranslation } from "react-i18next";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 
@@ -39,20 +40,20 @@ function cardIcon(card: ChatbotCard): IconName {
   }
 }
 
-function cardSubtitle(card: ChatbotCard): string {
+function cardSubtitle(card: ChatbotCard, translateText = defaultTranslate): string {
   switch (card.type) {
     case "help":
-      return t("Nguồn hướng dẫn · Phiên bản {{value0}}", { value0: card.version });
+      return translateText("Nguồn hướng dẫn · Phiên bản {{value0}}", { value0: card.version });
     case "booking":
-      return [card.data?.service_name ? t(card.data.service_name) : undefined, card.data?.status_label ? t(card.data.status_label) : undefined]
+      return [card.data?.service_name ? translateText(card.data.service_name) : undefined, card.data?.status_label ? translateText(card.data.status_label) : undefined]
         .filter(Boolean)
         .join(" · ");
     case "schedule":
-      return t(card.status_label);
+      return translateText(card.status_label);
     case "address_map":
-      return t("Chọn vị trí rồi lưu, tôi sẽ tiếp tục giúp bạn");
+      return translateText("Chọn vị trí rồi lưu, tôi sẽ tiếp tục giúp bạn");
     default:
-      return t("Dịch vụ CleanWise");
+      return translateText("Dịch vụ CleanWise");
   }
 }
 
@@ -65,11 +66,11 @@ export function ChatbotActionCard({
   onPress: () => void;
   loading: boolean;
 }) {
-  useTranslation();
+  const { t } = useTranslation();
   const { COLORS } = useAppTheme();
 
   const icon = cardIcon(card);
-  const subtitle = cardSubtitle(card);
+  const subtitle = cardSubtitle(card, t);
   const title = card.type === "address_map" ? t("Thêm địa chỉ trên bản đồ") : card.title;
   return (
     <TouchableOpacity

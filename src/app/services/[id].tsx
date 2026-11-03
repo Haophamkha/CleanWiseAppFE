@@ -242,7 +242,7 @@ export default function ServiceDetailScreen() {
               label={t(entry.label)}
               required={entry.required}
               value={values[entry.key]}
-              onPress={() => handleChooseAddress(entry.key, t(entry.label))}
+              onPress={() => handleChooseAddress(entry.key, entry.label)}
             />
           ))}
 
@@ -275,7 +275,7 @@ export default function ServiceDetailScreen() {
             <Text className="text-ink-soft text-sm">{t("Tạm tính")}</Text>
             <Text className="text-emerald-700 font-bold text-lg">
               {estimatedPrice != null
-                ? formatVnd(estimatedPrice)
+                ? formatVnd(estimatedPrice, t)
                 : t("Chưa đủ thông tin")}
             </Text>
           </View>

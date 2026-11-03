@@ -1,5 +1,6 @@
+import { translate as defaultTranslate } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { OVERLAY, RADIUS } from "@/constants/theme";
 import type { UserVoucher, Voucher } from "@/features/voucher/types/Voucher";
@@ -31,30 +32,30 @@ type Props = {
   onClaim?: (code: string) => Promise<boolean>;
 };
 
-function getLocalizedDistributionLabel(): Record<Voucher["distribution_type"], string> {
+function getLocalizedDistributionLabel(translateText = defaultTranslate): Record<Voucher["distribution_type"], string> {
   return {
-    PUBLIC: t("Voucher công khai"),
-    CODE_ONLY: t("Nhận bằng mã"),
-    ASSIGNED: t("Được cấp riêng"),
+    PUBLIC: translateText("Voucher công khai"),
+    CODE_ONLY: translateText("Nhận bằng mã"),
+    ASSIGNED: translateText("Được cấp riêng"),
   };
 }
 
-function getLocalizedLifecycleLabel(): Record<Voucher["lifecycle_status"], string> {
+function getLocalizedLifecycleLabel(translateText = defaultTranslate): Record<Voucher["lifecycle_status"], string> {
   return {
-    ACTIVE: t("Đang hoạt động"),
-    UPCOMING: t("Sắp diễn ra"),
-    EXPIRED: t("Đã hết hạn"),
-    EXHAUSTED: t("Đã hết lượt nhận"),
-    DISABLED: t("Đã ngừng hoạt động"),
+    ACTIVE: translateText("Đang hoạt động"),
+    UPCOMING: translateText("Sắp diễn ra"),
+    EXPIRED: translateText("Đã hết hạn"),
+    EXHAUSTED: translateText("Đã hết lượt nhận"),
+    DISABLED: translateText("Đã ngừng hoạt động"),
   };
 }
 
-function getLocalizedWalletStatusLabel(): Record<UserVoucher["status"], string> {
+function getLocalizedWalletStatusLabel(translateText = defaultTranslate): Record<UserVoucher["status"], string> {
   return {
-    AVAILABLE: t("Có thể sử dụng"),
-    RESERVED: t("Đang được giữ cho đơn dịch vụ"),
-    USED: t("Đã sử dụng"),
-    REVOKED: t("Đã thu hồi"),
+    AVAILABLE: translateText("Có thể sử dụng"),
+    RESERVED: translateText("Đang được giữ cho đơn dịch vụ"),
+    USED: translateText("Đã sử dụng"),
+    REVOKED: translateText("Đã thu hồi"),
   };
 }
 
@@ -174,7 +175,7 @@ export function VoucherDetailModal({
   const isPercent = voucher.discount_type === "PERCENT";
   const bigValue = isPercent
     ? `${Number(voucher.discount_value)}%`
-    : formatVoucherMoney(voucher.discount_value);
+    : formatVoucherMoney(voucher.discount_value, t);
   const daysLeft = getVoucherDaysLeft(voucher.end_at);
   const urgent = daysLeft >= 0 && daysLeft <= 3;
 
@@ -182,19 +183,19 @@ export function VoucherDetailModal({
     {
       icon: "calendar",
       label: t("Hiệu lực"),
-      value: `${formatVoucherDate(voucher.start_at)} - ${formatVoucherDate(voucher.end_at)}`,
+      value: `${formatVoucherDate(voucher.start_at, t)} - ${formatVoucherDate(voucher.end_at, t)}`,
     },
     {
       icon: "send",
       label: t("Hình thức phát hành"),
-      value: getLocalizedDistributionLabel()[voucher.distribution_type],
+      value: getLocalizedDistributionLabel(t)[voucher.distribution_type],
     },
     {
       icon: "activity",
       label: t("Trạng thái"),
       value: walletVoucher
-        ? getLocalizedWalletStatusLabel()[walletVoucher.status]
-        : getLocalizedLifecycleLabel()[voucher.lifecycle_status],
+        ? getLocalizedWalletStatusLabel(t)[walletVoucher.status]
+        : getLocalizedLifecycleLabel(t)[voucher.lifecycle_status],
     },
   ];
   if (voucher.remaining_issuance != null && !walletVoucher) {
@@ -208,7 +209,7 @@ export function VoucherDetailModal({
     rows.push({
       icon: "inbox",
       label: t("Nguồn nhận"),
-      value: getLocalizedVoucherSourceLabel()[walletVoucher.source],
+      value: getLocalizedVoucherSourceLabel(t)[walletVoucher.source],
     });
   }
 
@@ -449,14 +450,14 @@ export function VoucherDetailModal({
               <StatTile
                 icon="shopping-bag"
                 label={t("Đơn tối thiểu")}
-                value={formatVoucherMoney(voucher.min_order_amount)}
+                value={formatVoucherMoney(voucher.min_order_amount, t)}
               />
               <StatTile
                 icon="trending-down"
                 label={t("Giảm tối đa")}
                 value={
                   isPercent && voucher.max_discount_amount
-                    ? formatVoucherMoney(voucher.max_discount_amount)
+                    ? formatVoucherMoney(voucher.max_discount_amount, t)
                     : t("Không giới hạn")
                 }
               />

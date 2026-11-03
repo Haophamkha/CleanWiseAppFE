@@ -20,7 +20,7 @@ export function BookingHeader({
   const { COLORS } = useAppTheme();
 
   const insets = useSafeAreaInsets();
-  const statusMeta = getBookingStatusMeta(status, COLORS);
+  const statusMeta = getBookingStatusMeta(status, COLORS, t);
 
   return (
     <View

@@ -198,7 +198,7 @@ export function RepeatableItemsFooter({
                     )}
                     {itemPrice != null && (
                       <Text className="text-[13px] font-bold text-primary mt-1">
-                        {formatVnd(itemPrice)}
+                        {formatVnd(itemPrice, t)}
                       </Text>
                     )}
                   </View>
@@ -229,7 +229,7 @@ export function RepeatableItemsFooter({
                 hasItems ? "text-primary text-xl" : "text-ink-muted text-sm"
               }`}
             >
-              {hasItems ? formatVnd(totalPrice) : t("Chưa đủ thông tin")}
+              {hasItems ? formatVnd(totalPrice, t) : t("Chưa đủ thông tin")}
             </Text>
           </View>
 

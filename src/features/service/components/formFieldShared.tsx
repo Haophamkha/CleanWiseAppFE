@@ -1,5 +1,6 @@
+import { translate as defaultTranslate, getLocale } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { getLocale } from "@/features/language/i18n";
+
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 // src/components/service/formFieldShared.tsx
@@ -60,14 +61,14 @@ export function getSelectedOption(
 export function buildCaption(
   opt: FieldOption,
   isAdditive: boolean,
-  pricingConfig?: PricingConfig,
+  pricingConfig?: PricingConfig, translateText = defaultTranslate,
 ): string | undefined {
   const price = isAdditive
     ? pricingConfig?.additional_services?.[opt.value]
     : pricingConfig?.base_prices?.[opt.value];
 
   if (typeof price !== "number") return undefined;
-  return isAdditive ? `+${formatVnd(price)}` : formatVnd(price);
+  return isAdditive ? `+${formatVnd(price, translateText)}` : formatVnd(price, translateText);
 }
 
 // Ô chọn tròn: đã chọn = nền màu chính + dấu tích
@@ -417,7 +418,7 @@ export function WeekdayRow({
   value: string[];
   onChange: (v: string[]) => void;
 }) {
-  useTranslation();
+  const { t } = useTranslation();
   const weekdayCodes = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
   return (
     <View className="flex-row justify-between">
@@ -446,8 +447,8 @@ export function WeekdayRow({
                 isSelected ? "text-white" : "text-ink-muted"
               }`}
             >
-              {getLocale() === "en-US" && weekdayCodes.includes(opt.value)
-                ? new Date(2024, 0, 7 + weekdayCodes.indexOf(opt.value)).toLocaleDateString(getLocale(), { weekday: "short" })
+              {getLocale(t) === "en-US" && weekdayCodes.includes(opt.value)
+                ? new Date(2024, 0, 7 + weekdayCodes.indexOf(opt.value)).toLocaleDateString(getLocale(t), { weekday: "short" })
                 : opt.label.replace("Thứ ", "T")}
             </Text>
           </TouchableOpacity>
@@ -776,7 +777,7 @@ export function DateStripField({
   rangeDays?: number;
   onChange: (v: string) => void;
 }) {
-  useTranslation();
+  const { t } = useTranslation();
   const dates = buildDateRange(minDaysFromNow, rangeDays);
 
   return (
@@ -807,7 +808,7 @@ export function DateStripField({
                 selected ? "text-white/80" : "text-ink-muted"
               }`}
             >
-              {getLocale() === "en-US" ? d.toLocaleDateString(getLocale(), { weekday: "short" }) : VN_WEEKDAY_SHORT[d.getDay()]}
+              {getLocale(t) === "en-US" ? d.toLocaleDateString(getLocale(t), { weekday: "short" }) : VN_WEEKDAY_SHORT[d.getDay()]}
             </Text>
             <Text
               className={`text-[22px] font-extrabold my-0.5 ${
@@ -821,7 +822,7 @@ export function DateStripField({
                 selected ? "text-white/70" : "text-ink-muted"
               }`}
             >
-              {getLocale() === "en-US" ? d.toLocaleDateString(getLocale(), { month: "short" }) : `Th${d.getMonth() + 1}`}
+              {getLocale(t) === "en-US" ? d.toLocaleDateString(getLocale(t), { month: "short" }) : `Th${d.getMonth() + 1}`}
             </Text>
           </TouchableOpacity>
         );
@@ -907,6 +908,7 @@ export function FieldControl({
   pricingConfig?: PricingConfig;
   onChange: (v: any) => void;
 }) {
+  const { t } = useTranslation();
   const { mode: themeMode } = useAppTheme();
 
   const { COLORS } = useAppTheme();
@@ -924,7 +926,7 @@ export function FieldControl({
                 key={opt.value}
                 image={opt.image}
                 label={opt.label}
-                caption={buildCaption(opt, false, pricingConfig)}
+                caption={buildCaption(opt, false, pricingConfig, t)}
                 selected={value === opt.value}
                 onPress={() => onChange(opt.value)}
               />
@@ -939,7 +941,7 @@ export function FieldControl({
               key={opt.value}
               label={opt.label}
               description={opt.description}
-              caption={buildCaption(opt, false, pricingConfig)}
+              caption={buildCaption(opt, false, pricingConfig, t)}
               selected={value === opt.value}
               onPress={() => onChange(opt.value)}
             />
@@ -965,7 +967,7 @@ export function FieldControl({
                   image={opt.image}
                   label={opt.label}
                   description={opt.description}
-                  caption={buildCaption(opt, true, pricingConfig)}
+                  caption={buildCaption(opt, true, pricingConfig, t)}
                   selected={isSelected}
                   onPress={() => toggle(opt.value, isSelected)}
                 />
@@ -982,7 +984,7 @@ export function FieldControl({
               <Pill
                 key={opt.value}
                 label={opt.label}
-                caption={buildCaption(opt, true, pricingConfig)}
+                caption={buildCaption(opt, true, pricingConfig, t)}
                 selected={isSelected}
                 onPress={() => toggle(opt.value, isSelected)}
               />

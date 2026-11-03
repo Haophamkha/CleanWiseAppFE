@@ -1,3 +1,4 @@
+import { localizeAddressLabel } from "@/features/address/utils/addressLabel";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -37,7 +38,7 @@ export function AddressSummaryCard({
         </View>
         <View className="flex-1">
           <Text className="font-bold text-[15px] text-ink">
-            {address.label || t("Địa chỉ")}
+            {localizeAddressLabel(address.label, t) || t("Địa chỉ")}
           </Text>
           <Text className="text-[13px] leading-5 mt-0.5 text-ink-soft">
             {address.address_line}

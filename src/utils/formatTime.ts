@@ -1,29 +1,30 @@
-import { translate as t, getLocale } from "@/features/language/i18n";
-export function formatMessageTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString(getLocale(), {
+import { translate as defaultTranslate, getLocale } from "@/features/language/i18n";
+
+export function formatMessageTime(iso: string, translateText = defaultTranslate): string {
+  return new Date(iso).toLocaleTimeString(getLocale(translateText), {
     hour: "2-digit",
     minute: "2-digit",
   });
 }
 
-export function formatRelativeTime(iso: string): string {
+export function formatRelativeTime(iso: string, translateText = defaultTranslate): string {
   const date = new Date(iso);
   const diffMs = Date.now() - date.getTime();
   const diffMin = Math.floor(diffMs / 60000);
 
-  if (diffMin < 1) return t("Vừa xong");
-  if (diffMin < 60) return t("{{value0}} phút trước", { value0: diffMin , count: diffMin});
+  if (diffMin < 1) return translateText("Vừa xong");
+  if (diffMin < 60) return translateText("{{value0}} phút trước", { value0: diffMin , count: diffMin});
 
   const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return t("{{value0}} giờ trước", { value0: diffHour , count: diffHour});
+  if (diffHour < 24) return translateText("{{value0}} giờ trước", { value0: diffHour , count: diffHour});
 
   const diffDay = Math.floor(diffHour / 24);
-  if (diffDay < 7) return t("{{value0}} ngày trước", { value0: diffDay , count: diffDay});
+  if (diffDay < 7) return translateText("{{value0}} ngày trước", { value0: diffDay , count: diffDay});
 
-  return date.toLocaleDateString(getLocale());
+  return date.toLocaleDateString(getLocale(translateText));
 }
 
-export function formatScheduleRange(startIso: string, endIso: string): string {
+export function formatScheduleRange(startIso: string, endIso: string, translateText = defaultTranslate): string {
   const start = new Date(startIso);
   const end = new Date(endIso);
   const now = new Date();
@@ -34,14 +35,14 @@ export function formatScheduleRange(startIso: string, endIso: string): string {
     start.getDate() === now.getDate();
 
   const dayLabel = isSameDay
-    ? t("Hôm nay")
-    : start.toLocaleDateString(getLocale(), { day: "2-digit", month: "2-digit" });
+    ? translateText("Hôm nay")
+    : start.toLocaleDateString(getLocale(translateText), { day: "2-digit", month: "2-digit" });
 
-  const startTime = start.toLocaleTimeString(getLocale(), {
+  const startTime = start.toLocaleTimeString(getLocale(translateText), {
     hour: "2-digit",
     minute: "2-digit",
   });
-  const endTime = end.toLocaleTimeString(getLocale(), {
+  const endTime = end.toLocaleTimeString(getLocale(translateText), {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -49,13 +50,13 @@ export function formatScheduleRange(startIso: string, endIso: string): string {
   return `${dayLabel}, ${startTime} - ${endTime}`;
 }
 
-export function formatNotificationTime(iso: string): string {
+export function formatNotificationTime(iso: string, translateText = defaultTranslate): string {
   const date = new Date(iso);
   const now = new Date();
   const diffMin = Math.floor((now.getTime() - date.getTime()) / 60000);
 
-  if (diffMin < 1) return t("Vừa xong");
-  if (diffMin < 60) return t("{{value0}} phút trước", { value0: diffMin , count: diffMin});
+  if (diffMin < 1) return translateText("Vừa xong");
+  if (diffMin < 60) return translateText("{{value0}} phút trước", { value0: diffMin , count: diffMin});
 
   const startOfToday = new Date(
     now.getFullYear(),
@@ -67,17 +68,17 @@ export function formatNotificationTime(iso: string): string {
 
   if (date >= startOfToday) {
     const diffHour = Math.floor(diffMin / 60);
-    return t("{{value0}} giờ trước", { value0: diffHour , count: diffHour});
+    return translateText("{{value0}} giờ trước", { value0: diffHour , count: diffHour});
   }
   if (date >= startOfYesterday) {
-    return t("Hôm qua");
+    return translateText("Hôm qua");
   }
 
-  const time = date.toLocaleTimeString(getLocale(), {
+  const time = date.toLocaleTimeString(getLocale(translateText), {
     hour: "2-digit",
     minute: "2-digit",
   });
-  const day = date.toLocaleDateString(getLocale(), {
+  const day = date.toLocaleDateString(getLocale(translateText), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

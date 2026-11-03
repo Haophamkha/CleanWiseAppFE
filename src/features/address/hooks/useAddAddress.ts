@@ -38,7 +38,7 @@ export function useAddAddress() {
       }
     } catch (e) {
       form.setError(
-        getApiErrorMessage(e, t("Thêm địa chỉ thất bại, vui lòng thử lại")),
+        getApiErrorMessage(e, t("Thêm địa chỉ thất bại, vui lòng thử lại"), t),
       );
     }
   };
