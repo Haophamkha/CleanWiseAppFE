@@ -21,7 +21,7 @@ export function useChangePassword() {
       setError(t("Vui lòng nhập mật khẩu hiện tại"));
       return;
     }
-    const result = getLocalizedResetPasswordSchema().safeParse({
+    const result = getLocalizedResetPasswordSchema(t).safeParse({
       new_password: newPassword,
       new_password_confirm: confirmPassword,
     });
@@ -46,7 +46,7 @@ export function useChangePassword() {
       );
       router.back();
     } catch (e) {
-      setError(getApiErrorMessage(e, t("Đổi mật khẩu thất bại, thử lại.")));
+      setError(getApiErrorMessage(e, t("Đổi mật khẩu thất bại, thử lại."), t));
     }
   };
 

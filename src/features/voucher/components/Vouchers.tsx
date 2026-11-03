@@ -1,5 +1,6 @@
+import { translate as defaultTranslate } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { RequireLoginNotice } from "@/components/common/RequireLoginNotice";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
@@ -23,10 +24,10 @@ import {
   View,
 } from "react-native";
 
-function getLocalizedTabs(): { value: VoucherTab; label: string; icon: "compass" | "tag" }[] {
+function getLocalizedTabs(translateText = defaultTranslate): { value: VoucherTab; label: string; icon: "compass" | "tag" }[] {
   return [
-    { value: "discover", label: t("Khám phá"), icon: "compass" },
-    { value: "mine", label: t("Voucher của tôi"), icon: "tag" },
+    { value: "discover", label: translateText("Khám phá"), icon: "compass" },
+    { value: "mine", label: translateText("Voucher của tôi"), icon: "tag" },
   ];
 }
 
@@ -100,7 +101,7 @@ export function Vouchers() {
 
       {/* Tab */}
       <View className="mx-4 mt-4 mb-4 bg-line rounded-lg p-1 flex-row">
-        {getLocalizedTabs().map((tab) => {
+        {getLocalizedTabs(t).map((tab) => {
           const selected = v.activeTab === tab.value;
           return (
             <TouchableOpacity

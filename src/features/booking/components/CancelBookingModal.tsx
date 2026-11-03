@@ -1,5 +1,6 @@
+import { translate as defaultTranslate, translate as t } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
@@ -8,12 +9,12 @@ import { Feather } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
-function getLocalizedQuickReasons() {
+function getLocalizedQuickReasons(translateText = defaultTranslate) {
   return [
-    t("Tôi đổi lịch/kế hoạch"),
-    t("Đặt nhầm dịch vụ"),
-    t("Giá không phù hợp"),
-    t("Tìm được lựa chọn khác"),
+    translateText("Tôi đổi lịch/kế hoạch"),
+    translateText("Đặt nhầm dịch vụ"),
+    translateText("Giá không phù hợp"),
+    translateText("Tìm được lựa chọn khác"),
   ];
 }
 
@@ -93,7 +94,7 @@ export function CancelBookingModal({
         )}
 
         <View className="flex-row flex-wrap mt-4 mb-3" style={{ gap: 8 }}>
-          {getLocalizedQuickReasons().map((r) => {
+          {getLocalizedQuickReasons(t).map((r) => {
             const selected = reason === r;
             return (
               <TouchableOpacity

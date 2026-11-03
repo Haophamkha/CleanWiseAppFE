@@ -85,7 +85,7 @@ export function ChatbotHistorySheet({
                     status === 401 ||
                     status === 403 ||
                     status === 429
-                    ? chatbotErrorMessage(error)
+                    ? chatbotErrorMessage(error, t)
                     : t("Vui lòng kiểm tra kết nối và thử lại."),
                 );
                 return;
@@ -189,7 +189,7 @@ export function ChatbotHistorySheet({
                   {item.title || t("Cuộc trò chuyện mới")}
                 </Text>
                 <Text className="text-ink-muted text-xs mt-1">
-                  {new Date(item.updated_at).toLocaleDateString(getLocale())}
+                  {new Date(item.updated_at).toLocaleDateString(getLocale(t))}
                   {item.status === "CLOSED" ? t(" · Đã đóng") : ""}
                 </Text>
               </View>

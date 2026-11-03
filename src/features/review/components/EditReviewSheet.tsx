@@ -1,3 +1,4 @@
+import { localizeKnownMessage } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -116,10 +117,10 @@ export function EditReviewSheet({
           />
         )}
         <Text className="text-ink-muted text-xs leading-4 mt-4">
-          {t("Hạn chỉnh sửa:")}{" "}{formatReviewDate(review.edit_deadline)}{t(". Thời hạn được tính từ lần gửi đầu tiên.")}</Text>
+          {t("Hạn chỉnh sửa:")}{" "}{formatReviewDate(review.edit_deadline, t)}{t(". Thời hạn được tính từ lần gửi đầu tiên.")}</Text>
         {!!e.error && (
           <Text accessibilityRole="alert" className="text-danger text-sm mt-3">
-            {e.error}
+            {localizeKnownMessage(e.error, t)}
           </Text>
         )}
         {!editable && !e.error && (

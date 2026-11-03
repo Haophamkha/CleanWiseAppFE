@@ -1,5 +1,6 @@
+import { translate as defaultTranslate } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import {
     useGetMyVouchersQuery,
     useValidateVoucherMutation,
@@ -12,42 +13,42 @@ import type {
 import { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 
-function getLocalizedStatusReason(): Partial<Record<UserVoucher["status"], string>> {
+function getLocalizedStatusReason(translateText = defaultTranslate): Partial<Record<UserVoucher["status"], string>> {
   return {
-    RESERVED: t("Đang được giữ cho đơn dịch vụ khác"),
-    USED: t("Voucher đã được sử dụng"),
-    REVOKED: t("Voucher đã bị thu hồi"),
+    RESERVED: translateText("Đang được giữ cho đơn dịch vụ khác"),
+    USED: translateText("Voucher đã được sử dụng"),
+    REVOKED: translateText("Voucher đã bị thu hồi"),
   };
 }
 
 export function getUnavailableReason(
   item: UserVoucher,
-  subtotalAmount: number,
+  subtotalAmount: number, translateText = defaultTranslate,
 ) {
   if (item.status !== "AVAILABLE") {
-    return getLocalizedStatusReason()[item.status] ?? t("Voucher không khả dụng");
+    return getLocalizedStatusReason(translateText)[item.status] ?? translateText("Voucher không khả dụng");
   }
   if (item.voucher.lifecycle_status === "UPCOMING") {
-    return t("Voucher chưa đến thời gian sử dụng");
+    return translateText("Voucher chưa đến thời gian sử dụng");
   }
   if (item.voucher.lifecycle_status === "EXPIRED") {
-    return t("Voucher đã hết hạn");
+    return translateText("Voucher đã hết hạn");
   }
   if (item.voucher.lifecycle_status === "DISABLED") {
-    return t("Voucher đã ngừng hoạt động");
+    return translateText("Voucher đã ngừng hoạt động");
   }
   if (!item.is_usable) {
-    return t("Voucher hiện không khả dụng");
+    return translateText("Voucher hiện không khả dụng");
   }
 
   const minOrderAmount = Number(item.voucher.min_order_amount || 0);
   if (subtotalAmount < minOrderAmount) {
-    return t("Cần mua thêm {{value0}}", { value0: formatVoucherMoney(String(minOrderAmount - subtotalAmount)) });
+    return translateText("Cần mua thêm {{value0}}", { value0: formatVoucherMoney(String(minOrderAmount - subtotalAmount), translateText) });
   }
   return null;
 }
 
-function getErrorMessage(error: any) {
+function getErrorMessage(error: any, translateText = defaultTranslate) {
   const errors = error?.data?.errors ?? error?.data;
   const value =
     errors?.code ??
@@ -58,7 +59,7 @@ function getErrorMessage(error: any) {
   if (Array.isArray(value)) return value.join("\n");
   return typeof value === "string"
     ? value
-    : t("Không thể kiểm tra voucher. Vui lòng thử lại.");
+    : translateText("Không thể kiểm tra voucher. Vui lòng thử lại.");
 }
 
 type Params = {
@@ -106,8 +107,8 @@ export function useBookingVoucher({
   const sortedVouchers = useMemo(
     () =>
       [...walletVouchers].sort((left, right) => {
-        const leftDisabled = getUnavailableReason(left, subtotalAmount) ? 1 : 0;
-        const rightDisabled = getUnavailableReason(right, subtotalAmount)
+        const leftDisabled = getUnavailableReason(left, subtotalAmount, t) ? 1 : 0;
+        const rightDisabled = getUnavailableReason(right, subtotalAmount, t)
           ? 1
           : 0;
         return leftDisabled - rightDisabled;
@@ -144,7 +145,7 @@ export function useBookingVoucher({
       onApplied(selected, result);
       onClose();
     } catch (error) {
-      Alert.alert(t("Voucher không hợp lệ"), getErrorMessage(error));
+      Alert.alert(t("Voucher không hợp lệ"), getErrorMessage(error, t));
       refetch();
     }
   };

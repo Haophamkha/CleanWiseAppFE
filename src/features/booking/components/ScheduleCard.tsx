@@ -1,31 +1,32 @@
+import { translate as defaultTranslate } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Card } from "@/components/ui/Card";
 
 import { Feather } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 
-function getLocalizedWeekdays() {
+function getLocalizedWeekdays(translateText = defaultTranslate) {
   return [
-    t("Chủ nhật"),
-    t("Thứ hai"),
-    t("Thứ ba"),
-    t("Thứ tư"),
-    t("Thứ năm"),
-    t("Thứ sáu"),
-    t("Thứ bảy"),
+    translateText("Chủ nhật"),
+    translateText("Thứ hai"),
+    translateText("Thứ ba"),
+    translateText("Thứ tư"),
+    translateText("Thứ năm"),
+    translateText("Thứ sáu"),
+    translateText("Thứ bảy"),
   ];
 }
 const pad = (n: number) => String(n).padStart(2, "0");
-const fmtTime = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const fmtTime = (d: Date, translateText = defaultTranslate) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-function formatDuration(mins: number) {
+function formatDuration(mins: number, translateText = defaultTranslate) {
   const h = Math.floor(mins / 60);
   const m = mins % 60;
-  if (h && m) return t("{{value0}} giờ {{value1}} phút", { value0: h, value1: m });
-  if (h) return t("{{value0}} giờ", { value0: h });
-  return t("{{value0}} phút", { value0: m });
+  if (h && m) return translateText("{{value0}} giờ {{value1}} phút", { value0: h, value1: m });
+  if (h) return translateText("{{value0}} giờ", { value0: h });
+  return translateText("{{value0}} phút", { value0: m });
 }
 
 export function ScheduleCard({ start, end }: { start: string; end: string }) {
@@ -68,18 +69,18 @@ export function ScheduleCard({ start, end }: { start: string; end: string }) {
 
         <View className="flex-1 justify-center">
           <Text className="text-ink font-bold text-[16px]">
-            {getLocalizedWeekdays()[s.getDay()]}
+            {getLocalizedWeekdays(t)[s.getDay()]}
           </Text>
 
           <View className="flex-row items-center mt-2 self-start rounded-full bg-canvas px-3 py-1.5">
             <Feather name="clock" size={13} color={COLORS.primaryDark} />
             <Text className="text-ink text-[14px] font-bold ml-1.5">
-              {fmtTime(s)} – {fmtTime(e)}
+              {fmtTime(s, t)} – {fmtTime(e, t)}
             </Text>
           </View>
 
           <Text className="text-ink-muted text-[12.5px] mt-2">
-            {t("Thời lượng dự kiến")}{" "}{formatDuration(duration)}
+            {t("Thời lượng dự kiến")}{" "}{formatDuration(duration, t)}
           </Text>
         </View>
       </View>

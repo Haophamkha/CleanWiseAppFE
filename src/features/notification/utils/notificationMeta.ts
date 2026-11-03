@@ -1,4 +1,5 @@
-import { translate as t } from "@/features/language/i18n";
+import { translate as defaultTranslate } from "@/features/language/i18n";
+
 import type { ThemeColors } from "@/constants/theme";
 
 
@@ -36,38 +37,38 @@ export function getNotificationRoute(n: {
   return null;
 }
 
-export function getNotificationTypeMap(COLORS: ThemeColors): Record<string, NotificationTypeMeta> {
+export function getNotificationTypeMap(COLORS: ThemeColors, translateText = defaultTranslate): Record<string, NotificationTypeMeta> {
   return {
   BOOKING: {
-    label: t("Đơn dịch vụ"),
+    label: translateText("Đơn dịch vụ"),
     iconLibrary: "material-community",
     iconName: "calendar-check",
     iconBgColor: COLORS.primaryLight,
     iconColor: COLORS.primaryDark,
   },
   PAYMENT: {
-    label: t("Thanh toán"),
+    label: translateText("Thanh toán"),
     iconLibrary: "material-community",
     iconName: "wallet",
     iconBgColor: COLORS.successLight,
     iconColor: COLORS.success,
   },
   ASSIGNMENT: {
-    label: t("Phân công"),
+    label: translateText("Phân công"),
     iconLibrary: "material-community",
     iconName: "account-check",
     iconBgColor: COLORS.infoLight,
     iconColor: COLORS.info,
   },
   COMPLAINT: {
-    label: t("Khiếu nại"),
+    label: translateText("Khiếu nại"),
     iconLibrary: "material-community",
     iconName: "message-alert",
     iconBgColor: COLORS.dangerLight,
     iconColor: COLORS.danger,
   },
   SYSTEM: {
-    label: t("Hệ thống"),
+    label: translateText("Hệ thống"),
     iconLibrary: "material-community",
     iconName: "bell-ring",
     iconBgColor: COLORS.accentLight,
@@ -76,20 +77,20 @@ export function getNotificationTypeMap(COLORS: ThemeColors): Record<string, Noti
 };
 }
 
-export function getNotificationTypeMeta(type: string, COLORS: ThemeColors): NotificationTypeMeta {
-  const map = getNotificationTypeMap(COLORS);
+export function getNotificationTypeMeta(type: string, COLORS: ThemeColors, translateText = defaultTranslate): NotificationTypeMeta {
+  const map = getNotificationTypeMap(COLORS, translateText);
   return map[type] ?? map.SYSTEM;
 }
 
-export function getLocalizedNotificationFilterOptions(): {
+export function getLocalizedNotificationFilterOptions(translateText = defaultTranslate): {
   value: "ALL" | keyof ReturnType<typeof getNotificationTypeMap>;
   label: string;
 }[] {
   return [
-    { value: "ALL", label: t("Tất cả") },
-    { value: "BOOKING", label: t("Đơn dịch vụ") },
-    { value: "PAYMENT", label: t("Thanh toán") },
-    { value: "ASSIGNMENT", label: t("Phân công") },
-    { value: "COMPLAINT", label: t("Khiếu nại") },
+    { value: "ALL", label: translateText("Tất cả") },
+    { value: "BOOKING", label: translateText("Đơn dịch vụ") },
+    { value: "PAYMENT", label: translateText("Thanh toán") },
+    { value: "ASSIGNMENT", label: translateText("Phân công") },
+    { value: "COMPLAINT", label: translateText("Khiếu nại") },
   ];
 }

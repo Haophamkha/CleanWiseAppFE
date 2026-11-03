@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+import { localizeServiceField } from "@/features/service/utils/localizeService";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 // src/components/service/FormSchemaRenderer.tsx
 import type { FormField } from "@/features/service/types/Service";
@@ -19,11 +21,13 @@ export function FormSchemaRenderer({
   taskChecklist?: string;
   onChange: (key: string, value: any) => void;
 }) {
+  const { t } = useTranslation();
   const { COLORS } = useAppTheme();
 
   return (
     <View>
-      {fields.map((field) => {
+      {fields.map(rawField => {
+        const field = localizeServiceField(rawField, t);
         if (field.type === "TASK_CHECKLIST") {
           return <TaskChecklist key={field.key} content={taskChecklist} />;
         }

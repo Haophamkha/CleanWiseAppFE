@@ -164,14 +164,14 @@ export default function BookingConfirmScreen() {
 
             <PriceRow
               label={t("Giá dịch vụ{{value0}}", { value0: recurringPrice ? t(" ({{value0}} buổi)", { value0: recurringPrice.sessionsCount }) : "" })}
-              value={grossPrice != null ? formatVnd(grossPrice) : "—"}
+              value={grossPrice != null ? formatVnd(grossPrice, t) : "—"}
             />
             <PriceRow
               label={t("Giảm giá{{value0}}", { value0: recurringPrice && recurringPrice.discountPercent > 0
                   ? ` (${recurringPrice.discountPercent}%)`
                   : "" })}
               value={
-                discountAmount > 0 ? `-${formatVnd(discountAmount)}` : t("0đ")
+                discountAmount > 0 ? `-${formatVnd(discountAmount, t)}` : t("0đ")
               }
               accent={discountAmount > 0}
             />
@@ -179,7 +179,7 @@ export default function BookingConfirmScreen() {
             <View className="flex-row items-center justify-between border-t border-line pt-3 mt-1 mb-4">
               <Text className="font-bold text-ink-soft">{t("Tổng thanh toán")}</Text>
               <Text className="font-extrabold text-xl text-primary">
-                {totalAmount != null ? formatVnd(totalAmount) : "—"}
+                {totalAmount != null ? formatVnd(totalAmount, t) : "—"}
               </Text>
             </View>
 
@@ -201,7 +201,7 @@ export default function BookingConfirmScreen() {
                       numberOfLines={1}
                     >
                       {selectedVoucher.voucher.name}  {t("· Giảm")}{" "}
-                      {formatVnd(voucherDiscount)}
+                      {formatVnd(voucherDiscount, t)}
                     </Text>
                   </View>
                 </View>
@@ -303,7 +303,7 @@ export default function BookingConfirmScreen() {
                     numberOfLines={1}
                   >
                     {selectedWorker
-                      ? workerName(selectedWorker)
+                      ? workerName(selectedWorker, t)
                       : t("Chọn nhân viên")}
                   </Text>
                   {selectedWorker && (
@@ -400,7 +400,7 @@ export default function BookingConfirmScreen() {
         <View className="flex-row items-center justify-between mb-3">
           <Text className="text-ink-soft text-sm">{t("Tổng tiền")}</Text>
           <Text className="text-primary font-extrabold text-xl">
-            {totalAmount != null ? formatVnd(totalAmount) : t("Chờ báo giá")}
+            {totalAmount != null ? formatVnd(totalAmount, t) : t("Chờ báo giá")}
           </Text>
         </View>
         <TouchableOpacity

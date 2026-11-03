@@ -1,4 +1,5 @@
-import { getLocale } from "@/features/language/i18n";
+import { translate as defaultTranslate, getLocale } from "@/features/language/i18n";
+
 import type { ChatMessage } from "@/features/chat/types/chat";
 
 export type UiChatMessage = ChatMessage & {
@@ -51,26 +52,26 @@ export function mergeMessages(
 }
 
 // Hôm nay: hiện giờ. Ngày khác: hiện dd/MM
-export function formatConversationTime(iso: string) {
+export function formatConversationTime(iso: string, translateText = defaultTranslate) {
   const d = new Date(iso);
   if (d.toDateString() === new Date().toDateString()) {
-    return d.toLocaleTimeString(getLocale(), {
+    return d.toLocaleTimeString(getLocale(translateText), {
       hour: "2-digit",
       minute: "2-digit",
     });
   }
-  return d.toLocaleDateString(getLocale(), { day: "2-digit", month: "2-digit" });
+  return d.toLocaleDateString(getLocale(translateText), { day: "2-digit", month: "2-digit" });
 }
 
-export function formatMessageTime(iso: string) {
-  return new Date(iso).toLocaleTimeString(getLocale(), {
+export function formatMessageTime(iso: string, translateText = defaultTranslate) {
+  return new Date(iso).toLocaleTimeString(getLocale(translateText), {
     hour: "2-digit",
     minute: "2-digit",
   });
 }
 
-export function formatFullDateTime(iso: string) {
-  return new Date(iso).toLocaleString(getLocale(), {
+export function formatFullDateTime(iso: string, translateText = defaultTranslate) {
+  return new Date(iso).toLocaleString(getLocale(translateText), {
     hour: "2-digit",
     minute: "2-digit",
     day: "2-digit",

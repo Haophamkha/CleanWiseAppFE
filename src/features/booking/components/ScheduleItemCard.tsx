@@ -1,5 +1,6 @@
+import { translate as defaultTranslate, getLocale } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t, getLocale } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import type { BookingScheduleDetail } from "@/features/booking/types/Booking";
 
@@ -15,15 +16,15 @@ const canCancelSchedule = (startIso: string) =>
   new Date(startIso).getTime() - Date.now() >=
   CUSTOMER_MIN_CANCEL_HOURS * 60 * 60 * 1000;
 
-function getLocalizedWeekdayLabels() {
+function getLocalizedWeekdayLabels(translateText = defaultTranslate) {
   return [
-    t("Chủ nhật"),
-    t("Thứ 2"),
-    t("Thứ 3"),
-    t("Thứ 4"),
-    t("Thứ 5"),
-    t("Thứ 6"),
-    t("Thứ 7"),
+    translateText("Chủ nhật"),
+    translateText("Thứ 2"),
+    translateText("Thứ 3"),
+    translateText("Thứ 4"),
+    translateText("Thứ 5"),
+    translateText("Thứ 6"),
+    translateText("Thứ 7"),
   ];
 }
 
@@ -79,21 +80,21 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function formatDateRange(startIso: string, endIso: string) {
+function formatDateRange(startIso: string, endIso: string, translateText = defaultTranslate) {
   const start = new Date(startIso);
   const end = new Date(endIso);
 
-  const weekday = getLocalizedWeekdayLabels()[start.getDay()];
-  const dateStr = start.toLocaleDateString(getLocale(), {
+  const weekday = getLocalizedWeekdayLabels(translateText)[start.getDay()];
+  const dateStr = start.toLocaleDateString(getLocale(translateText), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
-  const startTime = start.toLocaleTimeString(getLocale(), {
+  const startTime = start.toLocaleTimeString(getLocale(translateText), {
     hour: "2-digit",
     minute: "2-digit",
   });
-  const endTime = end.toLocaleTimeString(getLocale(), {
+  const endTime = end.toLocaleTimeString(getLocale(translateText), {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -205,7 +206,7 @@ export function ScheduleItemCard({
 
   const { weekday, dateStr, startTime, endTime } = formatDateRange(
     schedule.scheduled_start,
-    schedule.scheduled_end,
+    schedule.scheduled_end, t,
   );
 
   return (

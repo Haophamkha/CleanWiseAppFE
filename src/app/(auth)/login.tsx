@@ -1,3 +1,4 @@
+import { localizeKnownMessage } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -96,7 +97,7 @@ export default function LoginScreen() {
             textAlign: "center",
           }}
         >
-          {error}
+          {localizeKnownMessage(error, t)}
         </Text>
       ) : null}
 

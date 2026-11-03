@@ -205,7 +205,7 @@ export function useChatbot(userId: number) {
         reconcile(latest.messages, next.id);
       } catch (error) {
         if (alive.current && version === generation.current)
-          setLoadError(chatbotErrorMessage(error));
+          setLoadError(chatbotErrorMessage(error, t));
       } finally {
         if (alive.current && version === generation.current) setLoading(false);
       }
@@ -249,7 +249,7 @@ export function useChatbot(userId: number) {
           stored?.conversation_id === next.id ? stored : null,
         );
     } catch (error) {
-      if (alive.current) setLoadError(chatbotErrorMessage(error));
+      if (alive.current) setLoadError(chatbotErrorMessage(error, t));
     } finally {
       if (alive.current) setLoading(false);
     }
@@ -318,7 +318,7 @@ export function useChatbot(userId: number) {
             setReplyError(
               chatbotErrorMessage({
                 data: { errors: { chatbot_error_code: result.run.error_code } },
-              }),
+              }, t),
             );
           }
           return;
@@ -333,8 +333,8 @@ export function useChatbot(userId: number) {
       if (!alive.current || version !== generation.current) return;
       if (pendingRef.current) {
         setPhase("failed");
-        setReplyError(chatbotErrorMessage(error));
-      } else setLoadError(chatbotErrorMessage(error));
+        setReplyError(chatbotErrorMessage(error, t));
+      } else setLoadError(chatbotErrorMessage(error, t));
     } finally {
       refreshing.current = false;
     }
@@ -452,16 +452,16 @@ export function useChatbot(userId: number) {
               reconcile(latest.messages, record.conversation_id);
             else {
               setPhase("failed");
-              setReplyError(chatbotErrorMessage(error));
+              setReplyError(chatbotErrorMessage(error, t));
             }
           } catch {
             // Keep the durable UUID for manual retry after reconnection.
             setPhase("failed");
-            if (alive.current) setReplyError(chatbotErrorMessage(error));
+            if (alive.current) setReplyError(chatbotErrorMessage(error, t));
           }
         } else {
           setPhase("failed");
-          setReplyError(chatbotErrorMessage(error));
+          setReplyError(chatbotErrorMessage(error, t));
         }
       } finally {
         busy.current = false;
@@ -495,7 +495,7 @@ export function useChatbot(userId: number) {
       setOlderPage(olderPage - 1);
     } catch (error) {
       if (alive.current && version === generation.current)
-        setLoadError(chatbotErrorMessage(error));
+        setLoadError(chatbotErrorMessage(error, t));
     } finally {
       if (alive.current) setLoadingOlder(false);
     }

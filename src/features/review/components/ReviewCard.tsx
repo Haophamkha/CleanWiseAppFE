@@ -33,13 +33,13 @@ export function ReviewCard({
         <ReviewStars rating={review.rating} />
       </View>
       <Text className="text-primary-dark font-semibold text-sm">
-        {review.service_name}
+        {t(review.service_name)}
       </Text>
       <Text className="text-ink-soft text-xs mt-1">
         {review.booking_code}  {t("· Buổi")} {review.schedule.sequence_no}
       </Text>
       <Text className="text-ink-muted text-xs mt-1">
-        {t("Ngày làm:")}{" "}{formatReviewDate(review.schedule.scheduled_start)}
+        {t("Ngày làm:")}{" "}{formatReviewDate(review.schedule.scheduled_start, t)}
       </Text>
       {!!review.comment && (
         <Text className="text-ink text-sm leading-5 mt-4">
@@ -77,13 +77,13 @@ export function ReviewCard({
           {t("Đánh giá đang được ẩn khỏi hiển thị công khai.")}</Text>
       )}
       <Text className="text-ink-muted text-xs mt-4">
-        {t("Đã gửi:")}{" "}{formatReviewDate(review.created_at)}
+        {t("Đã gửi:")}{" "}{formatReviewDate(review.created_at, t)}
         {review.is_edited ? t(" · Đã chỉnh sửa") : ""}
       </Text>
       <View className="mt-3 pt-3 border-t border-line">
         <Text className="text-ink-soft text-xs mb-3">
           {editable
-            ? t("Có thể sửa đến {{value0}}", { value0: formatReviewDate(review.edit_deadline) })
+            ? t("Có thể sửa đến {{value0}}", { value0: formatReviewDate(review.edit_deadline, t) })
             : t("Đã hết thời hạn chỉnh sửa")}
         </Text>
         {editable && (

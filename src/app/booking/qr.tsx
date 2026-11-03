@@ -1,5 +1,6 @@
+import { translate as defaultTranslate } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { Card } from "@/components/ui/Card";
@@ -21,11 +22,11 @@ import {
 import QRCode from "react-native-qrcode-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-function getLocalizedSteps() {
+function getLocalizedSteps(translateText = defaultTranslate) {
   return [
-    t("Chọn app ngân hàng của bạn ở bên dưới (hoặc nhấn “Mở trang thanh toán”)"),
-    t("Kiểm tra số tiền và nội dung chuyển khoản"),
-    t("Xác nhận thanh toán trong app ngân hàng"),
+    translateText("Chọn app ngân hàng của bạn ở bên dưới (hoặc nhấn “Mở trang thanh toán”)"),
+    translateText("Kiểm tra số tiền và nội dung chuyển khoản"),
+    translateText("Xác nhận thanh toán trong app ngân hàng"),
   ];
 }
 
@@ -290,11 +291,11 @@ export default function BookingQrScreen() {
           <Text className="font-bold text-[14px] text-ink mb-3">
             {t("Hướng dẫn thanh toán")}</Text>
 
-          {getLocalizedSteps().map((text, i) => (
+          {getLocalizedSteps(t).map((text, i) => (
             <View
               key={i}
               className={`flex-row items-center ${
-                i === getLocalizedSteps().length - 1 ? "" : "mb-3"
+                i === getLocalizedSteps(t).length - 1 ? "" : "mb-3"
               }`}
             >
               <View className="w-7 h-7 rounded-full bg-primary-light items-center justify-center mr-3">

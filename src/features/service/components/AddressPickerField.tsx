@@ -1,3 +1,4 @@
+import { localizeAddressLabel } from "@/features/address/utils/addressLabel";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -58,7 +59,7 @@ export function AddressPickerField({
                   className="font-bold text-[14px]"
                   style={{ color: COLORS.primary }}
                 >
-                  {value.label || t("Địa chỉ")}
+                  {localizeAddressLabel(value.label, t) || t("Địa chỉ")}
                 </Text>
               </View>
               <Text

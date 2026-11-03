@@ -47,7 +47,7 @@ export function useForgotPassword() {
   }, [resendAt]);
 
   const sendCode = async () => {
-    const result = getLocalizedForgotPasswordSchema().safeParse({ email: cleanEmail });
+    const result = getLocalizedForgotPasswordSchema(t).safeParse({ email: cleanEmail });
     if (!result.success) {
       setError(result.error.issues[0].message);
       return;
@@ -59,7 +59,7 @@ export function useForgotPassword() {
       setResendAt(Date.now() + RESEND_SECONDS * 1000);
       showSuccessToast(t("Đã gửi mã xác nhận"), t("Kiểm tra email của bạn"));
     } catch (e) {
-      setError(getApiErrorMessage(e, t("Không gửi được mã, thử lại sau.")));
+      setError(getApiErrorMessage(e, t("Không gửi được mã, thử lại sau."), t));
     }
   };
 
@@ -74,13 +74,13 @@ export function useForgotPassword() {
       setStep("reset");
     } catch (e) {
       setError(
-        getApiErrorMessage(e, t("Mã xác nhận không đúng hoặc đã hết hạn.")),
+        getApiErrorMessage(e, t("Mã xác nhận không đúng hoặc đã hết hạn."), t),
       );
     }
   };
 
   const submitNewPassword = async () => {
-    const result = getLocalizedResetPasswordSchema().safeParse({
+    const result = getLocalizedResetPasswordSchema(t).safeParse({
       new_password: newPassword,
       new_password_confirm: confirmPassword,
     });
@@ -98,7 +98,7 @@ export function useForgotPassword() {
       }).unwrap();
       setStep("done");
     } catch (e) {
-      setError(getApiErrorMessage(e, t("Đặt lại mật khẩu thất bại, thử lại.")));
+      setError(getApiErrorMessage(e, t("Đặt lại mật khẩu thất bại, thử lại."), t));
     }
   };
 

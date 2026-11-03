@@ -1,5 +1,6 @@
+import { translate as defaultTranslate } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { RADIUS, SHADOWS } from "@/constants/theme";
 import {
@@ -28,18 +29,18 @@ const HERO_OVERLAP = 28;
 const THUMB = 92;
 
 // Thứ tự cố định 3 nhóm ảnh minh chứng — luôn hiện đủ, kể cả khi chưa có ảnh
-function getLocalizedImageGroups(): {
+function getLocalizedImageGroups(translateText = defaultTranslate): {
   type: string;
   label: string;
   icon: IconName;
   danger?: boolean;
 }[] {
   return [
-    { type: "BEFORE", label: t("Trước khi làm"), icon: "sunrise" },
-    { type: "AFTER", label: t("Sau khi làm"), icon: "sunset" },
+    { type: "BEFORE", label: translateText("Trước khi làm"), icon: "sunrise" },
+    { type: "AFTER", label: translateText("Sau khi làm"), icon: "sunset" },
     {
       type: "ISSUE",
-      label: t("Báo cáo sự cố"),
+      label: translateText("Báo cáo sự cố"),
       icon: "alert-triangle",
       danger: true,
     },
@@ -704,7 +705,7 @@ export function ScheduleDetail() {
 
           {/* Ảnh minh chứng — luôn hiện đủ 3 nhóm: trước / sau / sự cố */}
           <Card title={t("Ảnh minh chứng")} icon="camera">
-            {getLocalizedImageGroups().map((g) => (
+            {getLocalizedImageGroups(t).map((g) => (
               <ImageGroup
                 key={g.type}
                 icon={g.icon}

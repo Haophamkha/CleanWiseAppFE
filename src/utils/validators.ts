@@ -1,60 +1,61 @@
-import { translate as t } from "@/features/language/i18n";
+import { translate as defaultTranslate } from "@/features/language/i18n";
+
 import type { FormField } from "@/features/service/types/Service";
 import { z } from "zod";
 
 const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
-function getLocalizedPasswordRule() {
+function getLocalizedPasswordRule(translateText = defaultTranslate) {
   return z
     .string()
-    .min(8, t("Mật khẩu tối thiểu 8 ký tự"))
-    .regex(/[A-Z]/, t("Mật khẩu cần ít nhất 1 chữ hoa"))
-    .regex(/[0-9]/, t("Mật khẩu cần ít nhất 1 chữ số"));
+    .min(8, translateText("Mật khẩu tối thiểu 8 ký tự"))
+    .regex(/[A-Z]/, translateText("Mật khẩu cần ít nhất 1 chữ hoa"))
+    .regex(/[0-9]/, translateText("Mật khẩu cần ít nhất 1 chữ số"));
 }
 
-export function getLocalizedLoginSchema() {
+export function getLocalizedLoginSchema(translateText = defaultTranslate) {
   return z.object({
     phone: z
       .string()
-      .min(1, t("Vui lòng nhập số điện thoại"))
-      .regex(phoneRegex, t("Số điện thoại không hợp lệ")),
-    password: z.string().min(1, t("Vui lòng nhập mật khẩu")),
+      .min(1, translateText("Vui lòng nhập số điện thoại"))
+      .regex(phoneRegex, translateText("Số điện thoại không hợp lệ")),
+    password: z.string().min(1, translateText("Vui lòng nhập mật khẩu")),
   });
 }
 
-export function getLocalizedRegisterSchema() {
+export function getLocalizedRegisterSchema(translateText = defaultTranslate) {
   return z
     .object({
       username: z
         .string()
-        .min(3, t("Tên đăng nhập tối thiểu 3 ký tự"))
-        .regex(/^[a-zA-Z0-9_]+$/, t("Chỉ dùng chữ, số và dấu gạch dưới")),
-      email: z.string().min(1, t("Vui lòng nhập email")).email(t("Email không hợp lệ")),
-      first_name: z.string().min(1, t("Vui lòng nhập họ")),
-      last_name: z.string().min(1, t("Vui lòng nhập tên")),
-      phone_number: z.string().regex(phoneRegex, t("Số điện thoại không hợp lệ")),
-      password: getLocalizedPasswordRule(),
-      password_confirm: z.string().min(1, t("Vui lòng xác nhận mật khẩu")),
+        .min(3, translateText("Tên đăng nhập tối thiểu 3 ký tự"))
+        .regex(/^[a-zA-Z0-9_]+$/, translateText("Chỉ dùng chữ, số và dấu gạch dưới")),
+      email: z.string().min(1, translateText("Vui lòng nhập email")).email(translateText("Email không hợp lệ")),
+      first_name: z.string().min(1, translateText("Vui lòng nhập họ")),
+      last_name: z.string().min(1, translateText("Vui lòng nhập tên")),
+      phone_number: z.string().regex(phoneRegex, translateText("Số điện thoại không hợp lệ")),
+      password: getLocalizedPasswordRule(translateText),
+      password_confirm: z.string().min(1, translateText("Vui lòng xác nhận mật khẩu")),
     })
     .refine((data) => data.password === data.password_confirm, {
-      message: t("Mật khẩu xác nhận không khớp"),
+      message: translateText("Mật khẩu xác nhận không khớp"),
       path: ["password_confirm"],
     });
 }
 
-export function getLocalizedForgotPasswordSchema() {
+export function getLocalizedForgotPasswordSchema(translateText = defaultTranslate) {
   return z.object({
-    email: z.string().min(1, t("Vui lòng nhập email")).email(t("Email không hợp lệ")),
+    email: z.string().min(1, translateText("Vui lòng nhập email")).email(translateText("Email không hợp lệ")),
   });
 }
 
-export function getLocalizedResetPasswordSchema() {
+export function getLocalizedResetPasswordSchema(translateText = defaultTranslate) {
   return z
     .object({
-      new_password: getLocalizedPasswordRule(),
-      new_password_confirm: z.string().min(1, t("Vui lòng xác nhận mật khẩu mới")),
+      new_password: getLocalizedPasswordRule(translateText),
+      new_password_confirm: z.string().min(1, translateText("Vui lòng xác nhận mật khẩu mới")),
     })
     .refine((data) => data.new_password === data.new_password_confirm, {
-      message: t("Mật khẩu xác nhận không khớp"),
+      message: translateText("Mật khẩu xác nhận không khớp"),
       path: ["new_password_confirm"],
     });
 }

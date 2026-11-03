@@ -53,7 +53,7 @@ export function useHome() {
   const services = useMemo(() => {
     const list = servicesQ.data ?? [];
     const q = normalize(query.trim());
-    return q ? list.filter((s) => normalize(s.name).includes(q)) : list;
+    return q ? list.filter((s) => normalize(t(s.name)).includes(q)) : list;
   }, [servicesQ.data, query, t]);
 
   const vouchers = useMemo(

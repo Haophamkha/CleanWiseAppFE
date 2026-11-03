@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { ROUTES } from "@/config/constants";
 import {
   useCreatePaymentLinkMutation,
@@ -16,6 +17,7 @@ const formatCountdown = (sec: number) =>
   `${Math.floor(sec / 60)}:${(sec % 60).toString().padStart(2, "0")}`;
 
 export function useBookingPayment() {
+  const { t } = useTranslation();
   const { bookingId, code } = useLocalSearchParams<{
     bookingId: string;
     code: string;
@@ -137,7 +139,7 @@ export function useBookingPayment() {
     isUrgent: secondsLeft <= 60 && !expired,
     countdownText: formatCountdown(secondsLeft),
     totalText: booking?.total_amount
-      ? formatVnd(Number(booking.total_amount))
+      ? formatVnd(Number(booking.total_amount), t)
       : "—",
     showQr,
     toggleQr: () => setShowQr((v) => !v),

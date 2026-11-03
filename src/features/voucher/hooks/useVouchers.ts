@@ -1,5 +1,6 @@
+import { translate as defaultTranslate } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import {
     useClaimVoucherByCodeMutation,
     useGetMyVouchersQuery,
@@ -17,13 +18,13 @@ export type SelectedVoucher = {
   walletVoucher?: UserVoucher;
 };
 
-const getApiErrorMessage = (error: any) => {
+const getApiErrorMessage = (error: any, translateText = defaultTranslate) => {
   const errors = error?.data?.errors;
   const fieldError =
     errors?.code ?? errors?.voucher ?? errors?.non_field_errors;
   if (Array.isArray(fieldError)) return fieldError[0];
   if (typeof fieldError === "string") return fieldError;
-  return error?.data?.message ?? t("Không thể nhận voucher. Vui lòng thử lại.");
+  return error?.data?.message ?? translateText("Không thể nhận voucher. Vui lòng thử lại.");
 };
 
 export function useVouchers() {
@@ -71,7 +72,7 @@ export function useVouchers() {
       );
       return true;
     } catch (error) {
-      showErrorToast(t("Không thể nhận voucher"), getApiErrorMessage(error));
+      showErrorToast(t("Không thể nhận voucher"), getApiErrorMessage(error, t));
       return false;
     } finally {
       setClaimingCode(null);
