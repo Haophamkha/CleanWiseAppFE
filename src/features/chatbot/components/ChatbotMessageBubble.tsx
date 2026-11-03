@@ -64,8 +64,8 @@ export function ChatbotMessageBubble({
         ? t("Bạn có thể xem chi tiết các thông tin vừa tra cứu bên dưới:")
         : cardTypes.has("booking")
           ? singleCard
-            ? t("Bạn có thể xem chi tiết đơn hàng này bên dưới:")
-            : t("Dưới đây là các đơn hàng gần đây của bạn:")
+            ? t("Bạn có thể xem chi tiết đơn dịch vụ này bên dưới:")
+            : t("Dưới đây là các đơn dịch vụ gần đây của bạn:")
           : cardTypes.has("schedule")
             ? singleCard
               ? t("Bạn có thể xem chi tiết buổi dịch vụ này bên dưới:")

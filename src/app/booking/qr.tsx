@@ -92,7 +92,7 @@ export default function BookingQrScreen() {
   return (
     <View className="flex-1 bg-canvas">
       <View className="bg-surface" style={{ paddingTop: insets.top }}>
-        <ScreenHeader title={t("Thanh toán đơn hàng")} />
+        <ScreenHeader title={t("Thanh toán đơn dịch vụ")} />
       </View>
 
       <ScrollView

@@ -1,9 +1,7 @@
-import { useTranslation } from "react-i18next";
+import { ROUTES } from "@/config/constants";
 import { translate as t } from "@/features/language/i18n";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
-// components/common/RequireLoginNotice.tsx
-import { Button } from "@/components/ui";
-import { ROUTES } from "@/config/constants";
+import { useTranslation } from "react-i18next";
 
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -17,34 +15,65 @@ export function RequireLoginNotice({
   message = t("Đăng nhập để xem đầy đủ thông tin của bạn"),
 }: Props) {
   const { t } = useTranslation();
-
-  const { COLORS } = useAppTheme();
+  const { COLORS, SHADOWS } = useAppTheme();
 
   return (
-    <View className="bg-surface rounded-xl border border-line items-center px-6 py-7 mb-5">
-      <View className="w-16 h-16 rounded-full bg-primary-light items-center justify-center mb-4">
-        <Feather name="user" size={26} color={COLORS.primary} />
+    <View
+      className="bg-surface border border-line items-center mb-6"
+      style={[
+        { borderRadius: 28, paddingHorizontal: 24, paddingVertical: 28 },
+        SHADOWS.card,
+      ]}
+    >
+      <View
+        className="bg-primary-light items-center justify-center"
+        style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 16 }}
+      >
+        <Feather name="user" size={32} color={COLORS.primary} />
       </View>
-      <Text className="text-lg font-bold text-ink mb-1">
-        {t("Bạn chưa đăng nhập")}</Text>
-      <Text className="text-sm text-ink-soft text-center leading-5">
+      <Text
+        className="font-bold text-ink"
+        style={{ fontSize: 20, lineHeight: 26, marginBottom: 6 }}
+      >
+        {t("Bạn chưa đăng nhập")}
+      </Text>
+      <Text
+        className="text-ink-soft text-center"
+        style={{ fontSize: 14, lineHeight: 21 }}
+      >
         {message}
       </Text>
 
-      <View className="flex-row w-full mt-6" style={{ gap: 12 }}>
+      <View className="flex-row w-full" style={{ gap: 12, marginTop: 24 }}>
         <TouchableOpacity
-          className="flex-1 rounded-xl py-3.5 items-center justify-center bg-primary-soft border border-primary-border"
+          className="flex-1 items-center justify-center bg-primary-soft border border-primary-border"
+          style={{ borderRadius: 999, height: 50 }}
           onPress={() => router.push(ROUTES.REGISTER as any)}
           activeOpacity={0.8}
         >
-          <Text className="font-semibold text-sm text-primary-dark">
-            {t("Đăng ký")}</Text>
+          <Text
+            className="font-semibold text-primary-dark"
+            style={{ fontSize: 15 }}
+          >
+            {t("Đăng ký")}
+          </Text>
         </TouchableOpacity>
-        <Button
-          title={t("Đăng nhập")}
+        <TouchableOpacity
+          className="flex-1 items-center justify-center"
+          style={[
+            { borderRadius: 999, height: 50, backgroundColor: COLORS.primary },
+            SHADOWS.float,
+          ]}
           onPress={() => router.push(ROUTES.LOGIN as any)}
-          className="flex-1"
-        />
+          activeOpacity={0.85}
+        >
+          <Text
+            className="font-semibold"
+            style={{ fontSize: 15, color: COLORS.white }}
+          >
+            {t("Đăng nhập")}
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );

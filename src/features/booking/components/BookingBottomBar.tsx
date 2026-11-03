@@ -25,7 +25,7 @@ export function BookingBottomBar({ onCancel }: { onCancel?: () => void }) {
       >
         <Feather name="x-circle" size={17} color={COLORS.danger} />
         <Text className="font-bold text-[14px] text-danger ml-2">
-          {t("Hủy đơn hàng")}</Text>
+          {t("Hủy đơn dịch vụ")}</Text>
       </TouchableOpacity>
     </View>
   );

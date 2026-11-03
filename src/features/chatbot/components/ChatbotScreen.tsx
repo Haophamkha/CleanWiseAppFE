@@ -342,7 +342,7 @@ export function ChatbotScreen() {
       <View className="flex-1 bg-canvas">
         <ChatbotHeader />
         <View className="flex-1 justify-center px-5">
-          <RequireLoginNotice message={t("Đăng nhập để trò chuyện với trợ lý và tra cứu đơn hàng, lịch dịch vụ của bạn.")} />
+          <RequireLoginNotice message={t("Đăng nhập để trò chuyện với trợ lý và tra cứu đơn dịch vụ, lịch dịch vụ của bạn.")} />
         </View>
       </View>
     );

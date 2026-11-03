@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
 
-import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { RequireLoginNotice } from "@/components/common/RequireLoginNotice";
 import { TabScreenHeader } from "@/components/common/TabScreenHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 
 import { BookingCard } from "@/features/booking/components/BookingCard";
 import { BookingStatusTabs } from "@/features/booking/components/BookingStatusTabs";
@@ -70,7 +70,11 @@ export default function BookingScreen() {
 
       {!isAuthenticated ? (
         <View className="flex-1 justify-center px-5 pb-16">
-          <RequireLoginNotice message={t("Đăng nhập để xem và quản lý các đơn hàng dịch vụ của bạn")} />
+          <RequireLoginNotice
+            message={t(
+              "Đăng nhập để xem và quản lý các đơn dịch vụ dịch vụ của bạn",
+            )}
+          />
         </View>
       ) : (
         <View className="flex-1">
@@ -92,7 +96,8 @@ export default function BookingScreen() {
                   size={18}
                   color={focused ? COLORS.primary : COLORS.inkMuted}
                 />
-                <TextInput keyboardAppearance={themeMode}
+                <TextInput
+                  keyboardAppearance={themeMode}
                   value={query}
                   onChangeText={setQuery}
                   onFocus={() => setFocused(true)}
@@ -130,7 +135,7 @@ export default function BookingScreen() {
             <View className="flex-1 justify-center">
               <EmptyState
                 icon="alert-triangle"
-                title={t("Không tải được danh sách đơn hàng")}
+                title={t("Không tải được danh sách đơn dịch vụ")}
                 actionLabel={t("Thử lại")}
                 onAction={refresh}
               />
@@ -144,7 +149,7 @@ export default function BookingScreen() {
               keyboardDismissMode="on-drag"
               contentContainerStyle={{
                 padding: 20,
-                paddingBottom: 100 + insets.bottom,
+                paddingBottom: 40,
               }}
               refreshControl={
                 <RefreshControl
@@ -169,7 +174,9 @@ export default function BookingScreen() {
                     title={
                       q
                         ? t("Không tìm thấy đơn phù hợp")
-                        : t("Chưa có đơn hàng nào. Các đơn dịch vụ bạn đặt sẽ hiển thị ở đây.")
+                        : t(
+                            "Chưa có đơn dịch vụ nào. Các đơn dịch vụ bạn đặt sẽ hiển thị ở đây.",
+                          )
                     }
                   />
                 </View>

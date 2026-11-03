@@ -14,7 +14,7 @@ import { Alert } from "react-native";
 
 function getLocalizedStatusReason(): Partial<Record<UserVoucher["status"], string>> {
   return {
-    RESERVED: t("Đang được giữ cho đơn hàng khác"),
+    RESERVED: t("Đang được giữ cho đơn dịch vụ khác"),
     USED: t("Voucher đã được sử dụng"),
     REVOKED: t("Voucher đã bị thu hồi"),
   };
@@ -136,7 +136,7 @@ export function useBookingVoucher({
       if (Number(result.total_amount) <= 0) {
         Alert.alert(
           t("Chưa thể áp dụng voucher"),
-          t("Hệ thống hiện chưa hỗ trợ đơn hàng có tổng thanh toán bằng 0đ."),
+          t("Hệ thống hiện chưa hỗ trợ đơn dịch vụ có tổng thanh toán bằng 0đ."),
         );
         return;
       }

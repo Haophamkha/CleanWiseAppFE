@@ -1,8 +1,9 @@
 import { useTranslation } from "react-i18next";
 
+import { TabScreenHeader } from "@/components/common/TabScreenHeader";
 import { Avatar } from "@/components/ui";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   isAuthenticated: boolean;
@@ -18,26 +19,45 @@ export function ProfileHeader({
   avatar,
 }: Props) {
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
+  const { COLORS, SHADOWS } = useAppTheme();
 
   return (
-    <View style={{ paddingTop: insets.top + 12, paddingHorizontal: 20 }}>
-      <Text className="font-bold text-ink" style={{ fontSize: 24, lineHeight: 30 }}>
-        {t("Tài khoản")}
-      </Text>
-      <View className="flex-row items-center" style={{ marginTop: 14 }}>
-        <Avatar uri={avatar} size={48} />
-        <View className="flex-1 ml-3">
-          <Text className="font-bold text-ink" style={{ fontSize: 16, lineHeight: 22 }} numberOfLines={1}>
+    <TabScreenHeader title={t("Tài khoản")}>
+      <View
+        className="flex-row items-center"
+        style={{ marginTop: 18, marginBottom: 8 }}
+      >
+        <View
+          style={[
+            {
+              padding: 4,
+              borderRadius: 999,
+              backgroundColor: COLORS.white,
+            },
+            SHADOWS.card,
+          ]}
+        >
+          <Avatar uri={avatar} size={72} />
+        </View>
+        <View className="flex-1 ml-4">
+          <Text
+            className="font-extrabold text-ink"
+            style={{ fontSize: 22, lineHeight: 28 }}
+            numberOfLines={1}
+          >
             {name}
           </Text>
           {subtitle ? (
-            <Text className="text-ink-soft mt-0.5" style={{ fontSize: 12, lineHeight: 18 }} numberOfLines={isAuthenticated ? 1 : 2}>
+            <Text
+              className="text-ink-soft"
+              style={{ fontSize: 14, lineHeight: 20, marginTop: 2 }}
+              numberOfLines={isAuthenticated ? 1 : 2}
+            >
               {subtitle}
             </Text>
           ) : null}
         </View>
       </View>
-    </View>
+    </TabScreenHeader>
   );
 }

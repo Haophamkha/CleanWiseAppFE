@@ -52,7 +52,7 @@ function getLocalizedLifecycleLabel(): Record<Voucher["lifecycle_status"], strin
 function getLocalizedWalletStatusLabel(): Record<UserVoucher["status"], string> {
   return {
     AVAILABLE: t("Có thể sử dụng"),
-    RESERVED: t("Đang được giữ cho đơn hàng"),
+    RESERVED: t("Đang được giữ cho đơn dịch vụ"),
     USED: t("Đã sử dụng"),
     REVOKED: t("Đã thu hồi"),
   };
@@ -528,7 +528,7 @@ export function VoucherDetailModal({
                   color: COLORS.accentDark,
                 }}
               >
-                {t("Mỗi tài khoản chỉ nhận voucher này một lần. Voucher chỉ áp dụng khi đơn hàng đáp ứng đủ điều kiện.")}</Text>
+                {t("Mỗi tài khoản chỉ nhận voucher này một lần. Voucher chỉ áp dụng khi đơn dịch vụ đáp ứng đủ điều kiện.")}</Text>
             </View>
           </ScrollView>
 

@@ -1,27 +1,26 @@
 import { useTranslation } from "react-i18next";
 
-import { useAppTheme } from "@/features/theme/ThemeProvider";
 import {
-    BRAND_COLORS,
-    BrandIcon,
-    type BrandName,
+  BRAND_COLORS,
+  BrandIcon,
+  type BrandName,
 } from "@/components/common/BrandIcon";
 import { MenuGroup } from "@/components/common/MenuGroup";
 import { MenuListItem } from "@/components/common/MenuListItem";
 import { getLocalizedAppInfo } from "@/config/appInfo";
 import { ROUTES } from "@/config/constants";
-import { ON_DARK, RADIUS, SHADOWS } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Feather } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import {
-    Linking,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  Linking,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -32,198 +31,232 @@ const goBack = () => {
   else router.replace(ROUTES.HOME as any);
 };
 
-const CARD = [{ borderRadius: RADIUS.card }, SHADOWS.card] as const;
-
-function ChannelTile({
+function ChannelItem({
   brand,
   label,
   onPress,
-  isFirst,
 }: {
   brand: BrandName;
   label: string;
   onPress: () => void;
-  isFirst?: boolean;
 }) {
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.8}
-      className="flex-1 bg-surface items-center py-3.5"
-      style={[...CARD, { marginLeft: isFirst ? 0 : 10 }]}
+      activeOpacity={0.7}
+      className="flex-1 items-center"
+      style={{ paddingVertical: 16 }}
     >
       <View
-        className="w-12 h-12 rounded-2xl items-center justify-center"
-        style={{ backgroundColor: `${BRAND_COLORS[brand]}1A` }}
+        className="items-center justify-center"
+        style={{
+          width: 48,
+          height: 48,
+          borderRadius: 24,
+          backgroundColor: `${BRAND_COLORS[brand]}1A`,
+        }}
       >
-        <BrandIcon name={brand} size={26} />
+        <BrandIcon name={brand} size={24} />
       </View>
-      <Text className="text-xs font-semibold text-ink mt-2">{label}</Text>
+      <Text
+        className="text-ink font-semibold"
+        style={{ fontSize: 12, marginTop: 8 }}
+      >
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 }
 
 export default function AboutScreen() {
   const { t } = useTranslation();
-
-  const { COLORS } = useAppTheme();
-
+  const { COLORS, SHADOWS, GRADIENTS, isDark } = useAppTheme();
   const insets = useSafeAreaInsets();
+  const info = getLocalizedAppInfo();
   const version = Constants.expoConfig?.version ?? "1.0.0";
 
   return (
     <View className="flex-1 bg-canvas">
-      <StatusBar style="light" />
+      <StatusBar style={isDark ? "light" : "dark"} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingBottom: Math.max(insets.bottom, 16) + 32,
         }}
       >
-        {/* Hero đậm để chữ trắng đọc rõ */}
+        {/* Header gradient mint */}
         <LinearGradient
-          colors={[COLORS.primaryFill, COLORS.primaryFillDark]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          colors={GRADIENTS.hero}
           style={{
             paddingTop: insets.top + 8,
-            paddingBottom: 64,
+            paddingBottom: 32,
             paddingHorizontal: 20,
-            borderBottomLeftRadius: RADIUS.hero,
-            borderBottomRightRadius: RADIUS.hero,
-            overflow: "hidden",
           }}
         >
-          {/* Vòng tròn trang trí */}
-          <View
-            pointerEvents="none"
-            style={{
-              position: "absolute",
-              top: -60,
-              right: -50,
-              width: 200,
-              height: 200,
-              borderRadius: 100,
-              backgroundColor: "rgba(255,255,255,0.08)",
-            }}
-          />
-          <View
-            pointerEvents="none"
-            style={{
-              position: "absolute",
-              bottom: -40,
-              left: -40,
-              width: 150,
-              height: 150,
-              borderRadius: 75,
-              backgroundColor: "rgba(255,255,255,0.06)",
-            }}
-          />
-
           <TouchableOpacity
             onPress={goBack}
             hitSlop={8}
             activeOpacity={0.7}
-            className="w-10 h-10 rounded-full items-center justify-center border"
-            style={{
-              backgroundColor: ON_DARK.surface,
-              borderColor: ON_DARK.border,
-            }}
+            className="bg-surface items-center justify-center"
+            style={[{ width: 40, height: 40, borderRadius: 20 }, SHADOWS.card]}
           >
-            <Feather name="arrow-left" size={20} color={ON_DARK.text} />
+            <Feather name="arrow-left" size={20} color={COLORS.ink} />
           </TouchableOpacity>
 
-          <View className="items-center mt-1">
+          <View className="items-center" style={{ marginTop: 8 }}>
             <View
-              className="w-24 h-24 bg-surface items-center justify-center"
-              style={[{ borderRadius: 30 }, SHADOWS.float]}
+              className="bg-surface items-center justify-center"
+              style={[
+                { width: 96, height: 96, borderRadius: 32 },
+                SHADOWS.float,
+              ]}
             >
-              <Feather name="home" size={44} color={COLORS.primary} />
+              <View
+                className="items-center justify-center"
+                style={{
+                  width: 76,
+                  height: 76,
+                  borderRadius: 24,
+                  backgroundColor: COLORS.primaryFill,
+                }}
+              >
+                <Feather name="home" size={36} color={COLORS.white} />
+              </View>
             </View>
+
             <Text
-              className="text-3xl font-bold mt-4"
-              style={{ color: ON_DARK.text }}
-            >
-              {getLocalizedAppInfo().name}
-            </Text>
-            <Text
-              className="text-sm mt-1 text-center"
-              style={{ color: ON_DARK.textSoft }}
-            >
-              {getLocalizedAppInfo().tagline}
-            </Text>
-            <View
-              className="rounded-full px-3 py-1 mt-4 border"
+              className="text-ink font-extrabold"
               style={{
-                backgroundColor: ON_DARK.surface,
-                borderColor: ON_DARK.border,
+                fontSize: 28,
+                lineHeight: 34,
+                marginTop: 16,
+                letterSpacing: -0.3,
               }}
             >
+              {info.name}
+            </Text>
+            <Text
+              className="text-ink-soft text-center"
+              style={{
+                fontSize: 14,
+                lineHeight: 20,
+                marginTop: 4,
+                paddingHorizontal: 16,
+              }}
+            >
+              {info.tagline}
+            </Text>
+
+            <View
+              className="flex-row items-center bg-surface"
+              style={{
+                marginTop: 14,
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 999,
+              }}
+            >
+              <View
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: COLORS.primary,
+                  marginRight: 6,
+                }}
+              />
               <Text
-                className="text-xs font-semibold"
-                style={{ color: ON_DARK.text }}
+                className="text-ink-soft font-semibold"
+                style={{ fontSize: 12 }}
               >
-                {t("Phiên bản")}{" "}{version}
+                {t("Phiên bản")} {version}
               </Text>
             </View>
           </View>
         </LinearGradient>
 
-        <View className="px-5">
-          {/* Kênh liên hệ đè lên hero */}
+        <View className="px-5" style={{ paddingTop: 20 }}>
+          {/* Liên hệ */}
+          <Text className="text-xs font-semibold uppercase tracking-wide text-ink-muted mb-2 ml-1">
+            {t("Liên hệ")}
+          </Text>
           <View
-            className="flex-row"
-            style={{ marginTop: -36, marginBottom: 20 }}
+            className="bg-surface border border-line flex-row"
+            style={[{ borderRadius: 24, marginBottom: 24 }, SHADOWS.card]}
           >
-            <ChannelTile
-              isFirst
+            <ChannelItem
               brand="zalo"
               label="Zalo"
-              onPress={() => open(getLocalizedAppInfo().zalo)}
+              onPress={() => open(info.zalo)}
             />
-            <ChannelTile
+            <View
+              className="bg-line"
+              style={{ width: 1, marginVertical: 16 }}
+            />
+            <ChannelItem
               brand="phone"
               label={t("Gọi")}
-              onPress={() => open(`tel:${getLocalizedAppInfo().hotline}`)}
+              onPress={() => open(`tel:${info.hotline}`)}
             />
-            <ChannelTile
+            <View
+              className="bg-line"
+              style={{ width: 1, marginVertical: 16 }}
+            />
+            <ChannelItem
               brand="email"
               label="Email"
-              onPress={() => open(`mailto:${getLocalizedAppInfo().email}`)}
+              onPress={() => open(`mailto:${info.email}`)}
             />
-            <ChannelTile
+            <View
+              className="bg-line"
+              style={{ width: 1, marginVertical: 16 }}
+            />
+            <ChannelItem
               brand="facebook"
               label="Facebook"
-              onPress={() => open(getLocalizedAppInfo().facebook)}
+              onPress={() => open(info.facebook)}
             />
           </View>
 
           {/* Giới thiệu */}
+          <Text className="text-xs font-semibold uppercase tracking-wide text-ink-muted mb-2 ml-1">
+            {t("Về chúng tôi")}
+          </Text>
           <View
-            className="bg-surface p-5"
-            style={[...CARD, { marginBottom: 20 }]}
+            className="bg-surface border border-line"
+            style={{ borderRadius: 24, padding: 20, marginBottom: 24 }}
           >
-            <Text className="text-lg font-bold text-ink">{t("Về chúng tôi")}</Text>
-            <Text className="text-sm text-ink-soft leading-6 mt-2">
-              {getLocalizedAppInfo().description}
+            <Text
+              className="text-ink-soft"
+              style={{ fontSize: 14, lineHeight: 23 }}
+            >
+              {info.description}
             </Text>
 
-            <View className="h-px bg-line" style={{ marginVertical: 16 }} />
+            <View className="h-px bg-line" style={{ marginVertical: 18 }} />
 
-            {getLocalizedAppInfo().highlights.map((h, i) => (
+            {info.highlights.map((h, i) => (
               <View
                 key={h.title}
                 className="flex-row items-center"
                 style={{ marginTop: i === 0 ? 0 : 16 }}
               >
-                <View className="w-11 h-11 rounded-2xl bg-primary-soft items-center justify-center">
+                <View
+                  className="bg-primary-soft items-center justify-center"
+                  style={{ width: 44, height: 44, borderRadius: 14 }}
+                >
                   <Feather name={h.icon} size={20} color={COLORS.primary} />
                 </View>
-                <View className="flex-1" style={{ marginLeft: 12 }}>
-                  <Text className="font-semibold text-ink">{h.title}</Text>
+                <View className="flex-1" style={{ marginLeft: 14 }}>
                   <Text
-                    className="text-xs text-ink-muted"
-                    style={{ marginTop: 2 }}
+                    className="text-ink font-semibold"
+                    style={{ fontSize: 15 }}
+                  >
+                    {h.title}
+                  </Text>
+                  <Text
+                    className="text-ink-muted"
+                    style={{ fontSize: 13, marginTop: 2 }}
                   >
                     {h.desc}
                   </Text>
@@ -234,47 +267,69 @@ export default function AboutScreen() {
 
           {/* Nhà phát triển */}
           <View
-            className="bg-surface p-4 flex-row items-center"
-            style={[...CARD, { marginBottom: 20 }]}
+            className="bg-surface border border-line flex-row items-center"
+            style={{ borderRadius: 24, padding: 16, marginBottom: 24 }}
           >
-            <View className="w-12 h-12 rounded-full bg-primary-soft items-center justify-center">
-              <Feather name="code" size={22} color={COLORS.primary} />
+            <View
+              className="bg-primary-soft items-center justify-center"
+              style={{ width: 44, height: 44, borderRadius: 22 }}
+            >
+              <Feather name="code" size={20} color={COLORS.primary} />
             </View>
-            <View className="flex-1" style={{ marginLeft: 12, marginRight: 8 }}>
-              <Text className="text-xs text-ink-muted">{t("Phát triển bởi")}</Text>
-              <Text className="font-semibold text-ink" style={{ marginTop: 2 }}>
-                {getLocalizedAppInfo().developer}
+            <View className="flex-1" style={{ marginLeft: 12 }}>
+              <Text className="text-ink-muted" style={{ fontSize: 12 }}>
+                {t("Phát triển bởi")}
+              </Text>
+              <Text
+                className="text-ink font-semibold"
+                style={{ fontSize: 15, marginTop: 2 }}
+              >
+                {info.developer}
               </Text>
             </View>
             <TouchableOpacity
-              onPress={() => open(getLocalizedAppInfo().zalo)}
+              onPress={() => open(info.zalo)}
               activeOpacity={0.8}
-              className="flex-row items-center rounded-full px-3 py-2"
-              style={{ backgroundColor: `${BRAND_COLORS.zalo}1A` }}
+              className="flex-row items-center"
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                borderRadius: 999,
+                backgroundColor: `${BRAND_COLORS.zalo}1A`,
+              }}
             >
-              <BrandIcon name="zalo" size={18} />
+              <BrandIcon name="zalo" size={16} />
               <Text
-                className="text-xs font-semibold"
-                style={{ color: BRAND_COLORS.zalo, marginLeft: 6 }}
+                className="font-semibold"
+                style={{
+                  fontSize: 12,
+                  color: BRAND_COLORS.zalo,
+                  marginLeft: 6,
+                }}
               >
-                {t("Nhắn tin")}</Text>
+                {t("Nhắn tin")}
+              </Text>
             </TouchableOpacity>
           </View>
 
+          {/* Pháp lý */}
           <MenuGroup title={t("Pháp lý")}>
             <MenuListItem
               icon="file-text"
               label={t("Điều khoản dịch vụ")}
-              onPress={() => open(getLocalizedAppInfo().terms)}
+              onPress={() => open(info.terms)}
             />
             <MenuListItem
               icon="lock"
               label={t("Chính sách bảo mật")}
-              onPress={() => open(getLocalizedAppInfo().privacy)}
+              onPress={() => open(info.privacy)}
             />
           </MenuGroup>
 
-          <Text className="text-center text-xs text-ink-muted mt-2">
+          <Text
+            className="text-center text-ink-muted"
+            style={{ fontSize: 12, marginTop: 4 }}
+          >
             © {new Date().getFullYear()} CleanWise. All rights reserved.
           </Text>
         </View>
