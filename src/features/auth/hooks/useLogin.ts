@@ -56,7 +56,7 @@ export function useLogin() {
   };
 
   const submit = async () => {
-    const result = getLocalizedLoginSchema().safeParse({ phone, password });
+    const result = getLocalizedLoginSchema(t).safeParse({ phone, password });
     if (!result.success) {
       setError(result.error.issues[0].message);
       return;
@@ -67,7 +67,7 @@ export function useLogin() {
     } catch (e) {
       const message = getApiErrorMessage(
         e,
-        t("Đăng nhập thất bại, vui lòng thử lại"),
+        t("Đăng nhập thất bại, vui lòng thử lại"), t,
       );
       setError(message);
       showErrorToast(t("Đăng nhập thất bại"), message);
@@ -81,7 +81,7 @@ export function useLogin() {
     } catch (e) {
       const message = getApiErrorMessage(
         e,
-        t("Đăng nhập Google thất bại, vui lòng thử lại"),
+        t("Đăng nhập Google thất bại, vui lòng thử lại"), t,
       );
       setError(message);
       showErrorToast(t("Đăng nhập Google thất bại"), message);

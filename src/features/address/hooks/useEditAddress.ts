@@ -80,7 +80,7 @@ export function useEditAddress() {
       router.back();
     } catch (e) {
       form.setError(
-        getApiErrorMessage(e, t("Cập nhật thất bại, vui lòng thử lại")),
+        getApiErrorMessage(e, t("Cập nhật thất bại, vui lòng thử lại"), t),
       );
     }
   };
@@ -105,7 +105,7 @@ export function useEditAddress() {
       router.back();
     } catch (e) {
       form.setError(
-        getApiErrorMessage(e, t("Xóa địa chỉ thất bại, vui lòng thử lại")),
+        getApiErrorMessage(e, t("Xóa địa chỉ thất bại, vui lòng thử lại"), t),
       );
     }
   };

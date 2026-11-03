@@ -74,7 +74,7 @@ export function ChatbotMessageBubble({
               ? t("Bạn có thể xem chi tiết dịch vụ này bên dưới:")
               : t("Dưới đây là các dịch vụ vừa tra cứu:");
 
-  const time = new Date(message.created_at).toLocaleTimeString(getLocale(), {
+  const time = new Date(message.created_at).toLocaleTimeString(getLocale(t), {
     hour: "2-digit",
     minute: "2-digit",
   });

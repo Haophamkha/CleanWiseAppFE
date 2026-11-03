@@ -90,6 +90,7 @@ function Sparkline({ series }: { series: number[] }) {
 }
 
 function TrendBadge({ net }: { net: number }) {
+  const { t } = useTranslation();
   const { COLORS, TREND, isDark } = useAppTheme();
 
   const up = net >= 0;
@@ -112,7 +113,7 @@ function TrendBadge({ net }: { net: number }) {
       />
       <Text style={{ marginLeft: 6, fontSize: 12.5, fontWeight: "800", color }}>
         {up ? "+" : "-"}
-        {formatVnd(Math.abs(net))}
+        {formatVnd(Math.abs(net), t)}
       </Text>
     </View>
   );
@@ -264,7 +265,7 @@ export function WalletHero({
                 color: ON_DARK.text,
               }}
             >
-              {balance.toLocaleString(getLocale())}
+              {balance.toLocaleString(getLocale(t))}
             </Text>
             <Text
               style={{

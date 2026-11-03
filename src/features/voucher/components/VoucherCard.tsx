@@ -1,5 +1,6 @@
+import { translate as defaultTranslate, getLocale } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t, getLocale } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { SHADOWS } from "@/constants/theme";
 import type { UserVoucher, Voucher } from "@/features/voucher/types/Voucher";
@@ -21,13 +22,13 @@ type Props = {
   isClaiming?: boolean;
 };
 
-export const formatVoucherMoney = (value?: string | null) => {
+export const formatVoucherMoney = (value?: string | null, translateText = defaultTranslate) => {
   const amount = Number(value ?? 0);
-  return t("{{value0}}đ", { value0: new Intl.NumberFormat(getLocale()).format(amount) });
+  return translateText("{{value0}}đ", { value0: new Intl.NumberFormat(getLocale(translateText)).format(amount) });
 };
 
-export const formatVoucherDate = (value: string) =>
-  new Date(value).toLocaleDateString(getLocale(), {
+export const formatVoucherDate = (value: string, translateText = defaultTranslate) =>
+  new Date(value).toLocaleDateString(getLocale(translateText), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -37,44 +38,44 @@ export const formatVoucherDate = (value: string) =>
 export const getVoucherDaysLeft = (value: string) =>
   Math.ceil((new Date(value).getTime() - Date.now()) / 86_400_000);
 
-export function getLocalizedVoucherSourceLabel(): Record<UserVoucher["source"], string> {
+export function getLocalizedVoucherSourceLabel(translateText = defaultTranslate): Record<UserVoucher["source"], string> {
   return {
-    PUBLIC: t("Voucher công khai"),
-    CODE: t("Nhận bằng mã"),
-    ADMIN: t("Được tặng riêng"),
-    CAMPAIGN: t("Quà từ chiến dịch"),
+    PUBLIC: translateText("Voucher công khai"),
+    CODE: translateText("Nhận bằng mã"),
+    ADMIN: translateText("Được tặng riêng"),
+    CAMPAIGN: translateText("Quà từ chiến dịch"),
   };
 }
 
-const getWalletStatus = (item: UserVoucher, COLORS: import("@/constants/theme").ThemeColors) => {
+const getWalletStatus = (item: UserVoucher, COLORS: import("@/constants/theme").ThemeColors, translateText = defaultTranslate) => {
   if (item.is_usable) {
     return {
-      label: t("Có thể dùng"),
+      label: translateText("Có thể dùng"),
       color: COLORS.primaryDark,
       bg: COLORS.primaryLight,
     };
   }
   if (item.status === "USED") {
-    return { label: t("Đã sử dụng"), color: COLORS.inkSoft, bg: COLORS.canvas };
+    return { label: translateText("Đã sử dụng"), color: COLORS.inkSoft, bg: COLORS.canvas };
   }
   if (item.status === "RESERVED") {
     return {
-      label: t("Đang được giữ"),
+      label: translateText("Đang được giữ"),
       color: COLORS.accentDark,
       bg: COLORS.accentLight,
     };
   }
   if (item.status === "REVOKED") {
     return {
-      label: t("Đã thu hồi"),
+      label: translateText("Đã thu hồi"),
       color: COLORS.danger,
       bg: COLORS.dangerLight,
     };
   }
   if (item.voucher.lifecycle_status === "EXPIRED") {
-    return { label: t("Đã hết hạn"), color: COLORS.inkSoft, bg: COLORS.canvas };
+    return { label: translateText("Đã hết hạn"), color: COLORS.inkSoft, bg: COLORS.canvas };
   }
-  return { label: t("Không khả dụng"), color: COLORS.inkSoft, bg: COLORS.canvas };
+  return { label: translateText("Không khả dụng"), color: COLORS.inkSoft, bg: COLORS.canvas };
 };
 
 const LEFT = 104;
@@ -132,7 +133,7 @@ export function VoucherCard({
   const { COLORS } = useAppTheme();
 
   const isPercent = voucher.discount_type === "PERCENT";
-  const status = walletVoucher ? getWalletStatus(walletVoucher, COLORS) : null;
+  const status = walletVoucher ? getWalletStatus(walletVoucher, COLORS, t) : null;
   const dimmed = !!walletVoucher && !walletVoucher.is_usable;
   const daysLeft = getVoucherDaysLeft(voucher.end_at);
   const urgent = !dimmed && daysLeft <= 3 && daysLeft >= 0;
@@ -217,7 +218,7 @@ export function VoucherCard({
           >
             {isPercent
               ? `${Number(voucher.discount_value)}%`
-              : formatVoucherMoney(voucher.discount_value)}
+              : formatVoucherMoney(voucher.discount_value, t)}
           </Text>
           <Text
             style={{
@@ -335,7 +336,7 @@ export function VoucherCard({
                 ? daysLeft === 0
                   ? t("Hết hạn hôm nay")
                   : t("Còn {{value0}} ngày", { value0: daysLeft , count: daysLeft})
-                : `HSD ${formatVoucherDate(voucher.end_at)}`}
+                : `HSD ${formatVoucherDate(voucher.end_at, t)}`}
             </Text>
           </View>
         </View>
@@ -378,7 +379,7 @@ export function VoucherCard({
                 color: COLORS.inkSoft,
               }}
             >
-              {t("Đơn từ")}{" "}{formatVoucherMoney(voucher.min_order_amount)}
+              {t("Đơn từ")}{" "}{formatVoucherMoney(voucher.min_order_amount, t)}
             </Text>
           </View>
           {isPercent && !!voucher.max_discount_amount && (
@@ -393,7 +394,7 @@ export function VoucherCard({
               <Text
                 style={{ marginLeft: 6, fontSize: 11, color: COLORS.inkMuted }}
               >
-                {t("Giảm tối đa")}{" "}{formatVoucherMoney(voucher.max_discount_amount)}
+                {t("Giảm tối đa")}{" "}{formatVoucherMoney(voucher.max_discount_amount, t)}
               </Text>
             </View>
           )}
@@ -411,7 +412,7 @@ export function VoucherCard({
             <Text
               style={{ fontSize: 11, fontWeight: "600", color: COLORS.inkSoft }}
             >
-              {getLocalizedVoucherSourceLabel()[walletVoucher.source]}
+              {getLocalizedVoucherSourceLabel(t)[walletVoucher.source]}
             </Text>
           </View>
         ) : (

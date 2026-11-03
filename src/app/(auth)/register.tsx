@@ -1,5 +1,7 @@
+import { translate as defaultTranslate, localizeKnownMessage } from "@/features/language/i18n";
+
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 
 import {
@@ -25,12 +27,12 @@ type FieldConfig = {
   autoCapitalize?: "none" | "words";
 };
 
-function getLocalizedContactFields(): FieldConfig[] {
+function getLocalizedContactFields(translateText = defaultTranslate): FieldConfig[] {
   return [
     {
       key: "username",
       icon: "at-sign",
-      placeholder: t("Tên đăng nhập"),
+      placeholder: translateText("Tên đăng nhập"),
       autoCapitalize: "none",
     },
     {
@@ -43,7 +45,7 @@ function getLocalizedContactFields(): FieldConfig[] {
     {
       key: "phone_number",
       icon: "phone",
-      placeholder: t("Số điện thoại"),
+      placeholder: translateText("Số điện thoại"),
       keyboardType: "phone-pad",
     },
   ];
@@ -156,7 +158,7 @@ export default function RegisterScreen() {
         </View>
       </View>
 
-      {getLocalizedContactFields().map((f) => (
+      {getLocalizedContactFields(t).map((f) => (
         <PillInput
           key={f.key}
           icon={f.icon}
@@ -252,7 +254,7 @@ export default function RegisterScreen() {
             textAlign: "center",
           }}
         >
-          {error}
+          {localizeKnownMessage(error, t)}
         </Text>
       ) : null}
 

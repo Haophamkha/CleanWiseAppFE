@@ -1,5 +1,6 @@
+import { translate as defaultTranslate } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 // app/profile/edit.tsx
 import ScreenContainer from "@/components/ScreenContainer";
@@ -34,34 +35,34 @@ type FieldConfig = {
   autoCapitalize?: "none" | "words";
 };
 
-function getLocalizedFields(): FieldConfig[] {
+function getLocalizedFields(translateText = defaultTranslate): FieldConfig[] {
   return [
     {
       key: "last_name",
-      label: t("Họ và tên đệm"),
+      label: translateText("Họ và tên đệm"),
       icon: "user",
-      placeholder: t("Nhập họ và tên đệm"),
+      placeholder: translateText("Nhập họ và tên đệm"),
       autoCapitalize: "words",
     },
     {
       key: "first_name",
-      label: t("Tên"),
+      label: translateText("Tên"),
       icon: "user",
-      placeholder: t("Nhập tên"),
+      placeholder: translateText("Nhập tên"),
       autoCapitalize: "words",
     },
     {
       key: "phone_number",
-      label: t("Số điện thoại"),
+      label: translateText("Số điện thoại"),
       icon: "phone",
-      placeholder: t("Nhập số điện thoại"),
+      placeholder: translateText("Nhập số điện thoại"),
       keyboardType: "phone-pad",
     },
     {
       key: "email",
       label: "Email",
       icon: "mail",
-      placeholder: t("Nhập email"),
+      placeholder: translateText("Nhập email"),
       keyboardType: "email-address",
       autoCapitalize: "none",
     },
@@ -129,7 +130,7 @@ export default function EditProfileScreen() {
               </View>
             </View>
 
-            {getLocalizedFields().map((field) => (
+            {getLocalizedFields(t).map((field) => (
               <Input
                 key={field.key}
                 label={field.label}

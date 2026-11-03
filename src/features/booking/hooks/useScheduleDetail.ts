@@ -1,5 +1,6 @@
+import { translate as defaultTranslate, getLocale } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t, getLocale } from "@/features/language/i18n";
+
 import type { BookingScheduleDetail } from "@/features/booking/types/Booking";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
@@ -8,28 +9,28 @@ export type ScheduleImage = NonNullable<
   BookingScheduleDetail["images"]
 >[number];
 
-function getLocalizedWeekdayLabels() {
+function getLocalizedWeekdayLabels(translateText = defaultTranslate) {
   return [
-    t("Chủ nhật"),
-    t("Thứ 2"),
-    t("Thứ 3"),
-    t("Thứ 4"),
-    t("Thứ 5"),
-    t("Thứ 6"),
-    t("Thứ 7"),
+    translateText("Chủ nhật"),
+    translateText("Thứ 2"),
+    translateText("Thứ 3"),
+    translateText("Thứ 4"),
+    translateText("Thứ 5"),
+    translateText("Thứ 6"),
+    translateText("Thứ 7"),
   ];
 }
 
-export function formatFull(iso: string | null) {
+export function formatFull(iso: string | null, translateText = defaultTranslate) {
   if (!iso) return null;
   const d = new Date(iso);
-  const weekday = getLocalizedWeekdayLabels()[d.getDay()];
-  const dateStr = d.toLocaleDateString(getLocale(), {
+  const weekday = getLocalizedWeekdayLabels(translateText)[d.getDay()];
+  const dateStr = d.toLocaleDateString(getLocale(translateText), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
-  const timeStr = d.toLocaleTimeString(getLocale(), {
+  const timeStr = d.toLocaleTimeString(getLocale(translateText), {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -99,9 +100,9 @@ export function useScheduleDetail() {
     goBack: () => router.back(),
     goToWorker,
 
-    scheduled: formatFull(schedule?.scheduled_start ?? null),
-    actualStart: formatFull(schedule?.actual_start ?? null),
-    actualEnd: formatFull(schedule?.actual_end ?? null),
+    scheduled: formatFull(schedule?.scheduled_start ?? null, t),
+    actualStart: formatFull(schedule?.actual_start ?? null, t),
+    actualEnd: formatFull(schedule?.actual_end ?? null, t),
 
     groupedImages,
     otherImages: groupedImages.OTHER ?? [],

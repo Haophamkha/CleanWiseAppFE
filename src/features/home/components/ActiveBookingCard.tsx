@@ -1,5 +1,6 @@
+import { translate as defaultTranslate, getLocale } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t, getLocale } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Badge, Card } from "@/components/ui";
 
@@ -7,14 +8,14 @@ import type { BookingListItem } from "@/features/booking/types/Booking";
 import { Feather } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
 
-function getLocalizedStatus(): Record<
+function getLocalizedStatus(translateText = defaultTranslate): Record<
   string,
   { label: string; tone: "accent" | "primary" | "success" }
 > {
   return {
-    PENDING: { label: t("Chờ nhận việc"), tone: "accent" },
-    ASSIGNED: { label: t("Đã có nhân viên"), tone: "primary" },
-    IN_PROGRESS: { label: t("Đang thực hiện"), tone: "success" },
+    PENDING: { label: translateText("Chờ nhận việc"), tone: "accent" },
+    ASSIGNED: { label: translateText("Đã có nhân viên"), tone: "primary" },
+    IN_PROGRESS: { label: translateText("Đang thực hiện"), tone: "success" },
   };
 }
 
@@ -29,7 +30,7 @@ export function ActiveBookingCard({
 
   const { COLORS } = useAppTheme();
 
-  const status = getLocalizedStatus()[booking.status] ?? getLocalizedStatus().PENDING;
+  const status = getLocalizedStatus(t)[booking.status] ?? getLocalizedStatus(t).PENDING;
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} className="mb-3">
@@ -39,7 +40,7 @@ export function ActiveBookingCard({
         </View>
         <View className="flex-1 mr-2">
           <Text className="text-base font-bold text-ink" numberOfLines={1}>
-            {booking.service_name}
+            {t(booking.service_name)}
           </Text>
           <Text className="text-xs text-ink-muted mt-0.5">
             {t("Mã")}{" "}{booking.booking_code}
@@ -51,7 +52,7 @@ export function ActiveBookingCard({
           </View>
           {booking.total_amount ? (
             <Text className="text-sm font-bold text-primary mt-2">
-              {Number(booking.total_amount).toLocaleString(getLocale())}{t("đ")}</Text>
+              {Number(booking.total_amount).toLocaleString(getLocale(t))}{t("đ")}</Text>
           ) : null}
         </View>
       </Card>

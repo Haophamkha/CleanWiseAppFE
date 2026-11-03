@@ -21,7 +21,7 @@ export function useNotificationPreferences(enabled: boolean) {
     } catch (e) {
       showErrorToast(
         t("Không thể lưu cài đặt"),
-        getApiErrorMessage(e, t("Vui lòng thử lại.")),
+        getApiErrorMessage(e, t("Vui lòng thử lại."), t),
       );
     }
   };

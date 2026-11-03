@@ -70,7 +70,7 @@ export function useNotifications() {
 
     const timers: ReturnType<typeof setTimeout>[] = [];
 
-    getLocalizedNotificationFilterOptions().filter(
+    getLocalizedNotificationFilterOptions(t).filter(
       (option) => option.value !== filter,
     ).forEach((option, index) => {
       timers.push(

@@ -111,7 +111,7 @@ function CustomerChatbot({ userId }: { userId: number }) {
   useEffect(() => {
     if (!pickedAddress || !canAnnounce) return;
     dispatch(clearPickedAddress(CHATBOT_ADDRESS_PICKER_KEY));
-    void send(addressPickedMessage(pickedAddress));
+    void send(addressPickedMessage(pickedAddress, t));
   }, [pickedAddress, canAnnounce, send, dispatch]);
 
   return (

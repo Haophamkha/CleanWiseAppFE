@@ -139,7 +139,7 @@ export function OpenBankAppButtons({ info }: { info: BankTransferInfo }) {
         </Text>
         <Text className="text-[12px] text-ink-soft">{t("Số tiền")}</Text>
         <Text selectable className="text-[14px] font-bold text-ink mb-1.5">
-          {info.amount.toLocaleString(getLocale())}{t("đ")}</Text>
+          {info.amount.toLocaleString(getLocale(t))}{t("đ")}</Text>
         <Text className="text-[12px] text-ink-soft">{t("Nội dung chuyển khoản")}</Text>
         <Text selectable className="text-[14px] font-bold text-ink">
           {info.transfer_content}

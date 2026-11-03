@@ -84,7 +84,7 @@ export function WithdrawModal({ visible, balance, onClose }: Props) {
               color: COLORS.primaryDark,
             }}
           >
-            {formatVnd(w.submittedAmount)}
+            {formatVnd(w.submittedAmount, t)}
           </Text>
           {!!w.record && (
             <Text
@@ -131,7 +131,7 @@ export function WithdrawModal({ visible, balance, onClose }: Props) {
           }}
         >
           {t("Mã gồm 6 số đã gửi tới email của bạn để xác nhận rút")}{" "}
-          {formatVnd(w.submittedAmount)}.
+          {formatVnd(w.submittedAmount, t)}.
         </Text>
 
         <OtpInput value={w.otp} onChange={w.setOtp} invalid={!!w.errorText} />
@@ -176,8 +176,8 @@ export function WithdrawModal({ visible, balance, onClose }: Props) {
           color: COLORS.inkMuted,
         }}
       >
-        {t("Số dư khả dụng")}{" "}{formatVnd(balance)}  {t("· Tối thiểu")}{" "}
-        {formatVnd(WITHDRAW_MIN)}{t(", tối đa")} {formatVnd(WITHDRAW_MAX)}{t("/lần")}</Text>
+        {t("Số dư khả dụng")}{" "}{formatVnd(balance, t)}  {t("· Tối thiểu")}{" "}
+        {formatVnd(WITHDRAW_MIN, t)}{t(", tối đa")} {formatVnd(WITHDRAW_MAX, t)}{t("/lần")}</Text>
 
       {/* tài khoản nhận */}
       <Text

@@ -1,9 +1,10 @@
+import { translate as defaultTranslate } from "@/features/language/i18n";
 import { MenuGroup } from "@/components/common/MenuGroup";
 import { MenuListItem } from "@/components/common/MenuListItem";
 import { RequireLoginNotice } from "@/components/common/RequireLoginNotice";
 import type { FeatherName } from "@/components/ui";
 import { ROUTES } from "@/config/constants";
-import { translate as t } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { useTranslation } from "react-i18next";
 
@@ -20,39 +21,39 @@ type MenuItem = {
   href?: string;
 };
 
-function getLocalizedAccountItems(): MenuItem[] {
+function getLocalizedAccountItems(translateText = defaultTranslate): MenuItem[] {
   return [
-    { icon: "user", label: t("Thông tin cá nhân"), href: ROUTES.EDIT_PROFILE },
-    { icon: "map-pin", label: t("Địa chỉ của tôi"), href: ROUTES.ADDRESS },
+    { icon: "user", label: translateText("Thông tin cá nhân"), href: ROUTES.EDIT_PROFILE },
+    { icon: "map-pin", label: translateText("Địa chỉ của tôi"), href: ROUTES.ADDRESS },
     {
       icon: "credit-card",
-      label: t("Ví / Thẻ thanh toán"),
+      label: translateText("Ví / Thẻ thanh toán"),
       href: ROUTES.WALLET,
     },
-    { icon: "tag", label: t("Khuyến mãi"), href: ROUTES.VOUCHERS },
+    { icon: "tag", label: translateText("Khuyến mãi"), href: ROUTES.VOUCHERS },
     {
       icon: "heart",
-      label: t("Nhân viên yêu thích"),
+      label: translateText("Nhân viên yêu thích"),
       href: ROUTES.FAVORITE_WORKERS,
     },
     {
       icon: "clock",
-      label: t("Lịch sử thanh toán"),
+      label: translateText("Lịch sử thanh toán"),
       href: ROUTES.PAYMENT_HISTORY,
     },
     {
       icon: "message-square",
-      label: t("Đánh giá và khiếu nại"),
+      label: translateText("Đánh giá và khiếu nại"),
       href: ROUTES.MY_REVIEWS,
     },
   ];
 }
 
-function getLocalizedSupportItems(): MenuItem[] {
+function getLocalizedSupportItems(translateText = defaultTranslate): MenuItem[] {
   return [
-    { icon: "book-open", label: t("Hướng dẫn sử dụng"), href: ROUTES.HELP },
-    { icon: "settings", label: t("Cài đặt"), href: ROUTES.SETTINGS },
-    { icon: "info", label: t("Về CleanWise"), href: ROUTES.ABOUT },
+    { icon: "book-open", label: translateText("Hướng dẫn sử dụng"), href: ROUTES.HELP },
+    { icon: "settings", label: translateText("Cài đặt"), href: ROUTES.SETTINGS },
+    { icon: "info", label: translateText("Về CleanWise"), href: ROUTES.ABOUT },
   ];
 }
 
@@ -91,7 +92,7 @@ export default function ProfileScreen() {
         <View className="px-5" style={{ paddingTop: 20 }}>
           {p.isAuthenticated ? (
             <MenuGroup title={t("Tài khoản")}>
-              {renderItems(getLocalizedAccountItems())}
+              {renderItems(getLocalizedAccountItems(t))}
             </MenuGroup>
           ) : (
             <RequireLoginNotice
@@ -102,7 +103,7 @@ export default function ProfileScreen() {
           )}
 
           <MenuGroup title={t("Hỗ trợ")}>
-            {renderItems(getLocalizedSupportItems())}
+            {renderItems(getLocalizedSupportItems(t))}
           </MenuGroup>
 
           {p.isAuthenticated && (

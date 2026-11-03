@@ -29,7 +29,7 @@ export default function NotificationFilterTabs({
         alignItems: "center",
       }}
     >
-      {getLocalizedNotificationFilterOptions().map((option) => {
+      {getLocalizedNotificationFilterOptions(t).map((option) => {
         const isActive = option.value === value;
         return (
           <TouchableOpacity

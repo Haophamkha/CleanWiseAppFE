@@ -1,20 +1,21 @@
+import { translate as defaultTranslate } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Avatar } from "@/components/ui";
 
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-function shortTime(iso?: string | null) {
+function shortTime(iso?: string | null, translateText = defaultTranslate) {
   if (!iso) return "";
   const d = new Date(iso);
   const min = Math.floor((Date.now() - d.getTime()) / 60000);
-  if (min < 1) return t("Vừa xong");
-  if (min < 60) return t("{{value0}} phút", { value0: min });
+  if (min < 1) return translateText("Vừa xong");
+  if (min < 60) return translateText("{{value0}} phút", { value0: min });
   const h = Math.floor(min / 60);
-  if (h < 24) return t("{{value0}} giờ", { value0: h });
+  if (h < 24) return translateText("{{value0}} giờ", { value0: h });
   const days = Math.floor(h / 24);
-  if (days < 7) return t("{{value0}} ngày", { value0: days , count: days});
+  if (days < 7) return translateText("{{value0}} ngày", { value0: days , count: days});
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
@@ -37,7 +38,7 @@ export function ConversationItem({
   const code: string | undefined =
     item.booking_code ?? item.assignment_code ?? item.code;
   const time = shortTime(
-    item.last_message_at ?? item.updated_at ?? last?.created_at,
+    item.last_message_at ?? item.updated_at ?? last?.created_at, t,
   );
   const unread = Number(item.unread_count ?? 0);
   const hasUnread = unread > 0;

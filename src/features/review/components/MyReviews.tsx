@@ -1,5 +1,6 @@
+import { translate as defaultTranslate } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import ScreenContainer from "@/components/ScreenContainer";
 import { RequireLoginNotice } from "@/components/common/RequireLoginNotice";
@@ -24,10 +25,10 @@ import { ReviewFilterSheet } from "./ReviewFilterSheet";
 
 type Tab = "reviews" | "complaints";
 
-function getLocalizedTabs(): { key: Tab; label: string; icon: keyof typeof Feather.glyphMap }[] {
+function getLocalizedTabs(translateText = defaultTranslate): { key: Tab; label: string; icon: keyof typeof Feather.glyphMap }[] {
   return [
-      { key: "reviews", label: t("Đánh giá"), icon: "star" },
-      { key: "complaints", label: t("Khiếu nại"), icon: "alert-circle" },
+      { key: "reviews", label: translateText("Đánh giá"), icon: "star" },
+      { key: "complaints", label: translateText("Khiếu nại"), icon: "alert-circle" },
     ];
 }
 
@@ -45,7 +46,7 @@ function SegmentedTabs({
   return (
     <View className="px-5 pt-4">
       <View className="flex-row bg-line rounded-2xl p-1">
-        {getLocalizedTabs().map((t) => {
+        {getLocalizedTabs(t).map((t) => {
           const selected = value === t.key;
           return (
             <TouchableOpacity

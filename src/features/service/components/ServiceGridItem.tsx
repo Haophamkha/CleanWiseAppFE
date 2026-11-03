@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { ServiceIcon } from "@/features/service/components/ServiceIcon";
 import { getServiceGridVisual } from "@/features/service/utils/serviceVisuals";
@@ -18,6 +19,7 @@ export function ServiceGridItem({
   icon,
   onPress,
 }: Props) {
+  const { t } = useTranslation();
   const { COLORS } = useAppTheme();
 
   const visual = getServiceGridVisual(code, sectionCode, COLORS);
@@ -44,7 +46,7 @@ export function ServiceGridItem({
         className="text-ink text-xs text-center font-medium"
         numberOfLines={2}
       >
-        {name}
+        {t(name)}
       </Text>
     </TouchableOpacity>
   );

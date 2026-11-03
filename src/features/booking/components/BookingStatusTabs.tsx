@@ -27,7 +27,7 @@ export function BookingStatusTabs({
         style={{ flexGrow: 0, flexShrink: 0 }}
         contentContainerStyle={{ paddingHorizontal: 8, alignItems: "center" }}
       >
-        {getLocalizedBookingStatusTabs().map((tab) => {
+        {getLocalizedBookingStatusTabs(t).map((tab) => {
           const selected = value === tab.key;
           const count = counts?.[tab.key] ?? 0;
           return (

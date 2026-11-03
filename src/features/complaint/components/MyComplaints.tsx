@@ -1,5 +1,6 @@
+import { translate as defaultTranslate } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { EmptyState } from "@/components/ui";
 
@@ -18,14 +19,14 @@ import {
     View,
 } from "react-native";
 
-function getLocalizedFilters(): { key: ComplaintFilter; label: string }[] {
+function getLocalizedFilters(translateText = defaultTranslate): { key: ComplaintFilter; label: string }[] {
   return [
-    { key: "ALL", label: t("Tất cả") },
-    { key: "PENDING", label: t("Chờ xử lý") },
-    { key: "IN_REVIEW", label: t("Đang xem xét") },
-    { key: "RESOLVED", label: t("Đã giải quyết") },
-    { key: "REJECTED", label: t("Bị từ chối") },
-    { key: "CANCELLED", label: t("Đã hủy") },
+    { key: "ALL", label: translateText("Tất cả") },
+    { key: "PENDING", label: translateText("Chờ xử lý") },
+    { key: "IN_REVIEW", label: translateText("Đang xem xét") },
+    { key: "RESOLVED", label: translateText("Đã giải quyết") },
+    { key: "REJECTED", label: translateText("Bị từ chối") },
+    { key: "CANCELLED", label: translateText("Đã hủy") },
   ];
 }
 
@@ -49,7 +50,7 @@ export function MyComplaints() {
             gap: 8,
           }}
         >
-          {getLocalizedFilters().map((f) => {
+          {getLocalizedFilters(t).map((f) => {
             const selected = c.filter === f.key;
             const n = c.counts[f.key] ?? 0;
             return (

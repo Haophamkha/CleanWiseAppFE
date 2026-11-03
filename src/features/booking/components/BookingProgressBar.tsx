@@ -51,7 +51,7 @@ export function BookingProgressBar({ status }: { status: string }) {
   }
 
   const currentIndex = STATUS_INDEX[status] ?? 0;
-  const total = getLocalizedProgressSteps().length;
+  const total = getLocalizedProgressSteps(t).length;
 
   return (
     <View
@@ -68,7 +68,7 @@ export function BookingProgressBar({ status }: { status: string }) {
       </View>
 
       <View className="flex-row">
-        {getLocalizedProgressSteps().map((step, index) => {
+        {getLocalizedProgressSteps(t).map((step, index) => {
           const completed = index < currentIndex;
           const active = index === currentIndex;
           const reached = completed || active;

@@ -1,8 +1,9 @@
-import { translate as t } from "@/features/language/i18n";
+import { translate as defaultTranslate } from "@/features/language/i18n";
+
 // Bóc thông báo lỗi từ response của backend (Django custom_exception_handler hoặc DRF thuần)
-export function getApiErrorMessage(e: any, fallback: string): string {
+export function getApiErrorMessage(e: any, fallback: string, translateText = defaultTranslate): string {
   if (e?.status === 429) {
-    return t("Bạn thử quá nhiều lần, vui lòng đợi một phút rồi thử lại");
+    return translateText("Bạn thử quá nhiều lần, vui lòng đợi một phút rồi thử lại");
   }
 
   const data = e?.data;

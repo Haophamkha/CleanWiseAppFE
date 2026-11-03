@@ -1,5 +1,6 @@
+import { translate as defaultTranslate } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -13,62 +14,62 @@ type Suggestion = {
   text: string;
 };
 
-function getLocalizedQuestions(): Suggestion[] {
+function getLocalizedQuestions(translateText = defaultTranslate): Suggestion[] {
   return [
     {
       icon: "calendar",
-      title: t("Đặt lịch dịch vụ"),
-      text: t("Tôi muốn đặt lịch dịch vụ."),
+      title: translateText("Đặt lịch dịch vụ"),
+      text: translateText("Tôi muốn đặt lịch dịch vụ."),
     },
     {
       icon: "grid",
-      title: t("Tìm dịch vụ phù hợp"),
-      text: t("CleanWise có những dịch vụ nào?"),
+      title: translateText("Tìm dịch vụ phù hợp"),
+      text: translateText("CleanWise có những dịch vụ nào?"),
     },
     {
       icon: "package",
-      title: t("Tra đơn và lịch sắp tới"),
-      text: t("Cho tôi xem đơn gần nhất và lịch dịch vụ sắp tới."),
+      title: translateText("Tra đơn và lịch sắp tới"),
+      text: translateText("Cho tôi xem đơn gần nhất và lịch dịch vụ sắp tới."),
     },
     {
       icon: "credit-card",
-      title: t("Hướng dẫn thanh toán"),
-      text: t("Hướng dẫn tôi các phương thức và các bước thanh toán dịch vụ trên CleanWise."),
+      title: translateText("Hướng dẫn thanh toán"),
+      text: translateText("Hướng dẫn tôi các phương thức và các bước thanh toán dịch vụ trên CleanWise."),
     },
   ];
 }
 
-function getLocalizedMoreQuestions(): Suggestion[] {
+function getLocalizedMoreQuestions(translateText = defaultTranslate): Suggestion[] {
   return [
     {
       icon: "rotate-ccw",
-      title: t("Đặt lại đơn cũ"),
-      text: t("Đặt lại như lần trước giúp tôi."),
+      title: translateText("Đặt lại đơn cũ"),
+      text: translateText("Đặt lại như lần trước giúp tôi."),
     },
     {
       icon: "x-circle",
-      title: t("Hủy đơn hoặc hủy buổi"),
-      text: t("Tôi muốn hủy một đơn."),
+      title: translateText("Hủy đơn hoặc hủy buổi"),
+      text: translateText("Tôi muốn hủy một đơn."),
     },
     {
       icon: "map-pin",
-      title: t("Thêm địa chỉ mới"),
-      text: t("Tôi muốn thêm một địa chỉ mới."),
+      title: translateText("Thêm địa chỉ mới"),
+      text: translateText("Tôi muốn thêm một địa chỉ mới."),
     },
     {
       icon: "dollar-sign",
-      title: t("Xem số dư ví"),
-      text: t("Ví CleanWise của tôi còn bao nhiêu?"),
+      title: translateText("Xem số dư ví"),
+      text: translateText("Ví CleanWise của tôi còn bao nhiêu?"),
     },
     {
       icon: "credit-card",
-      title: t("Kiểm tra thanh toán"),
-      text: t("Đơn gần nhất của tôi đã thanh toán chưa?"),
+      title: translateText("Kiểm tra thanh toán"),
+      text: translateText("Đơn gần nhất của tôi đã thanh toán chưa?"),
     },
     {
       icon: "book-open",
-      title: t("Hướng dẫn đặt dịch vụ"),
-      text: t("Hướng dẫn tôi các bước đặt đơn dịch vụ."),
+      title: translateText("Hướng dẫn đặt dịch vụ"),
+      text: translateText("Hướng dẫn tôi các bước đặt đơn dịch vụ."),
     },
   ];
 }
@@ -85,7 +86,7 @@ export function ChatbotWelcome({
   const { COLORS } = useAppTheme();
 
   const [expanded, setExpanded] = useState(false);
-  const questions = expanded ? [...getLocalizedQuestions(), ...getLocalizedMoreQuestions()] : getLocalizedQuestions();
+  const questions = expanded ? [...getLocalizedQuestions(t), ...getLocalizedMoreQuestions(t)] : getLocalizedQuestions(t);
   return (
     <View className="px-5 py-6">
       <View className="flex-row items-center mb-4" style={{ gap: 12 }}>

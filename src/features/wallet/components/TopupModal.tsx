@@ -78,7 +78,7 @@ export function TopupModal({ visible, onClose }: Props) {
               color: COLORS.primaryDark,
             }}
           >
-            {formatVnd(topup.amountValue)}
+            {formatVnd(topup.amountValue, t)}
           </Text>
           <Text
             style={{
@@ -91,7 +91,7 @@ export function TopupModal({ visible, onClose }: Props) {
             }}
           >
             {waiting
-              ? t("Hoàn tất chuyển khoản ở trang thanh toán. Sau khi thanh toán, quay lại app, số dư sẽ tự cập nhậtopup.")
+              ? t("Hoàn tất chuyển khoản ở trang thanh toán. Sau khi thanh toán, quay lại app, số dư sẽ tự cập nhật.")
               : success
                 ? t("Số dư ví đã được cộng.")
                 : t("Nếu bạn đã chuyển tiền, số dư sẽ được cộng khi hệ thống nhận được xác nhận. Nếu chưa, hãy tạo lệnh nạp mới.")}
@@ -132,7 +132,7 @@ export function TopupModal({ visible, onClose }: Props) {
           color: COLORS.inkMuted,
         }}
       >
-        {t("Tối thiểu")}{" "}{formatVnd(TOPUP_MIN)}{t(", tối đa")} {formatVnd(TOPUP_MAX)}{t("/lần. Bạn sẽ được chuyển sang trang thanh toán để chuyển khoản.")}</Text>
+        {t("Tối thiểu")}{" "}{formatVnd(TOPUP_MIN, t)}{t(", tối đa")} {formatVnd(TOPUP_MAX, t)}{t("/lần. Bạn sẽ được chuyển sang trang thanh toán để chuyển khoản.")}</Text>
 
       <AmountField
         value={topup.amountText}

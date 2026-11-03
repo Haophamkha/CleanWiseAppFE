@@ -20,7 +20,7 @@ export function BookingHeader({
   const { COLORS } = useAppTheme();
 
   const insets = useSafeAreaInsets();
-  const statusMeta = getBookingStatusMeta(status, COLORS);
+  const statusMeta = getBookingStatusMeta(status, COLORS, t);
 
   return (
     <View
@@ -44,7 +44,7 @@ export function BookingHeader({
           >
             {t("Chi tiết đơn dịch vụ")}</Text>
           <Text className="text-lg font-bold text-ink mt-0.5" numberOfLines={1}>
-            {serviceName}
+            {t(serviceName)}
           </Text>
         </View>
 

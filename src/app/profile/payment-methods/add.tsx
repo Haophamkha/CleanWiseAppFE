@@ -1,5 +1,7 @@
+import { translate as defaultTranslate, localizeKnownMessage } from "@/features/language/i18n";
+
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import {
     useCreateBankPaymentMethodMutation,
@@ -44,13 +46,13 @@ const optionIcon = (
   return "credit-card";
 };
 
-const getFirstError = (error: any) => {
+const getFirstError = (error: any, translateText = defaultTranslate) => {
   const errors = error?.data?.errors;
   if (errors && typeof errors === "object") {
     const first = Object.values(errors).flat().find(Boolean);
     if (typeof first === "string") return first;
   }
-  return error?.data?.message || t("Không thể lưu tài khoản. Vui lòng thử lại.");
+  return error?.data?.message || translateText("Không thể lưu tài khoản. Vui lòng thử lại.");
 };
 
 export default function AddCustomerPaymentMethodScreen() {
@@ -172,7 +174,7 @@ export default function AddCustomerPaymentMethodScreen() {
       }
       router.back();
     } catch (requestError) {
-      setError(getFirstError(requestError));
+      setError(getFirstError(requestError, t));
     }
   };
 
@@ -346,7 +348,7 @@ export default function AddCustomerPaymentMethodScreen() {
                 />
               </View>
 
-              <Text className="text-ink font-medium mb-1">CCCD/CMND Sandbox</Text>
+              <Text className="text-ink font-medium mb-1">{t("CCCD/CMND Sandbox")}</Text>
               <View className="flex-row items-center border border-line bg-canvas rounded-2xl px-4 mb-4">
                 <Feather name="user-check" size={18} color={COLORS.inkMuted} />
                 <TextInput keyboardAppearance={themeMode} className="flex-1 ml-3 py-3.5 text-ink" placeholder={t("Mã định danh trong kịch bản test")} value={identity} onChangeText={setIdentity} keyboardType="number-pad" maxLength={14} />
@@ -391,7 +393,7 @@ export default function AddCustomerPaymentMethodScreen() {
                 <View className="flex-row bg-red-50 rounded-xl p-3 mt-4">
                   <Feather name="alert-circle" size={17} color="#DC2626" />
                   <Text className="flex-1 text-red-600 text-sm ml-2">
-                    {error}
+                    {localizeKnownMessage(error, t)}
                   </Text>
                 </View>
               )}

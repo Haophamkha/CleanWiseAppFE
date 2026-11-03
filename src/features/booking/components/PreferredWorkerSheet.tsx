@@ -1,5 +1,6 @@
+import { translate as defaultTranslate } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-import { translate as t } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { RADIUS } from "@/constants/theme";
 import { Feather } from "@expo/vector-icons";
@@ -17,13 +18,13 @@ const AMBER = "#F59E0B";
 
 export const workerKey = (w: any) => (w?.worker ?? w)?.worker_id ?? w?.id;
 
-export const workerName = (w: any) => {
+export const workerName = (w: any, translateText = defaultTranslate) => {
   const x = w?.worker ?? w;
   return (
     [x?.last_name, x?.first_name].filter(Boolean).join(" ").trim() ||
     x?.full_name ||
     x?.name ||
-    t("Nhân viên")
+    translateText("Nhân viên")
   );
 };
 
@@ -155,7 +156,7 @@ export function PreferredWorkerSheet({
               const x = w?.worker ?? w;
               const id = workerKey(w);
               const selected = id === selectedId;
-              const name = workerName(w);
+              const name = workerName(w, t);
               const rating = Number(x?.average_rating ?? 0);
 
               return (

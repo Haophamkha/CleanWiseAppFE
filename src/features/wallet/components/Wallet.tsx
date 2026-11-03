@@ -1,5 +1,7 @@
+import { translate as defaultTranslate, getLocale } from "@/features/language/i18n";
+import { localizeTransactionNote } from "@/features/payment/utils/localizeTransactionNote";
 import { useTranslation } from "react-i18next";
-import { translate as t, getLocale } from "@/features/language/i18n";
+
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { LoadingOverlay } from "@/components/common/LoadingOverlay";
 import { SHADOWS } from "@/constants/theme";
@@ -23,38 +25,38 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Filter = "ALL" | "CREDIT" | "DEBIT";
-function getLocalizedFilters(): { key: Filter; label: string }[] {
+function getLocalizedFilters(translateText = defaultTranslate): { key: Filter; label: string }[] {
   return [
-    { key: "ALL", label: t("Tất cả") },
-    { key: "CREDIT", label: t("Tiền vào") },
-    { key: "DEBIT", label: t("Tiền ra") },
+    { key: "ALL", label: translateText("Tất cả") },
+    { key: "CREDIT", label: translateText("Tiền vào") },
+    { key: "DEBIT", label: translateText("Tiền ra") },
   ];
 }
 
-const fmtTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString(getLocale(), {
+const fmtTime = (iso: string, translateText = defaultTranslate) =>
+  new Date(iso).toLocaleTimeString(getLocale(translateText), {
     hour: "2-digit",
     minute: "2-digit",
   });
 
-const dayLabel = (iso: string) => {
+const dayLabel = (iso: string, translateText = defaultTranslate) => {
   const d = new Date(iso);
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
-  if (d.toDateString() === today.toDateString()) return t("Hôm nay");
-  if (d.toDateString() === yesterday.toDateString()) return t("Hôm qua");
-  return d.toLocaleDateString(getLocale(), {
+  if (d.toDateString() === today.toDateString()) return translateText("Hôm nay");
+  if (d.toDateString() === yesterday.toDateString()) return translateText("Hôm qua");
+  return d.toLocaleDateString(getLocale(translateText), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
 };
 
-function groupByDay(list: WalletTransaction[]) {
+function groupByDay(list: WalletTransaction[], translateText = defaultTranslate) {
   const groups: { label: string; items: WalletTransaction[] }[] = [];
   for (const tx of list) {
-    const label = dayLabel(tx.created_at);
+    const label = dayLabel(tx.created_at, translateText);
     const last = groups[groups.length - 1];
     if (last && last.label === label) last.items.push(tx);
     else groups.push({ label, items: [tx] });
@@ -101,6 +103,7 @@ function Chip({
 }
 
 function TransactionRow({ tx }: { tx: WalletTransaction }) {
+  const { t } = useTranslation();
   const { COLORS, TREND } = useAppTheme();
 
   const isCredit = tx.direction === "CREDIT";
@@ -147,7 +150,7 @@ function TransactionRow({ tx }: { tx: WalletTransaction }) {
           numberOfLines={1}
           style={{ fontSize: 14.5, fontWeight: "700", color: COLORS.ink }}
         >
-          {tx.type_display}
+          {t(tx.type_display)}
         </Text>
 
         {!!(tx.note || tx.booking_code) && (
@@ -155,7 +158,7 @@ function TransactionRow({ tx }: { tx: WalletTransaction }) {
             numberOfLines={1}
             style={{ marginTop: 2, fontSize: 12, color: COLORS.inkSoft }}
           >
-            {tx.note || tx.booking_code}
+            {tx.note ? localizeTransactionNote(tx.note, t) : tx.booking_code}
           </Text>
         )}
 
@@ -163,7 +166,7 @@ function TransactionRow({ tx }: { tx: WalletTransaction }) {
           style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}
         >
           <Text style={{ fontSize: 12, color: COLORS.inkMuted }}>
-            {fmtTime(tx.created_at)}
+            {fmtTime(tx.created_at, t)}
           </Text>
 
           {tx.status !== "SUCCESS" && (
@@ -185,7 +188,7 @@ function TransactionRow({ tx }: { tx: WalletTransaction }) {
                   color: failed ? COLORS.danger : COLORS.primaryDark,
                 }}
               >
-                {tx.status_display}
+                {t(tx.status_display)}
               </Text>
             </View>
           )}
@@ -211,7 +214,7 @@ function TransactionRow({ tx }: { tx: WalletTransaction }) {
           }}
         >
           {isCredit ? "+" : "-"}
-          {formatVnd(Number(tx.amount))}
+          {formatVnd(Number(tx.amount), t)}
         </Text>
 
         {!failed && (
@@ -244,7 +247,7 @@ export function Wallet() {
             ? t.direction === "CREDIT"
             : t.direction !== "CREDIT",
         );
-  const groups = groupByDay(list);
+  const groups = groupByDay(list, t);
 
   return (
     <View className="flex-1 bg-canvas">
@@ -282,7 +285,7 @@ export function Wallet() {
             {t("Lịch sử giao dịch")}</Text>
 
           <View style={{ flexDirection: "row", marginTop: 14 }}>
-            {getLocalizedFilters().map((f) => (
+            {getLocalizedFilters(t).map((f) => (
               <Chip
                 key={f.key}
                 label={f.label}
