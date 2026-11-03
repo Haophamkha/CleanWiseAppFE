@@ -21,7 +21,7 @@ export function CancelBookingModal({
   visible,
   loading,
   isPaidOnline,
-  title = t("Hủy đơn hàng"),
+  title = t("Hủy đơn dịch vụ"),
   refundNote,
   onClose,
   onConfirm,

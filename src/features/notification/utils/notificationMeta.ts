@@ -14,7 +14,7 @@ interface NotificationTypeMeta {
 
 /**
  * Trả về route tương ứng khi người dùng nhấn vào thông báo.
- * Tất cả thông báo liên quan đến buổi làm đều mở trang đơn hàng.
+ * Tất cả thông báo liên quan đến buổi làm đều mở trang đơn dịch vụ.
  */
 export function getNotificationRoute(n: {
   target?: string;
@@ -39,7 +39,7 @@ export function getNotificationRoute(n: {
 export function getNotificationTypeMap(COLORS: ThemeColors): Record<string, NotificationTypeMeta> {
   return {
   BOOKING: {
-    label: t("Đơn hàng"),
+    label: t("Đơn dịch vụ"),
     iconLibrary: "material-community",
     iconName: "calendar-check",
     iconBgColor: COLORS.primaryLight,
@@ -87,7 +87,7 @@ export function getLocalizedNotificationFilterOptions(): {
 }[] {
   return [
     { value: "ALL", label: t("Tất cả") },
-    { value: "BOOKING", label: t("Đơn hàng") },
+    { value: "BOOKING", label: t("Đơn dịch vụ") },
     { value: "PAYMENT", label: t("Thanh toán") },
     { value: "ASSIGNMENT", label: t("Phân công") },
     { value: "COMPLAINT", label: t("Khiếu nại") },

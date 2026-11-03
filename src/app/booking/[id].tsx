@@ -94,7 +94,7 @@ export default function BookingDetailScreen() {
       <View className="flex-1 justify-center bg-canvas">
         <EmptyState
           icon="alert-circle"
-          title={t("Không tải được đơn hàng")}
+          title={t("Không tải được đơn dịch vụ")}
           actionLabel={t("Quay lại")}
           onAction={() => router.back()}
         />

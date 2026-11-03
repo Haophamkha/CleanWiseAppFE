@@ -495,7 +495,7 @@ export function BookingVoucherModal(props: Props) {
                     color: COLORS.inkMuted,
                   }}
                 >
-                  {t("Giá trị đơn hàng")}{" "}
+                  {t("Giá trị đơn dịch vụ")}{" "}
                   <Text style={{ fontWeight: "700", color: COLORS.inkSoft }}>
                     {formatVoucherMoney(String(subtotalAmount))}
                   </Text>

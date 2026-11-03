@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 
-import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { EmptyState } from "@/components/ui";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 
 import { BannerCarousel } from "@/features/home/components/BannerCarousel";
 import { GuestBanner } from "@/features/home/components/GuestBanner";
@@ -80,6 +80,7 @@ export default function HomeScreen() {
                   sectionCode={item.section_code}
                   name={item.name}
                   description={item.description}
+                  icon={item.icon}
                   onPress={() => router.push(`/services/${item.id}` as any)}
                 />
               ))}

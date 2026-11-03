@@ -109,7 +109,7 @@ export function ChatbotWelcome({
       <Text className="text-ink text-[23px] font-extrabold">
         {t("Tôi có thể giúp gì cho bạn?")}</Text>
       <Text className="text-ink-soft text-sm leading-6 mt-2 mb-5">
-        {t("Tìm dịch vụ, đặt lịch, hủy đơn, xem đơn hàng và ví, hoặc hỏi hướng dẫn có nguồn tham khảo. Với đặt lịch và hủy đơn, tôi luôn hỏi xác nhận trước khi thực hiện.")}</Text>
+        {t("Tìm dịch vụ, đặt lịch, hủy đơn, xem đơn dịch vụ và ví, hoặc hỏi hướng dẫn có nguồn tham khảo. Với đặt lịch và hủy đơn, tôi luôn hỏi xác nhận trước khi thực hiện.")}</Text>
       <View style={{ gap: 10 }}>
         {questions.map((question) => (
           <TouchableOpacity
