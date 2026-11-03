@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 
 import { getHomeServiceIcon } from "@/features/home/utils/homeServiceIcon";
@@ -15,6 +16,7 @@ type Props = {
 };
 
 export function ServiceCard({ code, sectionCode, name, icon, onPress }: Props) {
+  const { t } = useTranslation();
   const { COLORS } = useAppTheme();
 
   const fallback = getServiceGridVisual(code, sectionCode, COLORS);
@@ -40,7 +42,7 @@ export function ServiceCard({ code, sectionCode, name, icon, onPress }: Props) {
         style={{ minHeight: 34, lineHeight: 17 }}
         numberOfLines={2}
       >
-        {name}
+        {t(name)}
       </Text>
     </TouchableOpacity>
   );

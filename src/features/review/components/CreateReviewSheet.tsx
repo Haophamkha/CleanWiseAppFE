@@ -57,7 +57,7 @@ export function CreateReviewSheet({
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
       >
         <Text className="text-primary-dark font-semibold">
-          {a.service_name}
+          {t(a.service_name)}
         </Text>
         <Text className="text-ink font-semibold mt-1">
           {`${a.worker.last_name} ${a.worker.first_name}`.trim() ||

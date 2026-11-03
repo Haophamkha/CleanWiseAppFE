@@ -44,7 +44,7 @@ export function BookingHeader({
           >
             {t("Chi tiết đơn hàng")}</Text>
           <Text className="text-lg font-bold text-ink mt-0.5" numberOfLines={1}>
-            {serviceName}
+            {t(serviceName)}
           </Text>
         </View>
 

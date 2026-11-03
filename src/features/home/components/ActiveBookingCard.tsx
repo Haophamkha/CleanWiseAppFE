@@ -39,7 +39,7 @@ export function ActiveBookingCard({
         </View>
         <View className="flex-1 mr-2">
           <Text className="text-base font-bold text-ink" numberOfLines={1}>
-            {booking.service_name}
+            {t(booking.service_name)}
           </Text>
           <Text className="text-xs text-ink-muted mt-0.5">
             {t("Mã")}{" "}{booking.booking_code}

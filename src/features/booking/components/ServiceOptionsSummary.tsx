@@ -1,3 +1,4 @@
+import { localizeServiceField } from "@/features/service/utils/localizeService";
 import { useTranslation } from "react-i18next";
 
 // src/components/booking/ServiceOptionsSummary.tsx
@@ -27,7 +28,8 @@ export function ServiceOptionsSummary({
 
   return (
     <View>
-      {fields.map((field) => {
+      {fields.map(rawField => {
+        const field = localizeServiceField(rawField, t);
         if (field.type === "TASK_CHECKLIST") return null;
 
         if (field.type === "REPEATABLE_GROUP") {

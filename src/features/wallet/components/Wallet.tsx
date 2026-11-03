@@ -1,3 +1,4 @@
+import { localizeTransactionNote } from "@/features/payment/utils/localizeTransactionNote";
 import { useTranslation } from "react-i18next";
 import { translate as t, getLocale } from "@/features/language/i18n";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -101,6 +102,7 @@ function Chip({
 }
 
 function TransactionRow({ tx }: { tx: WalletTransaction }) {
+  const { t } = useTranslation();
   const { COLORS, TREND } = useAppTheme();
 
   const isCredit = tx.direction === "CREDIT";
@@ -147,7 +149,7 @@ function TransactionRow({ tx }: { tx: WalletTransaction }) {
           numberOfLines={1}
           style={{ fontSize: 14.5, fontWeight: "700", color: COLORS.ink }}
         >
-          {tx.type_display}
+          {t(tx.type_display)}
         </Text>
 
         {!!(tx.note || tx.booking_code) && (
@@ -155,7 +157,7 @@ function TransactionRow({ tx }: { tx: WalletTransaction }) {
             numberOfLines={1}
             style={{ marginTop: 2, fontSize: 12, color: COLORS.inkSoft }}
           >
-            {tx.note || tx.booking_code}
+            {tx.note ? localizeTransactionNote(tx.note, t) : tx.booking_code}
           </Text>
         )}
 
@@ -185,7 +187,7 @@ function TransactionRow({ tx }: { tx: WalletTransaction }) {
                   color: failed ? COLORS.danger : COLORS.primaryDark,
                 }}
               >
-                {tx.status_display}
+                {t(tx.status_display)}
               </Text>
             </View>
           )}

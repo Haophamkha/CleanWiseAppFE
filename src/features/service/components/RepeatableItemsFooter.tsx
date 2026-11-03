@@ -1,3 +1,4 @@
+import { localizeServiceField } from "@/features/service/utils/localizeService";
 import { useTranslation } from "react-i18next";
 import { translate as t } from "@/features/language/i18n";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -50,7 +51,7 @@ export function RepeatableItemsFooter({
   const displayedSubmitLabel = isAuthenticated ? submitLabel : t("Đăng nhập ngay");
   const insets = useSafeAreaInsets();
 
-  const itemFields = groupField.item_fields ?? [];
+  const itemFields = (groupField.item_fields ?? []).map(field => localizeServiceField(field, t));
   const categoryField = itemFields[0];
   const categoryOptions = (categoryField?.options as any[]) ?? [];
   const optionField = itemFields.find(

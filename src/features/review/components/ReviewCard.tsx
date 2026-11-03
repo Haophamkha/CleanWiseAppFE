@@ -33,7 +33,7 @@ export function ReviewCard({
         <ReviewStars rating={review.rating} />
       </View>
       <Text className="text-primary-dark font-semibold text-sm">
-        {review.service_name}
+        {t(review.service_name)}
       </Text>
       <Text className="text-ink-soft text-xs mt-1">
         {review.booking_code}  {t("· Buổi")} {review.schedule.sequence_no}

@@ -151,7 +151,7 @@ export function BookingCard({ item }: { item: BookingCardData }) {
           />
           <View className="flex-1">
             <Text className="text-ink font-bold text-[17px]" numberOfLines={2}>
-              {item.service_name}
+              {t(item.service_name)}
             </Text>
             <View
               className="self-start flex-row items-center px-2.5 py-1 rounded-full mt-1.5"

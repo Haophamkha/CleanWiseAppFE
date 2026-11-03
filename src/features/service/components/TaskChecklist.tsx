@@ -129,7 +129,7 @@ export function TaskChecklist({ content }: Props) {
                       className="flex-1 text-[14px] leading-5 mt-0.5"
                       style={{ color: COLORS.textSecondary }}
                     >
-                      {task}
+                      {t(task)}
                     </Text>
                   </View>
                 ))}

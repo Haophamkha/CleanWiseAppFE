@@ -78,7 +78,7 @@ const capitalizeFirst = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const formatWeekdays = (weekdays?: string[]) =>
   !weekdays || weekdays.length === 0
     ? "—"
-    : weekdays.map((d) => WEEKDAY_LABELS[d] ?? d).join(", ");
+    : weekdays.map((d) => t(WEEKDAY_LABELS[d] ?? d)).join(", ");
 
 const formatTime = (d: Date) =>
   d.toLocaleTimeString(getLocale(), { hour: "2-digit", minute: "2-digit" });
@@ -360,7 +360,7 @@ export function useBookingConfirm() {
             (value === undefined || value === null || value === "")
           );
         })
-        .map((field) => ({ key: field.key, label: field.label }));
+        .map((field) => ({ key: field.key, label: t(field.label) }));
 
       if (missingFields.length > 0) {
         Alert.alert(

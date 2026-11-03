@@ -58,7 +58,7 @@ export default function BookingScreen() {
         ? items.filter(
             (i) =>
               normalize(i.booking_code).includes(q) ||
-              normalize(i.service_name).includes(q),
+              normalize(t(i.service_name)).includes(q),
           )
         : items,
     [items, q, t],

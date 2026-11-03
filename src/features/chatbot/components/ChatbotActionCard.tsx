@@ -44,7 +44,7 @@ function cardSubtitle(card: ChatbotCard): string {
     case "help":
       return t("Nguồn hướng dẫn · Phiên bản {{value0}}", { value0: card.version });
     case "booking":
-      return [card.data?.service_name, card.data?.status_label ? t(card.data.status_label) : undefined]
+      return [card.data?.service_name ? t(card.data.service_name) : undefined, card.data?.status_label ? t(card.data.status_label) : undefined]
         .filter(Boolean)
         .join(" · ");
     case "schedule":

@@ -91,7 +91,7 @@ export function TopupModal({ visible, onClose }: Props) {
             }}
           >
             {waiting
-              ? t("Hoàn tất chuyển khoản ở trang thanh toán. Sau khi thanh toán, quay lại app, số dư sẽ tự cập nhậtopup.")
+              ? t("Hoàn tất chuyển khoản ở trang thanh toán. Sau khi thanh toán, quay lại app, số dư sẽ tự cập nhật.")
               : success
                 ? t("Số dư ví đã được cộng.")
                 : t("Nếu bạn đã chuyển tiền, số dư sẽ được cộng khi hệ thống nhận được xác nhận. Nếu chưa, hãy tạo lệnh nạp mới.")}

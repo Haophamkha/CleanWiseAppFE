@@ -24,7 +24,7 @@ export function SystemMessageCard({
   const { COLORS } = useAppTheme();
 
   const sub = assignment
-    ? [assignment.service_name, assignment.booking_code]
+    ? [assignment.service_name ? t(assignment.service_name) : undefined, assignment.booking_code]
         .filter(Boolean)
         .join(" · ")
     : "";

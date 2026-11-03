@@ -113,7 +113,7 @@ export default function ServiceDetailScreen() {
     }
 
     if (missing.length > 0) {
-      showErrorToast(t("Thiếu thông tin"), t("Vui lòng điền: {{value0}}", { value0: missing.join(", ") }));
+      showErrorToast(t("Thiếu thông tin"), t("Vui lòng điền: {{value0}}", { value0: missing.map(label => t(label)).join(", ") }));
       return;
     }
 
@@ -201,7 +201,7 @@ export default function ServiceDetailScreen() {
           className="text-lg font-bold text-ink flex-1"
           numberOfLines={1}
         >
-          {service.name}
+          {t(service.name)}
         </Text>
       </View>
 
@@ -232,17 +232,17 @@ export default function ServiceDetailScreen() {
 
         <View className="px-5 pt-5">
           <Text className="text-ink-soft text-sm mb-5">
-            {service.description}
+            {t(service.description)}
           </Text>
 
           {/* Ô chọn địa chỉ — 1 dòng mặc định, hoặc 2 dòng cho chuyển nhà */}
           {addressEntries.map((entry) => (
             <AddressPickerField
               key={entry.key}
-              label={entry.label}
+              label={t(entry.label)}
               required={entry.required}
               value={values[entry.key]}
-              onPress={() => handleChooseAddress(entry.key, entry.label)}
+              onPress={() => handleChooseAddress(entry.key, t(entry.label))}
             />
           ))}
 

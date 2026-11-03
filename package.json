@@ -69,7 +69,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test:language": "node --test scripts/tests/language.test.cjs scripts/tests/service-language.test.cjs"
   },
   "private": true
 }

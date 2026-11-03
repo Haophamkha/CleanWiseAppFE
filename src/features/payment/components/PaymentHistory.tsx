@@ -1,3 +1,4 @@
+import { localizeTransactionNote } from "@/features/payment/utils/localizeTransactionNote";
 import { useTranslation } from "react-i18next";
 import { translate as t, getLocale } from "@/features/language/i18n";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -418,6 +419,7 @@ function HistoryRow({
   item: PaymentHistoryItem;
   onPress?: () => void;
 }) {
+  const { t } = useTranslation();
   const { COLORS, TREND } = useAppTheme();
 
   const BADGE: Partial<Record<PaymentHistoryStatus, { bg: string; fg: string }>> =
@@ -477,13 +479,15 @@ function HistoryRow({
           numberOfLines={1}
           style={{ fontSize: 14.5, fontWeight: "700", color: COLORS.ink }}
         >
-          {item.title}
+          {item.booking_code
+            ? t(item.kind === "REFUND" ? "Hoàn tiền đơn {{value0}}" : "Thanh toán đơn {{value0}}", { value0: item.booking_code })
+            : t(item.kind === "REFUND" ? "Hoàn tiền vào ví" : "Thanh toán bằng ví")}
         </Text>
         <View
           style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}
         >
           <Text style={{ fontSize: 12, color: COLORS.inkMuted }}>
-            {item.method_display} · {formatMessageTime(item.created_at)}
+            {t(item.method_display)} · {formatMessageTime(item.created_at)}
           </Text>
           {badge && (
             <View
@@ -498,7 +502,7 @@ function HistoryRow({
               <Text
                 style={{ fontSize: 11, fontWeight: "700", color: badge.fg }}
               >
-                {item.status_display}
+                {t(item.status_display)}
               </Text>
             </View>
           )}
@@ -508,7 +512,7 @@ function HistoryRow({
             numberOfLines={1}
             style={{ marginTop: 3, fontSize: 12, color: COLORS.inkSoft }}
           >
-            {item.note}
+            {localizeTransactionNote(item.note, t)}
           </Text>
         )}
       </View>
