@@ -29,12 +29,12 @@ function TerminalBanner({ status }: { status: "CANCELLED" | "EXPIRED" }) {
       </View>
       <View className="flex-1">
         <Text className="font-bold text-[15px]" style={{ color: tint }}>
-          {cancelled ? t("Đơn hàng đã hủy") : t("Đơn hàng đã hết hạn")}
+          {cancelled ? t("Đơn dịch vụ đã hủy") : t("Đơn dịch vụ đã hết hạn")}
         </Text>
         <Text className="text-[13px] mt-0.5 text-ink-soft">
           {cancelled
-            ? t("Đơn hàng này không còn được xử lý.")
-            : t("Đơn hàng đã hết thời gian chờ nhận việc.")}
+            ? t("Đơn dịch vụ này không còn được xử lý.")
+            : t("Đơn dịch vụ đã hết thời gian chờ nhận việc.")}
         </Text>
       </View>
     </View>
@@ -59,7 +59,7 @@ export function BookingProgressBar({ status }: { status: string }) {
       style={SHADOWS.card}
     >
       <View className="flex-row items-center justify-between mb-4">
-        <Text className="font-bold text-[15px] text-ink">{t("Tiến độ đơn hàng")}</Text>
+        <Text className="font-bold text-[15px] text-ink">{t("Tiến độ đơn dịch vụ")}</Text>
         <View className="px-2.5 py-1 rounded-full bg-primary-light">
           <Text className="text-[11px] font-bold text-primary-dark">
             {t("Bước")}{" "}{Math.min(currentIndex + 1, total)}/{total}

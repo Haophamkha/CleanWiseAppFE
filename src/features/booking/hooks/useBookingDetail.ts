@@ -75,13 +75,13 @@ export function useBookingDetail() {
       Alert.alert(
         t("Đã hủy đơn"),
         refunded > 0
-          ? t("Đơn hàng đã được hủy. Đã hoàn {{value0}} vào ví của bạn.", { value0: formatVnd(refunded) })
-          : t("Đơn hàng đã được hủy thành công."),
+          ? t("Đơn dịch vụ đã được hủy. Đã hoàn {{value0}} vào ví của bạn.", { value0: formatVnd(refunded) })
+          : t("Đơn dịch vụ đã được hủy thành công."),
       );
     } catch (err: any) {
       Alert.alert(
         t("Không thể hủy đơn"),
-        getApiErrorMessage(err, t("Không thể hủy đơn hàng, vui lòng thử lại.")),
+        getApiErrorMessage(err, t("Không thể hủy đơn dịch vụ, vui lòng thử lại.")),
       );
     }
   };
@@ -98,7 +98,7 @@ export function useBookingDetail() {
       const refunded = Number(res?.refunded_amount ?? 0);
       const lines = [
         res?.booking_status === "CANCELLED"
-          ? t("Đơn hàng đã được hủy.")
+          ? t("Đơn dịch vụ đã được hủy.")
           : t("Đã hủy buổi làm việc."),
       ];
       if (refunded > 0) {

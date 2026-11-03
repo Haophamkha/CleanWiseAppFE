@@ -21,6 +21,7 @@ export function ServiceCard({ code, sectionCode, name, icon, onPress }: Props) {
 
   const fallback = getServiceGridVisual(code, sectionCode, COLORS);
   const mapped = getHomeServiceIcon(code, sectionCode);
+  if (__DEV__) console.log("[ServiceCard]", code, "icon =", icon);
 
   return (
     <TouchableOpacity

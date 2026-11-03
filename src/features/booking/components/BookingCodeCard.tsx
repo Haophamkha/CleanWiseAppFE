@@ -50,7 +50,7 @@ export function BookingCodeCard({ code, large }: Props) {
       <View className="flex-row items-center justify-between">
         <View className="flex-1 mr-3">
           <Text className="text-[11px] font-bold uppercase tracking-wide text-ink-muted">
-            {t("Mã đơn hàng")}</Text>
+            {t("Mã đơn dịch vụ")}</Text>
           <Text
             selectable
             className="font-extrabold mt-0.5 text-base text-ink"
@@ -77,7 +77,7 @@ export function BookingCodeCard({ code, large }: Props) {
           className="text-[11px] font-bold uppercase text-ink-muted"
           style={{ letterSpacing: 1 }}
         >
-          {t("Mã đơn hàng")}</Text>
+          {t("Mã đơn dịch vụ")}</Text>
         <Text
           selectable
           className="text-[19px] font-extrabold text-ink mt-0.5"

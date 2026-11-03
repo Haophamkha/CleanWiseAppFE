@@ -90,7 +90,7 @@ export default function BookingSuccessScreen() {
             activeOpacity={0.85}
             onPress={() => router.replace("/(tabs)/booking")}
           >
-            <Text className="text-white font-bold text-base">{t("Xem đơn hàng")}</Text>
+            <Text className="text-white font-bold text-base">{t("Xem đơn dịch vụ")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             className="rounded-2xl h-14 items-center justify-center border border-line bg-surface"

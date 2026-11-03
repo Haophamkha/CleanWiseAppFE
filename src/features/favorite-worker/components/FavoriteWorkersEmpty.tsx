@@ -24,7 +24,7 @@ export function FavoriteWorkersEmpty() {
         className="bg-primary-fill rounded-xl px-6 py-3 mt-5"
         onPress={() => router.push("/(tabs)/booking")}
       >
-        <Text className="text-white font-bold">{t("Xem đơn hàng")}</Text>
+        <Text className="text-white font-bold">{t("Xem đơn dịch vụ")}</Text>
       </TouchableOpacity>
     </View>
   );

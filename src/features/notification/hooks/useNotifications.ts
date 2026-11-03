@@ -117,7 +117,7 @@ export function useNotifications() {
   };
 
   // Đánh dấu đã đọc và điều hướng theo loại thông báo.
-  // Thông báo liên quan buổi làm sẽ mở trang đơn hàng,
+  // Thông báo liên quan buổi làm sẽ mở trang đơn dịch vụ,
   // không điều hướng trực tiếp đến trang schedule.
   const pressNotification = (notification: AppNotification) => {
     if (!notification.is_read) {

@@ -23,7 +23,7 @@ export function GuestBanner() {
           <Text className="text-base font-bold text-ink">
             {t("Đăng nhập để đặt lịch")}</Text>
           <Text className="text-sm text-ink-soft">
-            {t("Theo dõi đơn hàng và nhận ưu đãi dành riêng cho bạn.")}</Text>
+            {t("Theo dõi đơn dịch vụ và nhận ưu đãi dành riêng cho bạn.")}</Text>
         </View>
       </View>
 

@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
 
-import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { useGetConversationsQuery } from "@/features/chat/api/chatApi";
 import { useChatSocket } from "@/features/chat/hooks/useChatSocket";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { useAppSelector } from "@/store/hooks";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
@@ -502,7 +502,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="booking"
         options={{
-          title: t("Đơn hàng"),
+          title: t("Đơn dịch vụ"),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "calendar" : "calendar-outline"}

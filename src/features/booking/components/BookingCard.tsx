@@ -1,17 +1,13 @@
-import { useTranslation } from "react-i18next";
-import { getLocale } from "@/features/language/i18n";
-import { useAppTheme } from "@/features/theme/ThemeProvider";
-import { SHADOWS } from "@/constants/theme";
 import { ServiceThumb } from "@/features/booking/components/ServiceThumb";
-import type {
-  BookingListItem,
-  BookingStatus,
-} from "@/features/booking/types/Booking";
+import type { BookingListItem } from "@/features/booking/types/Booking";
 import { getPaymentStatusMeta } from "@/features/booking/types/bookingStatus";
 import { getBookingStatusMap } from "@/features/booking/utils/bookingStatus";
+import { getLocale } from "@/features/language/i18n";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { formatVnd } from "@/utils/currency";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Platform, Text, TouchableOpacity, View } from "react-native";
 
 const MONO = Platform.select({
@@ -20,19 +16,11 @@ const MONO = Platform.select({
   default: "monospace",
 });
 
-const STATUS_ICON: Record<BookingStatus, keyof typeof Feather.glyphMap> = {
-  PENDING: "clock",
-  ASSIGNED: "user-check",
-  IN_PROGRESS: "loader",
-  COMPLETED: "check-circle",
-  CANCELLED: "x-circle",
-  FAILED: "alert-triangle",
-};
-
 /** Các field backend có thể bổ sung sau; có thì card tự hiện. */
 type BookingCardData = BookingListItem & {
-  service_image?: string | null;
+  service_icon?: string | null;
   service_code?: string;
+  section_code?: string;
   next_schedule_start?: string | null;
   address_summary?: string | null;
   worker_name?: string | null;
@@ -65,16 +53,19 @@ function MetaRow({
 }) {
   const { COLORS } = useAppTheme();
 
-
   return (
-    <View className="flex-row items-center mt-2.5">
+    <View className="flex-row items-center" style={{ marginTop: 10 }}>
       <View
-        className="items-center justify-center rounded-full bg-surface"
-        style={{ width: 24, height: 24 }}
+        className="items-center justify-center bg-surface"
+        style={{ width: 26, height: 26, borderRadius: 13 }}
       >
-        <Feather name={icon} size={12} color={COLORS.inkSoft} />
+        <Feather name={icon} size={13} color={COLORS.primary} />
       </View>
-      <Text className="text-ink text-[13px] ml-2.5 flex-1" numberOfLines={1}>
+      <Text
+        className="text-ink flex-1"
+        style={{ fontSize: 13.5, marginLeft: 10 }}
+        numberOfLines={1}
+      >
         {children}
       </Text>
     </View>
@@ -83,21 +74,17 @@ function MetaRow({
 
 export function BookingCard({ item }: { item: BookingCardData }) {
   const { t } = useTranslation();
+  const { COLORS, SHADOWS } = useAppTheme();
 
-  const { COLORS } = useAppTheme();
-
-  const BOOKING_STATUS_META = getBookingStatusMap(COLORS);
-  const meta = BOOKING_STATUS_META[item.status] ?? {
+  const meta = getBookingStatusMap(COLORS)[item.status] ?? {
     label: item.status,
     color: COLORS.inkSoft,
     bg: COLORS.line,
   };
-  const icon = STATUS_ICON[item.status] ?? "clipboard";
   const pay = getPaymentStatusMeta(item.payment_status, COLORS);
   const discount = Number(item.discount_amount) || 0;
 
   const isDead = item.status === "CANCELLED" || item.status === "FAILED";
-  const showPayment = !isDead;
 
   const hasProgress = !!item.total_sessions && item.total_sessions > 1;
   const progress = hasProgress
@@ -107,8 +94,12 @@ export function BookingCard({ item }: { item: BookingCardData }) {
   return (
     <TouchableOpacity
       activeOpacity={0.85}
-      className="bg-surface rounded-3xl border border-line mb-4 overflow-hidden"
-      style={[SHADOWS.card, isDead && { opacity: 0.75 }]}
+      className="bg-surface border border-line overflow-hidden"
+      style={[
+        { borderRadius: 26, marginBottom: 16 },
+        SHADOWS.card,
+        isDead && { opacity: 0.75 },
+      ]}
       onPress={() =>
         router.push({
           pathname: "/booking/[id]",
@@ -116,54 +107,81 @@ export function BookingCard({ item }: { item: BookingCardData }) {
         })
       }
     >
-      {/* Hàng 1: MÃ ĐƠN riêng một hàng, không bị cắt */}
+      {/* Dải mã đơn */}
       <View
-        className="flex-row flex-wrap items-center px-4 py-3"
-        style={{ backgroundColor: COLORS.primaryLight }}
+        className="flex-row items-center"
+        style={{
+          backgroundColor: COLORS.primaryLight,
+          paddingHorizontal: 18,
+          paddingVertical: 14,
+        }}
       >
         <Text
-          className="text-[11px] font-bold mr-2"
-          style={{ color: COLORS.primaryDark, opacity: 0.7 }}
+          className="font-bold"
+          style={{
+            fontSize: 11,
+            letterSpacing: 0.6,
+            color: COLORS.primaryDark,
+            opacity: 0.7,
+            marginRight: 10,
+          }}
         >
-          {t("MÃ ĐƠN")}</Text>
+          {t("MÃ ĐƠN")}
+        </Text>
         <Text
           selectable
-          className="text-[15px] font-extrabold"
+          className="font-extrabold flex-1"
           style={{
+            fontSize: 17,
             color: COLORS.primaryDark,
             fontFamily: MONO,
             letterSpacing: 0.8,
           }}
+          numberOfLines={1}
         >
           {item.booking_code}
         </Text>
       </View>
 
-      <View className="p-4">
-        {/* Hàng 2: ảnh + tên dịch vụ + trạng thái bên dưới */}
+      <View style={{ padding: 18 }}>
+        {/* Icon + tên dịch vụ + trạng thái */}
         <View className="flex-row items-center">
           <ServiceThumb
-            imageUrl={item.service_image}
             serviceName={item.service_name}
-            fallbackIcon={icon}
-            tint={meta.color}
-            bg={meta.bg}
+            serviceCode={item.service_code}
+            sectionCode={item.section_code}
+            iconUri={item.service_icon}
+            size={56}
           />
           <View className="flex-1">
-            <Text className="text-ink font-bold text-[17px]" numberOfLines={2}>
+            <Text
+              className="text-ink font-bold"
+              style={{ fontSize: 17, lineHeight: 23 }}
+              numberOfLines={2}
+            >
               {t(item.service_name)}
             </Text>
             <View
-              className="self-start flex-row items-center px-2.5 py-1 rounded-full mt-1.5"
-              style={{ backgroundColor: meta.bg }}
+              className="self-start flex-row items-center"
+              style={{
+                backgroundColor: meta.bg,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                borderRadius: 999,
+                marginTop: 6,
+              }}
             >
               <View
-                className="rounded-full mr-1.5"
-                style={{ width: 6, height: 6, backgroundColor: meta.color }}
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: meta.color,
+                  marginRight: 6,
+                }}
               />
               <Text
-                className="text-[11.5px] font-bold"
-                style={{ color: meta.color }}
+                style={{ fontSize: 11.5, fontWeight: "700", color: meta.color }}
               >
                 {meta.label}
               </Text>
@@ -171,8 +189,17 @@ export function BookingCard({ item }: { item: BookingCardData }) {
           </View>
         </View>
 
-        {/* Hàng 3: thông tin phụ */}
-        <View className="mt-4 rounded-2xl bg-canvas px-3.5 pt-0.5 pb-3.5">
+        {/* Thông tin phụ */}
+        <View
+          className="bg-canvas"
+          style={{
+            marginTop: 16,
+            borderRadius: 18,
+            paddingHorizontal: 14,
+            paddingTop: 2,
+            paddingBottom: 14,
+          }}
+        >
           <MetaRow icon="calendar">
             {item.next_schedule_start
               ? dateTimeText(item.next_schedule_start)
@@ -190,16 +217,29 @@ export function BookingCard({ item }: { item: BookingCardData }) {
           )}
 
           {hasProgress && (
-            <View className="mt-3.5">
-              <View className="flex-row items-center justify-between mb-1.5">
-                <Text className="text-[11.5px] text-ink-muted">{t("Tiến độ")}</Text>
-                <Text className="text-[11.5px] font-bold text-ink-soft">
-                  {item.done_sessions ?? 0}/{item.total_sessions} {t("buổi")}</Text>
+            <View style={{ marginTop: 14 }}>
+              <View
+                className="flex-row items-center justify-between"
+                style={{ marginBottom: 6 }}
+              >
+                <Text className="text-ink-muted" style={{ fontSize: 11.5 }}>
+                  {t("Tiến độ")}
+                </Text>
+                <Text
+                  className="text-ink-soft font-bold"
+                  style={{ fontSize: 11.5 }}
+                >
+                  {item.done_sessions ?? 0}/{item.total_sessions} {t("buổi")}
+                </Text>
               </View>
-              <View className="h-1.5 rounded-full bg-line overflow-hidden">
+              <View
+                className="bg-line overflow-hidden"
+                style={{ height: 6, borderRadius: 3 }}
+              >
                 <View
-                  className="h-full rounded-full"
                   style={{
+                    height: 6,
+                    borderRadius: 3,
                     width: `${progress * 100}%`,
                     backgroundColor: COLORS.primaryFill,
                   }}
@@ -209,33 +249,58 @@ export function BookingCard({ item }: { item: BookingCardData }) {
           )}
         </View>
 
-        {/* Hàng 4: thanh toán + tổng tiền */}
-        <View className="flex-row items-end justify-between mt-4 pt-4 border-t border-dashed border-line">
-          <View className="flex-1 mr-3">
-            {showPayment && (
+        {/* Thanh toán + tổng tiền */}
+        <View
+          className="flex-row items-end justify-between"
+          style={{
+            marginTop: 16,
+            paddingTop: 14,
+            borderTopWidth: 1,
+            borderTopColor: COLORS.line,
+          }}
+        >
+          <View className="flex-1" style={{ marginRight: 12 }}>
+            {!isDead && (
               <View
-                className="self-start flex-row items-center px-2.5 py-1 rounded-full"
-                style={{ backgroundColor: pay.bg }}
+                className="self-start flex-row items-center"
+                style={{
+                  backgroundColor: pay.bg,
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: 999,
+                }}
               >
                 <Feather name={pay.icon} size={11} color={pay.color} />
                 <Text
-                  className="text-[11px] font-bold ml-1"
-                  style={{ color: pay.color }}
+                  style={{
+                    fontSize: 11,
+                    fontWeight: "700",
+                    color: pay.color,
+                    marginLeft: 4,
+                  }}
                 >
                   {pay.label}
                 </Text>
               </View>
             )}
             {discount > 0 && (
-              <Text className="text-[11.5px] text-success mt-1.5">
-                {t("Tiết kiệm")}{" "}{formatVnd(discount)}
+              <Text
+                className="text-success"
+                style={{ fontSize: 11.5, marginTop: 6 }}
+              >
+                {t("Tiết kiệm")} {formatVnd(discount)}
               </Text>
             )}
           </View>
 
           <View className="items-end">
-            <Text className="text-ink-muted text-[11px]">{t("Tổng thanh toán")}</Text>
-            <Text className="text-primary font-extrabold text-[20px]">
+            <Text className="text-ink-muted" style={{ fontSize: 11.5 }}>
+              {t("Tổng thanh toán")}
+            </Text>
+            <Text
+              className="text-primary font-extrabold"
+              style={{ fontSize: 22, lineHeight: 28 }}
+            >
               {item.total_amount
                 ? formatVnd(Number(item.total_amount))
                 : t("Chờ báo giá")}

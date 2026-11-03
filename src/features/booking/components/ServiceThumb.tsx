@@ -1,77 +1,58 @@
+import { getHomeServiceIcon } from "@/features/home/utils/homeServiceIcon";
+import { ServiceIcon } from "@/features/service/components/ServiceIcon";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { View } from "react-native";
 
-import { Feather } from "@expo/vector-icons";
-import { useState } from "react";
-import { Image, View } from "react-native";
+type McName = keyof typeof MaterialCommunityIcons.glyphMap;
 
-type FeatherName = keyof typeof Feather.glyphMap;
-
-// Đoán icon theo tên dịch vụ (tạm thời, chỉnh lại theo dịch vụ thật của bạn)
-const KEYWORD_ICONS: { keywords: string[]; icon: FeatherName }[] = [
-  { keywords: ["máy lạnh", "điều hòa", "may lanh"], icon: "wind" },
-  { keywords: ["chuyển nhà", "chuyển văn phòng"], icon: "truck" },
-  { keywords: ["giặt", "sofa", "thảm", "nệm"], icon: "droplet" },
-  { keywords: ["sửa", "bảo trì", "điện", "nước"], icon: "tool" },
-  { keywords: ["dọn", "vệ sinh nhà", "tổng vệ sinh"], icon: "home" },
-];
-
-function guessIcon(name: string): FeatherName | null {
+// Đoán theo tên khi backend chưa trả service_code / icon
+function guessByName(name: string): McName {
   const n = name.toLowerCase();
-  return (
-    KEYWORD_ICONS.find((k) => k.keywords.some((w) => n.includes(w)))?.icon ??
-    null
-  );
+  if (n.includes("máy lạnh") || n.includes("điều hòa"))
+    return "air-conditioner";
+  if (n.includes("gói tháng") || n.includes("định kỳ")) return "calendar-check";
+  if (n.includes("chuyển")) return "truck-fast";
+  if (["sofa", "nệm", "rèm", "thảm"].some((w) => n.includes(w))) return "sofa";
+  if (n.includes("dọn") || n.includes("vệ sinh")) return "broom";
+  return "broom";
 }
 
 export function ServiceThumb({
-  imageUrl,
   serviceName,
-  fallbackIcon,
-  tint,
-  bg,
-  size = 56,
+  serviceCode,
+  sectionCode,
+  iconUri,
+  size = 52,
 }: {
-  imageUrl?: string | null;
   serviceName: string;
-  fallbackIcon: FeatherName;
-  tint: string;
-  bg: string;
+  serviceCode?: string;
+  sectionCode?: string;
+  iconUri?: string | null;
   size?: number;
 }) {
   const { COLORS } = useAppTheme();
-
-  const [failed, setFailed] = useState(false);
-  const showImage = !!imageUrl && !failed;
-  const icon = guessIcon(serviceName) ?? fallbackIcon;
-  const usingGuessedIcon = icon !== fallbackIcon;
+  const name =
+    getHomeServiceIcon(serviceCode ?? "", sectionCode ?? "") ??
+    guessByName(serviceName);
 
   return (
     <View
-      className="rounded-2xl items-center justify-center mr-3 overflow-hidden"
+      className="items-center justify-center"
       style={{
         width: size,
         height: size,
-        backgroundColor: showImage
-          ? COLORS.canvas
-          : usingGuessedIcon
-            ? COLORS.primaryLight
-            : bg,
+        borderRadius: 16,
+        backgroundColor: COLORS.primaryLight,
+        marginRight: 12,
       }}
     >
-      {showImage ? (
-        <Image
-          source={{ uri: imageUrl! }}
-          style={{ width: size, height: size }}
-          resizeMode="cover"
-          onError={() => setFailed(true)}
-        />
-      ) : (
-        <Feather
-          name={icon}
-          size={size * 0.44}
-          color={usingGuessedIcon ? COLORS.primaryDark : tint}
-        />
-      )}
+      <ServiceIcon
+        uri={iconUri}
+        fallbackName={name}
+        size={size * 0.56}
+        color={COLORS.primary}
+      />
     </View>
   );
 }

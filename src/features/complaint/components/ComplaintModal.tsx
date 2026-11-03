@@ -129,7 +129,7 @@ export function ComplaintModal({
   const handleSubmit = async () => {
     if (!complaintStage) {
       const message =
-        t("Trạng thái đơn hàng hiện tại không cho phép gửi khiếu nại.");
+        t("Trạng thái đơn dịch vụ hiện tại không cho phép gửi khiếu nại.");
       setError(message);
       showErrorToast(t("Không thể gửi phản hồi"), message);
       return;
@@ -336,7 +336,7 @@ export function ComplaintModal({
           }}
         >
           <Text className="text-[13px] text-ink-soft">
-            {t("Hiện chưa có lý do phản hồi phù hợp với trạng thái đơn hàng.")}</Text>
+            {t("Hiện chưa có lý do phản hồi phù hợp với trạng thái đơn dịch vụ.")}</Text>
         </View>
       );
     }

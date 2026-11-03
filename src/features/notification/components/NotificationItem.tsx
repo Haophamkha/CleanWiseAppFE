@@ -92,7 +92,7 @@ export default function NotificationItem({
         {route ? (
           <View className="flex-row items-center mt-2">
             <Text className="text-xs font-semibold text-primary">
-              {route.includes("wallets") ? t("Xem ví") : t("Xem đơn hàng")}
+              {route.includes("wallets") ? t("Xem ví") : t("Xem đơn dịch vụ")}
             </Text>
 
             <Feather name="chevron-right" size={14} color={COLORS.primary} />

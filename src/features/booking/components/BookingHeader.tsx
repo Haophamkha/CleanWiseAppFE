@@ -42,7 +42,7 @@ export function BookingHeader({
             className="text-[11px] font-semibold uppercase text-ink-muted"
             style={{ letterSpacing: 1 }}
           >
-            {t("Chi tiết đơn hàng")}</Text>
+            {t("Chi tiết đơn dịch vụ")}</Text>
           <Text className="text-lg font-bold text-ink mt-0.5" numberOfLines={1}>
             {t(serviceName)}
           </Text>
