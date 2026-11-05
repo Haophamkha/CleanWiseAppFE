@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
 
-import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { RADIUS, SHADOWS } from "@/constants/theme";
 import { BookingCodeCard } from "@/features/booking/components/BookingCodeCard";
 import { IconRow } from "@/features/booking/components/IconRow";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -34,7 +34,7 @@ export default function BookingSuccessScreen() {
         }}
       />
 
-      <View className="flex-1 px-6 pt-24 items-center">
+      <View className="flex-1 px-6 pt-20 items-center">
         {/* Huy hiệu thành công */}
         <View
           className="items-center justify-center mb-7 rounded-full bg-surface/60"
@@ -51,16 +51,20 @@ export default function BookingSuccessScreen() {
         </View>
 
         <Text className="text-[24px] font-extrabold text-center text-ink mb-2">
-          {t("Đặt lịch thành công!")}</Text>
+          {t("Đặt lịch thành công!")}
+        </Text>
         <Text className="text-[14px] leading-5 text-center text-ink-soft mb-7 px-4">
-          {t("Đơn của bạn đang chờ nhân viên nhận việc. Bạn có thể theo dõi trạng thái ở mục \"Đơn của tôi\".")}</Text>
+          {t(
+            'Đơn của bạn đang chờ nhân viên nhận việc. Bạn có thể theo dõi trạng thái ở mục "Đơn của tôi".',
+          )}
+        </Text>
 
         {/* Vé mã đơn */}
         <View
           className="w-full bg-surface border border-line overflow-hidden mb-7"
           style={[{ borderRadius: RADIUS.card }, SHADOWS.card]}
         >
-          <View className="px-5 py-4">
+          <View className="p-2 pb-15">
             <BookingCodeCard code={code} large />
           </View>
 
@@ -90,14 +94,18 @@ export default function BookingSuccessScreen() {
             activeOpacity={0.85}
             onPress={() => router.replace("/(tabs)/booking")}
           >
-            <Text className="text-white font-bold text-base">{t("Xem đơn dịch vụ")}</Text>
+            <Text className="text-white font-bold text-base">
+              {t("Xem đơn dịch vụ")}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             className="rounded-2xl h-14 items-center justify-center border border-line bg-surface"
             activeOpacity={0.8}
             onPress={() => router.replace("/(tabs)/home")}
           >
-            <Text className="font-bold text-base text-ink">{t("Về trang chủ")}</Text>
+            <Text className="font-bold text-base text-ink">
+              {t("Về trang chủ")}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
