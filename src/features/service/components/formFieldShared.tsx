@@ -1,6 +1,8 @@
-import { translate as defaultTranslate, getLocale } from "@/features/language/i18n";
+import {
+  translate as defaultTranslate,
+  getLocale,
+} from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 // src/components/service/formFieldShared.tsx
@@ -26,8 +28,36 @@ import {
   View,
 } from "react-native";
 
-
 export type Values = Record<string, any>;
+
+const BOOKING_MIN_HOUR = 8;
+const BOOKING_MAX_HOUR = 18;
+
+export const MIN_LEAD_MINUTES = 120;
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const minutesToTime = (m: number) =>
+  `${pad2(Math.floor(m / 60))}:${pad2(m % 60)}`;
+const timeToMinutes = (v: string) => {
+  const [h, m] = v.split(":");
+  return (parseInt(h, 10) || 0) * 60 + (parseInt(m, 10) || 0);
+};
+
+function earliestStartMinutes(
+  dateKey: string | undefined,
+  minHour = BOOKING_MIN_HOUR,
+): number {
+  const base = minHour * 60;
+  const now = new Date();
+  if (!dateKey || dateKey !== toDateKey(now)) return base;
+  const t = new Date(now.getTime() + MIN_LEAD_MINUTES * 60000);
+  if (toDateKey(t) !== toDateKey(now)) return 24 * 60;
+  const mins =
+    t.getHours() * 60 +
+    t.getMinutes() +
+    (t.getSeconds() > 0 || t.getMilliseconds() > 0 ? 1 : 0);
+  return Math.max(base, Math.ceil(mins / 5) * 5);
+}
 
 export const isConditional = (
   options: FieldOption[] | ConditionalOptionGroup[] | undefined,
@@ -61,14 +91,17 @@ export function getSelectedOption(
 export function buildCaption(
   opt: FieldOption,
   isAdditive: boolean,
-  pricingConfig?: PricingConfig, translateText = defaultTranslate,
+  pricingConfig?: PricingConfig,
+  translateText = defaultTranslate,
 ): string | undefined {
   const price = isAdditive
     ? pricingConfig?.additional_services?.[opt.value]
     : pricingConfig?.base_prices?.[opt.value];
 
   if (typeof price !== "number") return undefined;
-  return isAdditive ? `+${formatVnd(price, translateText)}` : formatVnd(price, translateText);
+  return isAdditive
+    ? `+${formatVnd(price, translateText)}`
+    : formatVnd(price, translateText);
 }
 
 // Ô chọn tròn: đã chọn = nền màu chính + dấu tích
@@ -301,7 +334,9 @@ export function TabBar({
             onPress={() => onChange(opt.value)}
             activeOpacity={0.85}
             className={`h-10 px-5 rounded-full items-center justify-center border ${
-              selected ? "bg-primary-fill border-primary" : "bg-surface border-line"
+              selected
+                ? "bg-primary-fill border-primary"
+                : "bg-surface border-line"
             }`}
             style={selected ? SHADOWS.card : undefined}
           >
@@ -448,7 +483,11 @@ export function WeekdayRow({
               }`}
             >
               {getLocale(t) === "en-US" && weekdayCodes.includes(opt.value)
-                ? new Date(2024, 0, 7 + weekdayCodes.indexOf(opt.value)).toLocaleDateString(getLocale(t), { weekday: "short" })
+                ? new Date(
+                    2024,
+                    0,
+                    7 + weekdayCodes.indexOf(opt.value),
+                  ).toLocaleDateString(getLocale(t), { weekday: "short" })
                 : opt.label.replace("Thứ ", "T")}
             </Text>
           </TouchableOpacity>
@@ -584,62 +623,72 @@ function TimeWheelPicker({
   value,
   minHour,
   maxHour,
+  minTotalMinutes,
   onChange,
 }: {
   value: string;
   minHour: number;
   maxHour: number;
+  minTotalMinutes: number;
   onChange: (v: string) => void;
 }) {
   const { t } = useTranslation();
 
+  const minTotal = Math.max(minHour * 60, minTotalMinutes);
+  const firstHour = Math.min(maxHour, Math.floor(minTotal / 60));
   const hours = Array.from(
-    { length: maxHour - minHour + 1 },
-    (_, i) => minHour + i,
+    { length: maxHour - firstHour + 1 },
+    (_, i) => firstHour + i,
   );
+
+  const minutesFor = (h: number) => {
+    if (h === maxHour) return [0]; // giờ cuối chỉ cho :00
+    const start = h === firstHour ? minTotal % 60 : 0;
+    return Array.from({ length: 60 - start }, (_, i) => start + i);
+  };
 
   const [hh, mm] = value.split(":");
   const parsedHour = Math.min(
     maxHour,
-    Math.max(minHour, parseInt(hh, 10) || minHour),
+    Math.max(firstHour, parseInt(hh, 10) || firstHour),
   );
-  // Giờ cuối (18) chỉ cho chọn :00, vì giờ bắt đầu tối đa là 18:00
-  const minutes =
-    parsedHour === maxHour ? [0] : Array.from({ length: 60 }, (_, i) => i);
-  const parsedMinute = parsedHour === maxHour ? 0 : parseInt(mm, 10) || 0;
+  const minutes = minutesFor(parsedHour);
+  const rawMinute = parseInt(mm, 10) || 0;
+  const parsedMinute =
+    minutes.find((m) => m >= rawMinute) ?? minutes[minutes.length - 1];
 
   const hourIndex = hours.indexOf(parsedHour);
   const minuteIndex = minutes.indexOf(parsedMinute);
 
-  const commit = (hIdx: number, mIdx: number) => {
-    const h = hours[hIdx];
-    const m = h === maxHour ? 0 : mIdx; // danh sách 60 phút thì index = số phút
-    onChange(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+  const commit = (h: number, m: number) => {
+    const list = minutesFor(h);
+    const safeMinute = list.find((x) => x >= m) ?? list[list.length - 1];
+    onChange(`${pad2(h)}:${pad2(safeMinute)}`);
   };
 
   return (
     <View>
       <View className="flex-row mb-2">
         <Text className="flex-1 text-center text-[15px] font-bold text-ink">
-          {t("Giờ")}</Text>
+          {t("Giờ")}
+        </Text>
         <Text className="flex-1 text-center text-[15px] font-bold text-ink">
-          {t("Phút")}</Text>
+          {t("Phút")}
+        </Text>
       </View>
 
       <View style={{ height: WHEEL_HEIGHT, flexDirection: "row" }}>
         <WheelColumn
           data={hours}
           selectedIndex={hourIndex === -1 ? 0 : hourIndex}
-          formatItem={(v) => String(v).padStart(2, "0")}
-          onChangeIndex={(idx) =>
-            commit(idx, minuteIndex === -1 ? 0 : minuteIndex)
-          }
+          formatItem={(v) => pad2(v)}
+          onChangeIndex={(idx) => commit(hours[idx], parsedMinute)}
         />
         <WheelColumn
           data={minutes}
           selectedIndex={minuteIndex === -1 ? 0 : minuteIndex}
-          formatItem={(v) => String(v).padStart(2, "0")}
-          onChangeIndex={(idx) => commit(hourIndex === -1 ? 0 : hourIndex, idx)}
+          formatItem={(v) => pad2(v)}
+          onChangeIndex={(idx) => commit(parsedHour, minutes[idx])}
         />
       </View>
     </View>
@@ -651,11 +700,13 @@ function TimeWheelPicker({
 // ============================================================
 export function TimeField({
   value,
+  date,
   onChange,
-  minHour = 8,
-  maxHour = 18,
+  minHour = BOOKING_MIN_HOUR,
+  maxHour = BOOKING_MAX_HOUR,
 }: {
   value: string | undefined;
+  date?: string;
   onChange: (v: string) => void;
   minHour?: number;
   maxHour?: number;
@@ -664,14 +715,23 @@ export function TimeField({
 
   const { COLORS } = useAppTheme();
 
-  const defaultValue = `${String(minHour).padStart(2, "0")}:00`;
-  const displayValue = value ?? defaultValue;
+  const earliest = earliestStartMinutes(date, minHour);
+  const defaultValue = minutesToTime(Math.min(earliest, maxHour * 60));
+  const displayValue =
+    value && timeToMinutes(value) >= earliest ? value : defaultValue;
+
+  // Đổi sang hôm nay mà giờ đã chọn nằm trong khoảng chưa cho đặt -> đẩy lên giờ sớm nhất
+  useEffect(() => {
+    if (value && timeToMinutes(value) < earliest && earliest <= maxHour * 60) {
+      onChange(minutesToTime(earliest));
+    }
+  }, [date, value, earliest]);
 
   const [visible, setVisible] = useState(false);
   const [tempValue, setTempValue] = useState(displayValue);
 
   const open = () => {
-    setTempValue(value ?? defaultValue);
+    setTempValue(displayValue);
     setVisible(true);
   };
 
@@ -698,7 +758,9 @@ export function TimeField({
           </Text>
         </View>
         <View className="px-3 py-1.5 rounded-full bg-primary-light">
-          <Text className="text-xs font-bold text-primary-dark">{t("Đổi")}</Text>
+          <Text className="text-xs font-bold text-primary-dark">
+            {t("Đổi")}
+          </Text>
         </View>
       </TouchableOpacity>
 
@@ -713,9 +775,11 @@ export function TimeField({
           </TouchableOpacity>
 
           <View className="items-center">
-            <Text className="text-lg font-bold text-ink">{t("Chọn giờ làm")}</Text>
+            <Text className="text-lg font-bold text-ink">
+              {t("Chọn giờ làm")}
+            </Text>
             <Text className="text-xs text-ink-muted mt-0.5">
-              {t("Khung giờ")}{" "}{String(minHour).padStart(2, "0")}:00 -{" "}
+              {t("Khung giờ")} {String(minHour).padStart(2, "0")}:00 -{" "}
               {String(maxHour).padStart(2, "0")}:00
             </Text>
           </View>
@@ -734,6 +798,7 @@ export function TimeField({
             value={tempValue}
             minHour={minHour}
             maxHour={maxHour}
+            minTotalMinutes={earliest}
             onChange={setTempValue}
           />
         </View>
@@ -768,7 +833,7 @@ function toDateKey(d: Date): string {
 
 export function DateStripField({
   value,
-  minDaysFromNow = 1,
+  minDaysFromNow = 0,
   rangeDays = 14,
   onChange,
 }: {
@@ -778,7 +843,12 @@ export function DateStripField({
   onChange: (v: string) => void;
 }) {
   const { t } = useTranslation();
-  const dates = buildDateRange(minDaysFromNow, rangeDays);
+  // Hôm nay chỉ hiện nếu còn khung giờ hợp lệ
+  const todayHasSlot =
+    earliestStartMinutes(toDateKey(new Date())) <= BOOKING_MAX_HOUR * 60;
+  const effectiveMin =
+    minDaysFromNow === 0 && !todayHasSlot ? 1 : minDaysFromNow;
+  const dates = buildDateRange(effectiveMin, rangeDays);
 
   return (
     <ScrollView
@@ -796,7 +866,9 @@ export function DateStripField({
             onPress={() => onChange(key)}
             activeOpacity={0.85}
             className={`items-center justify-center border ${
-              selected ? "bg-primary-fill border-primary" : "bg-surface border-line"
+              selected
+                ? "bg-primary-fill border-primary"
+                : "bg-surface border-line"
             }`}
             style={[
               { width: 60, height: 80, borderRadius: 20 },
@@ -808,7 +880,9 @@ export function DateStripField({
                 selected ? "text-white/80" : "text-ink-muted"
               }`}
             >
-              {getLocale(t) === "en-US" ? d.toLocaleDateString(getLocale(t), { weekday: "short" }) : VN_WEEKDAY_SHORT[d.getDay()]}
+              {getLocale(t) === "en-US"
+                ? d.toLocaleDateString(getLocale(t), { weekday: "short" })
+                : VN_WEEKDAY_SHORT[d.getDay()]}
             </Text>
             <Text
               className={`text-[22px] font-extrabold my-0.5 ${
@@ -822,7 +896,9 @@ export function DateStripField({
                 selected ? "text-white/70" : "text-ink-muted"
               }`}
             >
-              {getLocale(t) === "en-US" ? d.toLocaleDateString(getLocale(t), { month: "short" }) : `Th${d.getMonth() + 1}`}
+              {getLocale(t) === "en-US"
+                ? d.toLocaleDateString(getLocale(t), { month: "short" })
+                : `Th${d.getMonth() + 1}`}
             </Text>
           </TouchableOpacity>
         );
@@ -1016,7 +1092,8 @@ export function FieldControl({
     case "TEXT":
     case "TEXTAREA":
       return (
-        <TextInput keyboardAppearance={themeMode}
+        <TextInput
+          keyboardAppearance={themeMode}
           className="rounded-2xl border border-line bg-surface px-4 py-3.5 text-[15px] text-ink"
           style={{
             minHeight: field.type === "TEXTAREA" ? 96 : undefined,
@@ -1043,15 +1120,17 @@ export function FieldControl({
 
     case "DATE":
       return (
-        <DateStripField
-          value={value}
-          minDaysFromNow={field.min_days_from_now ?? 1}
-          onChange={onChange}
-        />
+        <DateStripField value={value} minDaysFromNow={0} onChange={onChange} />
       );
 
     case "TIME":
-      return <TimeField value={value} onChange={onChange} />;
+      return (
+        <TimeField
+          value={value}
+          date={siblingValues.date}
+          onChange={onChange}
+        />
+      );
 
     default:
       return null;
