@@ -1253,5 +1253,7 @@
   "Chuyển thiếu ({{value0}} / {{value1}}){{value2}}": "Underpayment ({{value0}} / {{value1}}){{value2}}",
   "Liên hệ": "Contact",
   "© {{value0}} CleanWise. Bảo lưu mọi quyền.": "© {{value0}} CleanWise. All rights reserved.",
-  "CCCD/CMND Sandbox": "Sandbox national ID card"
+  "CCCD/CMND Sandbox": "Sandbox national ID card",
+  "Vui lòng đặt trước giờ bắt đầu ít nhất 2 giờ. Hãy quay lại chọn giờ khác.": "Please book at least 2 hours before the start time. Go back and choose a later time.",
+  "Gói {{value0}}, buổi đầu theo lịch gần nhất": "{{value0}} package, first session on the nearest matching day"
 }
