@@ -1,4 +1,6 @@
 {
+  "LỊCH LÀM": "LỊCH LÀM",
+  "NGÀY ĐẶT": "NGÀY ĐẶT",
   "Đổi mật khẩu thành công!": "Đổi mật khẩu thành công!",
   "Bạn có thể đăng nhập lại bằng mật khẩu mới.": "Bạn có thể đăng nhập lại bằng mật khẩu mới.",
   "Quên mật khẩu?": "Quên mật khẩu?",
@@ -113,8 +115,7 @@
   "Gói định kỳ cần thanh toán trước. Hủy buổi nào sẽ được hoàn tiền buổi đó vào ví.": "Gói định kỳ cần thanh toán trước. Hủy buổi nào sẽ được hoàn tiền buổi đó vào ví.",
   "Tổng tiền": "Tổng tiền",
   "Chờ báo giá": "Chờ báo giá",
-  "Đang đăng việc...": "Đang đăng việc...",
-  "Đăng việc": "Đăng việc",
+  "Đang đặt dịch vụ...": "Đang đặt dịch vụ...",
   "Chọn app ngân hàng của bạn ở bên dưới (hoặc nhấn “Mở trang thanh toán”)": "Chọn app ngân hàng của bạn ở bên dưới (hoặc nhấn “Mở trang thanh toán”)",
   "Kiểm tra số tiền và nội dung chuyển khoản": "Kiểm tra số tiền và nội dung chuyển khoản",
   "Xác nhận thanh toán trong app ngân hàng": "Xác nhận thanh toán trong app ngân hàng",

@@ -174,7 +174,7 @@ export function BookingCard({ item }: { item: BookingCardData }) {
               selectable
               numberOfLines={1}
               adjustsFontSizeToFit
-              minimumFontScale={0.6}
+              minimumFontScale={0.7}
               className="text-ink font-extrabold"
               style={{
                 fontSize: 13,

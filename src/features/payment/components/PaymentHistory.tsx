@@ -478,6 +478,8 @@ function HistoryRow({
       <View style={{ flex: 1, marginLeft: 12 }}>
         <Text
           numberOfLines={1}
+          adjustsFontSizeToFit={Boolean(item.booking_code)}
+          minimumFontScale={0.7}
           style={{ fontSize: 14.5, fontWeight: "700", color: COLORS.ink }}
         >
           {item.booking_code

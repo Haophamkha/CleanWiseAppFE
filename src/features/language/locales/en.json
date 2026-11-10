@@ -1,4 +1,6 @@
 {
+  "LỊCH LÀM": "SCHEDULE",
+  "NGÀY ĐẶT": "BOOKED ON",
   "Đổi mật khẩu thành công!": "Password changed successfully!",
   "Bạn có thể đăng nhập lại bằng mật khẩu mới.": "You can sign in again with your new password.",
   "Quên mật khẩu?": "Forgot password?",
@@ -113,8 +115,7 @@
   "Gói định kỳ cần thanh toán trước. Hủy buổi nào sẽ được hoàn tiền buổi đó vào ví.": "Recurring packages require advance payment. Canceled sessions are refunded to your wallet.",
   "Tổng tiền": "Total",
   "Chờ báo giá": "Awaiting quote",
-  "Đang đăng việc...": "Posting booking...",
-  "Đăng việc": "Post booking",
+  "Đang đặt dịch vụ...": "Booking service...",
   "Chọn app ngân hàng của bạn ở bên dưới (hoặc nhấn “Mở trang thanh toán”)": "Choose your banking app below (or tap “Open payment page”)",
   "Kiểm tra số tiền và nội dung chuyển khoản": "Check the amount and transfer reference",
   "Xác nhận thanh toán trong app ngân hàng": "Confirm payment in your banking app",

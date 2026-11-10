@@ -83,6 +83,7 @@ export function ConversationItem({
             <View
               style={{
                 marginLeft: 8,
+                maxWidth: "60%",
                 paddingHorizontal: 6,
                 paddingVertical: 1,
                 borderRadius: 6,
@@ -90,6 +91,9 @@ export function ConversationItem({
               }}
             >
               <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
                 style={{
                   fontSize: 11,
                   fontWeight: "600",
