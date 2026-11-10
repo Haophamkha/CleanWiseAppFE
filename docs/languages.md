@@ -40,3 +40,21 @@ Cần kiểm tra thêm Android/iOS thật, cỡ chữ lớn và các luồng có
 `service-language.test.cjs` kiểm tra coverage nội dung dịch vụ seed, nhãn/lựa chọn điều kiện lồng nhau, đổi Việt–Anh trên component biểu mẫu/tóm tắt đặt dịch vụ và lịch sử thanh toán với dữ liệu mô phỏng. Các mẫu ghi chú giao dịch do hệ thống sinh được dịch qua `localizeTransactionNote`; ghi chú tự do giữ nguyên. Dữ liệu khách nhập, điều kiện và mã lựa chọn giữ nguyên.
 
 Kết quả cuối: TypeScript đạt; 72 kiểm thử đạt; không thiếu khóa dịch tĩnh trong lời gọi `t()`. Ảnh xác nhận: `../output/customer-language-audit/service-english.png`; log kiểm thử: `../output/customer-language-audit/tests.txt`.
+
+
+## Đổi qua lại ngôn ngữ — 04/11/2026
+
+Kiểm tra trên QuangFE sau merge 58adc44. Đã sửa khóa Liên hệ còn thiếu, bản quyền luôn English, nhãn CCCD/CMND Sandbox, nhãn địa chỉ preset và tiêu đề màn chọn địa chỉ lưu theo ngôn ngữ cũ. Chỉ dịch đúng ba preset Nhà/Công ty/Khác; dữ liệu lưu vẫn là giá trị gốc và nhãn tự đặt giữ nguyên. ErrorText cùng các màn auth/payment/complaint/review cập nhật các thông báo lỗi cố định đã có trong từ điển kể cả khi chuỗi lỗi được lưu trước lúc đổi ngôn ngữ. Thông báo tự do từ backend và chuỗi động không khớp khóa cố định vẫn giữ nguyên; không tự dịch nội dung người dùng.
+
+Đã thực hiện hai vòng đổi Việt–Anh trên web và đối chiếu Settings, About, Home, gói tháng, sofa/nệm/rèm/thảm; kiểm tra thêm form địa chỉ chọn Home hiển thị đúng trong ô nhập. Không thấy lỗi runtime ở các màn đã kiểm tra. Kiểm thử component giữ nguyên dữ liệu và đổi nhãn/lỗi tại chỗ. 75 kiểm thử đạt, TypeScript đạt. Ảnh About hai ngôn ngữ ở ../output/customer-language-switch/. Chưa xác nhận toàn bộ UI Android/iOS hoặc luồng đăng nhập có dữ liệu riêng trong lượt này.
+
+
+## Hồi quy React Compiler: menu giữ bản dịch cũ
+
+Đã tái hiện đúng lỗi HỖ TRỢ tiếng Việt nhưng các hàng User guide/Settings/About CleanWise vẫn English trong một phiên đã đăng nhập. Nguyên nhân: React Compiler memoize lời gọi factory không có đầu vào reactive (getLocalizedSupportItems()), dù hàm đọc i18n global đã đổi. Các test transpile TypeScript thông thường và điều hướng bằng tải lại trang không phát hiện được.
+
+Factory nhãn/trạng thái và helper định dạng tiền/ngày giờ nay nhận hàm t của useTranslation() làm đối số. Các caller render truyền t rõ ràng; các caller thuần có defaultTranslate tương thích. getLocale(t) dùng đối số làm phụ thuộc để bộ tối ưu làm mới kết quả khi locale thay đổi. Không remount toàn app khi đổi ngôn ngữ. Không đổi API payload, địa chỉ hoặc dữ liệu khách nhập.
+
+Đã thêm language-compiler.test.cjs chạy Babel React Compiler thật: kiểm tra menu 5 lần đổi Anh–Việt cho khách đã/chưa đăng nhập, giữ component mounted; trạng thái đơn và số dư ví đổi với cùng dữ liệu/theme. Test menu thất bại đúng lỗi trước sửa và đạt sau sửa. npm run test:language bao gồm bộ compiler này.
+
+Đã kiểm tra trực tiếp trong phiên đăng nhập có sẵn: mở Cài đặt và back về Cá nhân, đổi vi/en/vi/en/vi không reload; cả 7 mục Tài khoản và 3 mục Hỗ trợ đều đồng bộ. Kết quả: TypeScript đạt, 79 kiểm thử đạt. Ảnh: ../output/customer-language-switch/profile-vi-fixed.png. Các kiểm tra trước theo cách goto()/reload() không chứng minh được cập nhật tại chỗ; dùng điều hướng SPA và giữ component mounted cho các lần rà tiếp theo.
