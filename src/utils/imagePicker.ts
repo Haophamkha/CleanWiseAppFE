@@ -7,6 +7,7 @@ import { Alert } from "react-native";
 
 type Options = {
   square?: boolean;
+  includeWebFile?: boolean;
 };
 
 export async function pickImage(options?: Options, translateText = defaultTranslate): Promise<PickedFile | null> {
@@ -34,5 +35,11 @@ export async function pickImage(options?: Options, translateText = defaultTransl
   const name = asset.fileName ?? asset.uri.split("/").pop() ?? "photo.jpg";
   const type = asset.mimeType ?? "image/jpeg";
 
-  return { uri: asset.uri, name, type };
+  return {
+    uri: asset.uri,
+    name,
+    type,
+    size: asset.fileSize,
+    ...(options?.includeWebFile && asset.file ? { file: asset.file } : {}),
+  };
 }

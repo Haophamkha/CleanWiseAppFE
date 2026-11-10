@@ -92,21 +92,22 @@ export const complaintApi = baseApi.injectEndpoints({
           formData.append("content", content);
         }
 
-        (files ?? []).forEach((file) => {
+        for (const file of files ?? []) {
+          if (file.file) {
+            formData.append("attachments", file.file);
+            continue;
+          }
           formData.append("attachments", {
             uri: file.uri,
             name: file.name ?? `photo-${Date.now()}.jpg`,
             type: file.type ?? "image/jpeg",
           } as any);
-        });
+        }
 
         return {
           url: "/api/customer/complaints/",
           method: "POST",
           data: formData,
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
         };
       },
 
