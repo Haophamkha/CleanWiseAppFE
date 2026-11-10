@@ -43,9 +43,17 @@ export type FormSchema = {
   version: number;
   address_count: number;
   schedule_type?: "ONCE" | "RECURRING_WEEKLY";
+  default_duration_hours?: number;
   addresses?: { key: string; label: string; required: boolean }[];
   task_checklist?: string;
   fields: FormField[];
+};
+
+export type BookingPolicy = {
+  time_zone: string;
+  min_advance_minutes: number;
+  open_time: string;
+  last_start_time: string;
 };
 
 /**
@@ -99,6 +107,7 @@ export type ServiceListItem = {
 
 export type ServiceDetail = ServiceListItem & {
   form_schema: FormSchema;
+  booking_policy?: BookingPolicy;
   pricing_config: PricingConfig;
   images: ServiceImage[];
   created_at: string;

@@ -4,6 +4,13 @@ import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { useGetAddressesQuery } from "@/features/address/api/addressApi";
 import { clearPickedAddress } from "@/features/address/stores/addressPickerSlice";
 import { setBookingDraft } from "@/features/booking/stores/bookingDraftSlice";
+import {
+  DEFAULT_BOOKING_POLICY,
+  formatBookingTime,
+  getBookingTimeRange,
+  getBookingToday,
+  isBookingTimeInRange,
+} from "@/features/booking/utils/bookingSchedule";
 import { useGetServiceDetailQuery } from "@/features/service/api/serviceApi";
 import { AddressPickerField } from "@/features/service/components/AddressPickerField";
 import { FormSchemaRenderer } from "@/features/service/components/FormSchemaRenderer";
@@ -54,9 +61,36 @@ export default function ServiceDetailScreen() {
   // Dữ liệu dịch vụ cũ có thể chưa có form_schema/fields. Luôn chuẩn hóa
   // thành mảng để màn hình chi tiết không bị crash khi render.
   const serviceFields = service?.form_schema?.fields ?? [];
+  const bookingPolicy = service && (service.form_schema?.schedule_type ?? "ONCE") === "ONCE"
+    ? service.booking_policy ?? DEFAULT_BOOKING_POLICY
+    : undefined;
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    if (!bookingPolicy) return;
+    const timer = setInterval(() => {
+      const current = Date.now();
+      // Date and eligibility only change at the minute boundary or just after it.
+      setNow(Math.min(current, Math.floor(current / 60_000) * 60_000 + 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [bookingPolicy]);
+  const today = bookingPolicy ? getBookingToday(bookingPolicy, now) : undefined;
+  const booking = bookingPolicy && today ? {
+    today,
+    todayAvailable: !!getBookingTimeRange(today, bookingPolicy, now),
+    timeRange: getBookingTimeRange(values.date, bookingPolicy, now),
+    minAdvanceMinutes: bookingPolicy.min_advance_minutes,
+  } : undefined;
 
   const handleChange = (key: string, value: any) => {
-    setValues((prev) => ({ ...prev, [key]: value }));
+    const timeRange = key === "date" && bookingPolicy ? getBookingTimeRange(value, bookingPolicy) : null;
+    setValues((prev) => {
+      const next = { ...prev, [key]: value };
+      if (key === "date" && bookingPolicy && !isBookingTimeInRange(prev.start_time, timeRange)) {
+        next.start_time = timeRange ? formatBookingTime(timeRange.min) : undefined;
+      }
+      return next;
+    });
   };
 
   // Danh sách dòng địa chỉ cần chọn: lấy từ form_schema.addresses,
@@ -114,6 +148,12 @@ export default function ServiceDetailScreen() {
 
     if (missing.length > 0) {
       showErrorToast(t("Thiếu thông tin"), t("Vui lòng điền: {{value0}}", { value0: missing.map(label => t(label)).join(", ") }));
+      return;
+    }
+    if (bookingPolicy && !isBookingTimeInRange(
+      values.start_time, getBookingTimeRange(values.date, bookingPolicy),
+    )) {
+      showErrorToast(t("Thời gian không hợp lệ"), t("Khung giờ đã hết hạn hoặc không hợp lệ. Vui lòng chọn lại ngày giờ."));
       return;
     }
 
@@ -251,6 +291,7 @@ export default function ServiceDetailScreen() {
             values={values}
             pricingConfig={service.pricing_config}
             taskChecklist={service.form_schema?.task_checklist}
+            booking={booking}
             onChange={handleChange}
           />
         </View>

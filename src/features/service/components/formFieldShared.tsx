@@ -6,6 +6,14 @@ import { useAppTheme } from "@/features/theme/ThemeProvider";
 // src/components/service/formFieldShared.tsx
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { SHADOWS } from "@/constants/theme";
+import {
+  DEFAULT_BOOKING_POLICY,
+  formatBookingTime,
+  isBookingTimeInRange,
+  parseBookingTime,
+  type BookingFieldContext,
+  type BookingTimeRange,
+} from "@/features/booking/utils/bookingSchedule";
 import type {
   ConditionalOptionGroup,
   FieldOption,
@@ -582,40 +590,29 @@ function WheelColumn({
 
 function TimeWheelPicker({
   value,
-  minHour,
-  maxHour,
+  range,
   onChange,
 }: {
   value: string;
-  minHour: number;
-  maxHour: number;
+  range: BookingTimeRange;
   onChange: (v: string) => void;
 }) {
   const { t } = useTranslation();
 
-  const hours = Array.from(
-    { length: maxHour - minHour + 1 },
-    (_, i) => minHour + i,
-  );
-
-  const [hh, mm] = value.split(":");
-  const parsedHour = Math.min(
-    maxHour,
-    Math.max(minHour, parseInt(hh, 10) || minHour),
-  );
-  // Giờ cuối (18) chỉ cho chọn :00, vì giờ bắt đầu tối đa là 18:00
-  const minutes =
-    parsedHour === maxHour ? [0] : Array.from({ length: 60 }, (_, i) => i);
-  const parsedMinute = parsedHour === maxHour ? 0 : parseInt(mm, 10) || 0;
-
+  const minHour = Math.floor(range.min / 60);
+  const maxHour = Math.floor(range.max / 60);
+  const hours = Array.from({ length: maxHour - minHour + 1 }, (_, i) => minHour + i);
+  const time = parseBookingTime(value);
+  const parsedHour = Math.floor(time / 60);
+  const parsedMinute = time % 60;
+  const minutesForHour = (hour: number) => {
+    const min = Math.max(0, range.min - hour * 60);
+    const max = Math.min(59, range.max - hour * 60);
+    return Array.from({ length: max - min + 1 }, (_, i) => min + i);
+  };
+  const minutes = minutesForHour(parsedHour);
   const hourIndex = hours.indexOf(parsedHour);
   const minuteIndex = minutes.indexOf(parsedMinute);
-
-  const commit = (hIdx: number, mIdx: number) => {
-    const h = hours[hIdx];
-    const m = h === maxHour ? 0 : mIdx; // danh sách 60 phút thì index = số phút
-    onChange(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
-  };
 
   return (
     <View>
@@ -629,17 +626,20 @@ function TimeWheelPicker({
       <View style={{ height: WHEEL_HEIGHT, flexDirection: "row" }}>
         <WheelColumn
           data={hours}
-          selectedIndex={hourIndex === -1 ? 0 : hourIndex}
+          selectedIndex={hourIndex}
           formatItem={(v) => String(v).padStart(2, "0")}
-          onChangeIndex={(idx) =>
-            commit(idx, minuteIndex === -1 ? 0 : minuteIndex)
-          }
+          onChangeIndex={(idx) => {
+            const hour = hours[idx];
+            const choices = minutesForHour(hour);
+            const minute = choices.includes(parsedMinute) ? parsedMinute : choices[0];
+            onChange(formatBookingTime(hour * 60 + minute));
+          }}
         />
         <WheelColumn
           data={minutes}
-          selectedIndex={minuteIndex === -1 ? 0 : minuteIndex}
+          selectedIndex={minuteIndex}
           formatItem={(v) => String(v).padStart(2, "0")}
-          onChangeIndex={(idx) => commit(hourIndex === -1 ? 0 : hourIndex, idx)}
+          onChangeIndex={(idx) => onChange(formatBookingTime(parsedHour * 60 + minutes[idx]))}
         />
       </View>
     </View>
@@ -652,31 +652,41 @@ function TimeWheelPicker({
 export function TimeField({
   value,
   onChange,
-  minHour = 8,
-  maxHour = 18,
+  range,
+  disabledLabel,
 }: {
   value: string | undefined;
   onChange: (v: string) => void;
-  minHour?: number;
-  maxHour?: number;
+  range?: BookingTimeRange | null;
+  disabledLabel?: string;
 }) {
   const { t } = useTranslation();
 
   const { COLORS } = useAppTheme();
 
-  const defaultValue = `${String(minHour).padStart(2, "0")}:00`;
-  const displayValue = value ?? defaultValue;
+  const activeRange = range ?? {
+    min: parseBookingTime(DEFAULT_BOOKING_POLICY.open_time),
+    max: parseBookingTime(DEFAULT_BOOKING_POLICY.last_start_time),
+  };
+  const defaultValue = formatBookingTime(activeRange.min);
+  const selectedValue = isBookingTimeInRange(value, activeRange) ? value : undefined;
+  const displayValue = range === null
+    ? disabledLabel
+    : selectedValue ?? (range ? t("Chọn giờ làm") : defaultValue);
+  const rangeLabel = `${formatBookingTime(activeRange.min)} – ${formatBookingTime(activeRange.max)}`;
 
   const [visible, setVisible] = useState(false);
-  const [tempValue, setTempValue] = useState(displayValue);
+  const [tempValue, setTempValue] = useState(defaultValue);
+  const wheelValue = isBookingTimeInRange(tempValue, activeRange) ? tempValue : defaultValue;
 
   const open = () => {
-    setTempValue(value ?? defaultValue);
+    setTempValue(selectedValue ?? defaultValue);
     setVisible(true);
   };
 
   const confirm = () => {
-    onChange(tempValue);
+    if (range === null) return;
+    onChange(wheelValue);
     setVisible(false);
   };
 
@@ -684,9 +694,12 @@ export function TimeField({
     <>
       <TouchableOpacity
         onPress={open}
+        disabled={range === null}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: range === null }}
         activeOpacity={0.85}
         className="flex-row items-center rounded-2xl border border-line bg-surface p-4"
-        style={SHADOWS.card}
+        style={[SHADOWS.card, range === null && { opacity: 0.55 }]}
       >
         <View className="w-11 h-11 rounded-full bg-primary-light items-center justify-center mr-3">
           <Feather name="clock" size={19} color={COLORS.primaryDark} />
@@ -696,13 +709,18 @@ export function TimeField({
           <Text className="text-[22px] font-extrabold text-ink">
             {displayValue}
           </Text>
+          {range && (
+            <Text className="text-xs text-ink-soft">{t("Khung giờ")} {rangeLabel}</Text>
+          )}
         </View>
-        <View className="px-3 py-1.5 rounded-full bg-primary-light">
-          <Text className="text-xs font-bold text-primary-dark">{t("Đổi")}</Text>
-        </View>
+        {range !== null && (
+          <View className="px-3 py-1.5 rounded-full bg-primary-light">
+            <Text className="text-xs font-bold text-primary-dark">{t("Đổi")}</Text>
+          </View>
+        )}
       </TouchableOpacity>
 
-      <BottomSheet visible={visible} onClose={() => setVisible(false)}>
+      <BottomSheet visible={visible && range !== null} onClose={() => setVisible(false)}>
         <View className="flex-row items-center justify-between px-5 pt-3">
           <TouchableOpacity
             onPress={() => setVisible(false)}
@@ -715,8 +733,7 @@ export function TimeField({
           <View className="items-center">
             <Text className="text-lg font-bold text-ink">{t("Chọn giờ làm")}</Text>
             <Text className="text-xs text-ink-muted mt-0.5">
-              {t("Khung giờ")}{" "}{String(minHour).padStart(2, "0")}:00 -{" "}
-              {String(maxHour).padStart(2, "0")}:00
+              {t("Khung giờ")} {rangeLabel}
             </Text>
           </View>
 
@@ -731,9 +748,8 @@ export function TimeField({
 
         <View className="px-8 pt-8 pb-4">
           <TimeWheelPicker
-            value={tempValue}
-            minHour={minHour}
-            maxHour={maxHour}
+            value={wheelValue}
+            range={activeRange}
             onChange={setTempValue}
           />
         </View>
@@ -747,9 +763,9 @@ export function TimeField({
 // ============================================================
 const VN_WEEKDAY_SHORT = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
-function buildDateRange(startOffsetDays: number, count: number): Date[] {
-  const base = new Date();
-  base.setHours(0, 0, 0, 0);
+function buildDateRange(startOffsetDays: number, count: number, today?: string): Date[] {
+  const base = today ? new Date(`${today}T12:00:00`) : new Date();
+  base.setHours(12, 0, 0, 0);
   const result: Date[] = [];
   for (let i = 0; i < count; i++) {
     const d = new Date(base);
@@ -770,15 +786,19 @@ export function DateStripField({
   value,
   minDaysFromNow = 1,
   rangeDays = 14,
+  today,
+  disableToday = false,
   onChange,
 }: {
   value: string | undefined;
   minDaysFromNow?: number;
   rangeDays?: number;
+  today?: string;
+  disableToday?: boolean;
   onChange: (v: string) => void;
 }) {
   const { t } = useTranslation();
-  const dates = buildDateRange(minDaysFromNow, rangeDays);
+  const dates = buildDateRange(minDaysFromNow, rangeDays, today);
 
   return (
     <ScrollView
@@ -789,11 +809,16 @@ export function DateStripField({
     >
       {dates.map((d) => {
         const key = toDateKey(d);
-        const selected = value === key;
+        const isToday = key === today;
+        const disabled = isToday && disableToday;
+        const selected = !disabled && value === key;
         return (
           <TouchableOpacity
             key={key}
             onPress={() => onChange(key)}
+            disabled={disabled}
+            accessibilityRole="button"
+            accessibilityState={{ disabled, selected }}
             activeOpacity={0.85}
             className={`items-center justify-center border ${
               selected ? "bg-primary-fill border-primary" : "bg-surface border-line"
@@ -801,6 +826,7 @@ export function DateStripField({
             style={[
               { width: 60, height: 80, borderRadius: 20 },
               selected ? SHADOWS.float : undefined,
+              disabled ? { opacity: 0.45 } : undefined,
             ]}
           >
             <Text
@@ -808,7 +834,9 @@ export function DateStripField({
                 selected ? "text-white/80" : "text-ink-muted"
               }`}
             >
-              {getLocale(t) === "en-US" ? d.toLocaleDateString(getLocale(t), { weekday: "short" }) : VN_WEEKDAY_SHORT[d.getDay()]}
+              {isToday ? t("Hôm nay") : getLocale(t) === "en-US"
+                ? d.toLocaleDateString(getLocale(t), { weekday: "short" })
+                : VN_WEEKDAY_SHORT[d.getDay()]}
             </Text>
             <Text
               className={`text-[22px] font-extrabold my-0.5 ${
@@ -900,12 +928,14 @@ export function FieldControl({
   value,
   siblingValues,
   pricingConfig,
+  booking,
   onChange,
 }: {
   field: FormField;
   value: any;
   siblingValues: Values;
   pricingConfig?: PricingConfig;
+  booking?: BookingFieldContext;
   onChange: (v: any) => void;
 }) {
   const { t } = useTranslation();
@@ -1042,6 +1072,25 @@ export function FieldControl({
       );
 
     case "DATE":
+      if (booking && field.key === "date") {
+        return (
+          <View>
+            <DateStripField
+              value={value}
+              today={booking.today}
+              disableToday={!booking.todayAvailable}
+              minDaysFromNow={0}
+              rangeDays={15}
+              onChange={onChange}
+            />
+            <Text className="mt-2 text-xs text-ink-soft">
+              {booking.todayAvailable
+                ? t("Cần đặt trước ít nhất {{value0}} phút.", { value0: booking.minAdvanceMinutes })
+                : t("Hôm nay đã hết khung giờ. Vui lòng chọn ngày khác.")}
+            </Text>
+          </View>
+        );
+      }
       return (
         <DateStripField
           value={value}
@@ -1051,7 +1100,15 @@ export function FieldControl({
       );
 
     case "TIME":
-      return <TimeField value={value} onChange={onChange} />;
+      return (
+        <TimeField
+          key={booking && field.key === "start_time" ? siblingValues.date : undefined}
+          value={value}
+          onChange={onChange}
+          range={field.key === "start_time" ? booking?.timeRange : undefined}
+          disabledLabel={siblingValues.date ? t("Không còn giờ phù hợp") : t("Chọn ngày trước")}
+        />
+      );
 
     default:
       return null;

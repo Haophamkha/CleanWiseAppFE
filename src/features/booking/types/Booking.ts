@@ -1,3 +1,5 @@
+import type { FavoriteWorker } from "@/features/favorite-worker/types/FavoriteWorker";
+
 export type PaymentMethod = "CASH" | "BANK_TRANSFER" | "WALLET";
 
 export type PaymentStatus =
@@ -16,6 +18,21 @@ export type CreateBookingRequest = {
   voucher_code?: string;
   payment_method: PaymentMethod;
   preferred_worker_id?: number | null;
+};
+
+export type FavoriteWorkerAvailabilityRequest = Pick<
+  CreateBookingRequest,
+  "service_id" | "address_id" | "service_data"
+>;
+
+export type BookingFavoriteWorker = FavoriteWorker & {
+  availability: "AVAILABLE" | "BUSY" | "UNAVAILABLE";
+};
+
+export type FavoriteWorkerAvailabilityResponse = {
+  results: BookingFavoriteWorker[];
+  first_schedule: { scheduled_start: string; scheduled_end: string };
+  session_count: number;
 };
 
 export type BookingWorker = {
