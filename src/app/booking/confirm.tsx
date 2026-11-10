@@ -10,7 +10,6 @@ import { PaymentMethodSheet } from "@/features/booking/components/PaymentMethodS
 import {
   PreferredWorkerInfoModal,
   PreferredWorkerSheet,
-  workerKey,
   workerName,
 } from "@/features/booking/components/PreferredWorkerSheet";
 import { ServiceOptionsSummary } from "@/features/booking/components/ServiceOptionsSummary";
@@ -94,15 +93,16 @@ export default function BookingConfirmScreen() {
     prepaidOnly,
     favoriteWorkers,
     favoritesLoading,
-    preferredWorkerId,
-    setPreferredWorkerId,
+    favoritesFetching,
+    favoritesError,
+    availabilitySchedule,
+    refreshFavoriteWorkers,
+    selectedWorker,
+    setPreferredWorker,
   } = useBookingConfirm();
 
   const [workerModalVisible, setWorkerModalVisible] = useState(false);
   const [infoVisible, setInfoVisible] = useState(false);
-  const selectedWorker = favoriteWorkers.find(
-    (w: any) => workerKey(w) === preferredWorkerId,
-  );
 
   if (!service) {
     return (
@@ -284,13 +284,17 @@ export default function BookingConfirmScreen() {
             <View className="py-4 items-center">
               <ActivityIndicator color={COLORS.primary} />
             </View>
-          ) : favoriteWorkers.length > 0 ? (
+          ) : favoriteWorkers.length > 0 || favoritesError || selectedWorker ? (
             <View
               className="flex-row items-center rounded-2xl border border-line bg-surface"
               style={SHADOWS.card}
             >
               <TouchableOpacity
-                onPress={() => setWorkerModalVisible(true)}
+                onPress={() => {
+                  refreshFavoriteWorkers();
+                  setWorkerModalVisible(true);
+                }}
+                disabled={isLoading}
                 activeOpacity={0.8}
                 className="flex-1 flex-row items-center p-4"
               >
@@ -311,19 +315,6 @@ export default function BookingConfirmScreen() {
                       {t("Gửi yêu cầu riêng cho nhân viên này")}</Text>
                   )}
                 </View>
-                {selectedWorker && (
-                  <TouchableOpacity
-                    onPress={() => setPreferredWorkerId(null as any)}
-                    hitSlop={8}
-                    className="mr-2"
-                  >
-                    <Feather
-                      name="x-circle"
-                      size={18}
-                      color={COLORS.inkMuted}
-                    />
-                  </TouchableOpacity>
-                )}
                 <Feather
                   name="chevron-right"
                   size={18}
@@ -331,12 +322,23 @@ export default function BookingConfirmScreen() {
                 />
               </TouchableOpacity>
 
+              {selectedWorker && (
+                <TouchableOpacity
+                  onPress={() => setPreferredWorker(null)}
+                  disabled={isLoading}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("Bỏ chọn nhân viên")}
+                  className="px-2 py-3"
+                >
+                  <Feather name="x-circle" size={18} color={COLORS.inkMuted} />
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 onPress={() => setInfoVisible(true)}
                 hitSlop={8}
                 className="pr-4 pl-1"
               >
-                <Feather name="help-circle" size={22} color="#F59E0B" />
+                <Feather name="help-circle" size={22} color={COLORS.accent} />
               </TouchableOpacity>
             </View>
           ) : (
@@ -439,8 +441,12 @@ export default function BookingConfirmScreen() {
       <PreferredWorkerSheet
         visible={workerModalVisible}
         workers={favoriteWorkers}
-        selectedId={preferredWorkerId ?? null}
-        onSelect={setPreferredWorkerId}
+        selectedId={selectedWorker?.worker_id}
+        schedule={availabilitySchedule}
+        isChecking={favoritesLoading || favoritesFetching}
+        hasError={favoritesError}
+        onRetry={refreshFavoriteWorkers}
+        onSelect={setPreferredWorker}
         onClose={() => setWorkerModalVisible(false)}
       />
 

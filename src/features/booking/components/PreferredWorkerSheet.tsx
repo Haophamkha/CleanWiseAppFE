@@ -3,8 +3,11 @@ import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { RADIUS } from "@/constants/theme";
+import type { BookingFavoriteWorker } from "@/features/booking/types/Booking";
+import type { FavoriteWorker } from "@/features/favorite-worker/types/FavoriteWorker";
 import { Feather } from "@expo/vector-icons";
 import {
+  ActivityIndicator,
   Image,
   Modal,
   Pressable,
@@ -14,16 +17,9 @@ import {
   View,
 } from "react-native";
 
-const AMBER = "#F59E0B";
-
-export const workerKey = (w: any) => (w?.worker ?? w)?.worker_id ?? w?.id;
-
-export const workerName = (w: any, translateText = defaultTranslate) => {
-  const x = w?.worker ?? w;
+export const workerName = (worker: FavoriteWorker, translateText = defaultTranslate) => {
   return (
-    [x?.last_name, x?.first_name].filter(Boolean).join(" ").trim() ||
-    x?.full_name ||
-    x?.name ||
+    [worker.last_name, worker.first_name].filter(Boolean).join(" ").trim() ||
     translateText("Nhân viên")
   );
 };
@@ -38,7 +34,7 @@ export function PreferredWorkerInfoModal({
 }) {
   const { t } = useTranslation();
 
-  const { COLORS } = useAppTheme();
+  const { COLORS, OVERLAY } = useAppTheme();
 
   return (
     <Modal
@@ -49,9 +45,10 @@ export function PreferredWorkerInfoModal({
     >
       <Pressable
         onPress={onClose}
+        accessible={false}
         style={{
           flex: 1,
-          backgroundColor: "rgba(0,0,0,0.5)",
+          backgroundColor: OVERLAY,
           justifyContent: "center",
           padding: 28,
         }}
@@ -69,7 +66,7 @@ export function PreferredWorkerInfoModal({
               backgroundColor: COLORS.accentLight,
             }}
           >
-            <Feather name="help-circle" size={28} color={AMBER} />
+            <Feather name="help-circle" size={28} color={COLORS.accent} />
           </View>
           <Text className="font-bold text-base text-ink text-center">
             {t("Chọn 1 nhân viên yêu thích để gửi yêu cầu riêng")}</Text>
@@ -94,9 +91,13 @@ export function PreferredWorkerInfoModal({
 /* ---------- Modal chọn nhân viên ---------- */
 type Props = {
   visible: boolean;
-  workers: any[];
-  selectedId: number | null | undefined;
-  onSelect: (id: any) => void;
+  workers: BookingFavoriteWorker[];
+  selectedId?: number;
+  schedule?: string;
+  isChecking: boolean;
+  hasError: boolean;
+  onRetry: () => void;
+  onSelect: (worker: BookingFavoriteWorker | null) => void;
   onClose: () => void;
 };
 
@@ -104,12 +105,16 @@ export function PreferredWorkerSheet({
   visible,
   workers,
   selectedId,
+  schedule,
+  isChecking,
+  hasError,
+  onRetry,
   onSelect,
   onClose,
 }: Props) {
   const { t } = useTranslation();
 
-  const { COLORS } = useAppTheme();
+  const { COLORS, OVERLAY } = useAppTheme();
 
   return (
     <Modal
@@ -122,17 +127,19 @@ export function PreferredWorkerSheet({
         onPress={onClose}
         style={{
           flex: 1,
-          backgroundColor: "rgba(0,0,0,0.5)",
+          backgroundColor: OVERLAY,
           justifyContent: "center",
           padding: 20,
         }}
+        accessible={false}
       >
         <Pressable
+          accessibilityViewIsModal
+          accessible={false}
           className="bg-surface"
           style={{
             borderRadius: RADIUS.card + 8,
             maxHeight: "80%",
-            minHeight: "45%",
             overflow: "hidden",
           }}
         >
@@ -143,97 +150,156 @@ export function PreferredWorkerSheet({
               <Text className="text-ink-muted text-xs mt-0.5">
                 {t("Chọn 1 nhân viên để gửi yêu cầu riêng")}</Text>
             </View>
-            <TouchableOpacity onPress={onClose} hitSlop={10}>
+            <TouchableOpacity
+              onPress={onClose}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={t("Đóng")}
+            >
               <Feather name="x" size={22} color={COLORS.inkMuted} />
             </TouchableOpacity>
           </View>
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
-          >
-            {workers.map((w) => {
-              const x = w?.worker ?? w;
-              const id = workerKey(w);
-              const selected = id === selectedId;
-              const name = workerName(w, t);
-              const rating = Number(x?.average_rating ?? 0);
+          {schedule && (
+            <View className="mx-4 mb-3 flex-row items-center gap-2 rounded-xl bg-primary-soft px-3 py-2.5">
+              <Feather name="clock" size={16} color={COLORS.primaryDark} />
+              <Text className="flex-1 text-[13px] font-semibold text-primary-dark">{schedule}</Text>
+            </View>
+          )}
+          {isChecking ? (
+            <View className="items-center gap-2 px-4 pb-5 pt-2" accessibilityLiveRegion="polite">
+              <ActivityIndicator color={COLORS.primary} />
+              <Text className="text-center text-sm text-ink-soft">
+                {t("Đang kiểm tra lịch nhân viên…")}
+              </Text>
+            </View>
+          ) : hasError ? (
+            <View className="items-center px-4 pb-5 pt-2" accessibilityLiveRegion="polite">
+              <Text className="text-center text-sm text-ink-soft">
+                {t("Không thể kiểm tra lịch nhân viên.")}
+              </Text>
+              <TouchableOpacity accessibilityRole="button" className="px-4 py-3" onPress={onRetry}>
+                <Text className="font-semibold text-primary-dark">{t("Thử lại")}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : workers.length === 0 ? (
+            <Text className="px-4 pb-5 text-center text-sm text-ink-soft">
+              {t("Chưa có nhân viên yêu thích phù hợp")}
+            </Text>
+          ) : (
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              style={{ flexGrow: 0 }}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
+            >
+              {workers.map((worker) => {
+                const available = worker.availability === "AVAILABLE";
+                const selected = available && worker.worker_id === selectedId;
+                const name = workerName(worker, t);
+                const rating = Number(worker.average_rating);
+                const status = available
+                  ? t("Rảnh")
+                  : worker.availability === "BUSY" ? t("Bận") : t("Không thể nhận việc");
+                const statusColor = available ? COLORS.primaryDark : COLORS.inkSoft;
 
-              return (
-                <TouchableOpacity
-                  key={id}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    onSelect(selected ? null : id);
-                    onClose();
-                  }}
-                  className="flex-row items-center rounded-2xl border mb-2.5"
-                  style={{
-                    padding: 12,
-                    borderColor: selected ? COLORS.primary : COLORS.line,
-                    backgroundColor: selected
-                      ? COLORS.primarySoft
-                      : COLORS.surface,
-                  }}
-                >
-                  {x?.avatar ? (
-                    <Image
-                      source={{ uri: x.avatar }}
-                      style={{ width: 52, height: 52, borderRadius: 26 }}
-                    />
-                  ) : (
-                    <View
-                      className="bg-primary-light items-center justify-center"
-                      style={{ width: 52, height: 52, borderRadius: 26 }}
-                    >
-                      <Text className="font-bold text-lg text-primary-dark">
-                        {name.trim().charAt(0).toUpperCase()}
-                      </Text>
-                    </View>
-                  )}
-
-                  <View className="flex-1 ml-3">
-                    <Text
-                      className="font-bold text-[15px] text-ink"
-                      numberOfLines={1}
-                    >
-                      {name}
-                    </Text>
-                    <View className="flex-row items-center mt-1">
-                      <Feather name="star" size={12} color={AMBER} />
-                      <Text className="text-xs font-semibold text-ink ml-1">
-                        {rating > 0 ? rating.toFixed(1) : t("Mới")}
-                      </Text>
-                      <Text className="text-xs text-ink-muted ml-2">
-                        {x?.total_completed_jobs ?? 0} {t("đơn")}</Text>
-                    </View>
-                    {x?.experience_years != null && (
-                      <Text className="text-xs text-ink-muted mt-0.5">
-                        {x.experience_years} {t("năm kinh nghiệm")}</Text>
-                    )}
-                  </View>
-
-                  <View
-                    className="items-center justify-center"
+                return (
+                  <TouchableOpacity
+                    key={worker.worker_id}
+                    activeOpacity={0.8}
+                    disabled={!available}
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: !available, selected }}
+                    accessibilityLabel={`${name}, ${status}`}
+                    onPress={
+                      available
+                        ? () => {
+                            onSelect(selected ? null : worker);
+                            onClose();
+                          }
+                        : undefined
+                    }
+                    className="flex-row items-center rounded-2xl border mb-2.5"
                     style={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: 12,
-                      borderWidth: 2,
+                      padding: 12,
                       borderColor: selected ? COLORS.primary : COLORS.line,
                       backgroundColor: selected
-                        ? COLORS.primaryFill
-                        : "transparent",
+                        ? COLORS.primarySoft
+                        : available ? COLORS.surface : COLORS.surfaceMuted,
                     }}
                   >
-                    {selected && (
-                      <Feather name="check" size={14} color={COLORS.white} />
+                    {worker.avatar ? (
+                      <Image
+                        source={{ uri: worker.avatar }}
+                        style={{ width: 44, height: 44, borderRadius: 22 }}
+                      />
+                    ) : (
+                      <View
+                        className="items-center justify-center"
+                        style={{
+                          width: 44, height: 44, borderRadius: 22,
+                          backgroundColor: available ? COLORS.primaryLight : COLORS.line,
+                        }}
+                      >
+                        <Text className="font-bold text-lg" style={{ color: statusColor }}>
+                          {name.trim().charAt(0).toUpperCase()}
+                        </Text>
+                      </View>
                     )}
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+
+                    <View className="flex-1 mx-2">
+                      <Text
+                        className={`font-bold text-[15px] ${available ? "text-ink" : "text-ink-soft"}`}
+                        numberOfLines={2}
+                      >
+                        {name}
+                      </Text>
+                      <View className="flex-row flex-wrap items-center mt-1">
+                        <Feather name="star" size={12} color={COLORS.accent} />
+                        <Text className="text-xs font-semibold text-ink ml-1">
+                          {rating > 0 ? rating.toFixed(1) : t("Mới")}
+                        </Text>
+                        <Text className="text-xs text-ink-soft ml-2">
+                          {worker.total_completed_jobs} {t("đơn")}</Text>
+                      </View>
+                      {worker.experience_years != null && (
+                        <Text className="text-xs text-ink-soft mt-0.5">
+                          {worker.experience_years} {t("năm kinh nghiệm")}</Text>
+                      )}
+                    </View>
+
+                    <View
+                      className="flex-row items-center gap-1 rounded-full px-2 py-1"
+                      style={{ backgroundColor: available ? COLORS.successLight : COLORS.line, maxWidth: 108 }}
+                    >
+                      <Feather name={available ? "check" : "minus"} size={12} color={statusColor} />
+                      <Text className="shrink text-xs font-semibold" style={{ color: statusColor }}>
+                        {status}
+                      </Text>
+                    </View>
+
+                    <View
+                      className="ml-2 items-center justify-center"
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: 10,
+                        borderWidth: 2,
+                        borderColor: selected ? COLORS.primary : COLORS.line,
+                        opacity: available ? 1 : 0,
+                        backgroundColor: selected
+                          ? COLORS.primaryFill
+                          : "transparent",
+                      }}
+                    >
+                      {selected && (
+                        <Feather name="check" size={14} color={COLORS.white} />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          )}
         </Pressable>
       </Pressable>
     </Modal>

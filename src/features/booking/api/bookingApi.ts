@@ -4,6 +4,8 @@ import type {
   BookingStatus,
   CancelScheduleResult,
   CreateBookingRequest,
+  FavoriteWorkerAvailabilityRequest,
+  FavoriteWorkerAvailabilityResponse,
 } from "@/features/booking/types/Booking";
 import { baseApi } from "@/store/baseApi";
 
@@ -12,6 +14,19 @@ const unwrap = (response: any) =>
 
 export const bookingApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    getFavoriteWorkerAvailability: builder.query<
+      FavoriteWorkerAvailabilityResponse,
+      FavoriteWorkerAvailabilityRequest
+    >({
+      query: (data) => ({
+        url: "/api/customer/bookings/favorite-worker-availability/",
+        method: "POST",
+        data,
+      }),
+      transformResponse: unwrap,
+      providesTags: ["FavoriteWorkers"],
+    }),
+
     createBooking: builder.mutation<
       BookingDetail,
       CreateBookingRequest & { idempotencyKey: string }
@@ -140,6 +155,7 @@ export const bookingApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useGetFavoriteWorkerAvailabilityQuery,
   useCreateBookingMutation,
   useGetBookingsQuery,
   useGetBookingDetailQuery,

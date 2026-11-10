@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { localizeServiceField } from "@/features/service/utils/localizeService";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
+import type { BookingFieldContext } from "@/features/booking/utils/bookingSchedule";
 // src/components/service/FormSchemaRenderer.tsx
 import type { FormField } from "@/features/service/types/Service";
 import { Text, View } from "react-native";
@@ -13,12 +14,14 @@ export function FormSchemaRenderer({
   values,
   pricingConfig,
   taskChecklist,
+  booking,
   onChange,
 }: {
   fields: FormField[];
   values: Values;
   pricingConfig?: any;
   taskChecklist?: string;
+  booking?: BookingFieldContext;
   onChange: (key: string, value: any) => void;
 }) {
   const { t } = useTranslation();
@@ -62,6 +65,7 @@ export function FormSchemaRenderer({
                 field={field}
                 value={values[field.key]}
                 siblingValues={values}
+                booking={booking}
                 pricingConfig={pricingConfig}
                 onChange={(v) => onChange(field.key, v)}
               />

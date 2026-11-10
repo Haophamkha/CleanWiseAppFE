@@ -1,13 +1,23 @@
-import type { FeatherName } from "@/components/ui/Input";
-import { useCreateBookingMutation } from "@/features/booking/api/bookingApi";
-import { useIdempotencyKey } from "@/features/booking/hooks/useIdempotencyKey";
-import { clearBookingDraft } from "@/features/booking/stores/bookingDraftSlice";
-import { useGetFavoriteWorkersQuery } from "@/features/favorite-worker/api/favoriteWorkerApi";
 import {
   translate as defaultTranslate,
   getLocale,
+  localizeKnownMessage,
 } from "@/features/language/i18n";
-import { MIN_LEAD_MINUTES } from "@/features/service/components/formFieldShared";
+import { useTranslation } from "react-i18next";
+
+import type { FeatherName } from "@/components/ui/Input";
+import {
+  useCreateBookingMutation,
+  useGetFavoriteWorkerAvailabilityQuery,
+} from "@/features/booking/api/bookingApi";
+import { useIdempotencyKey } from "@/features/booking/hooks/useIdempotencyKey";
+import { clearBookingDraft } from "@/features/booking/stores/bookingDraftSlice";
+import type { BookingFavoriteWorker } from "@/features/booking/types/Booking";
+import {
+  DEFAULT_BOOKING_POLICY,
+  getBookingTimeRange,
+  isBookingTimeInRange,
+} from "@/features/booking/utils/bookingSchedule";
 import {
   calculateEstimatedPrice,
   calculateRecurringPrice,
@@ -19,9 +29,9 @@ import type {
 import { useGetWalletQuery } from "@/features/wallet/api/walletApi";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { formatVnd } from "@/utils/currency";
+import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { Alert } from "react-native";
 
 export type PaymentMethodValue = "CASH" | "BANK_TRANSFER" | "WALLET";
@@ -73,6 +83,7 @@ function getLocalizedPackageLabels(
 function extractDurationHours(
   fields: { key: string; type: string }[],
   values: Record<string, any>,
+  defaultDurationHours = 3,
 ): number {
   const durationField = fields.find(
     (f) => f.key === "duration" && f.type === "SINGLE_SELECT",
@@ -82,7 +93,7 @@ function extractDurationHours(
     const match = raw.match(/^(\d+)_HOURS?$/i);
     if (match) return parseInt(match[1], 10);
   }
-  return 2;
+  return defaultDurationHours;
 }
 
 const capitalizeFirst = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -99,6 +110,7 @@ const formatTime = (d: Date, translateText = defaultTranslate) =>
   d.toLocaleTimeString(getLocale(translateText), {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "UTC",
   });
 
 export function useBookingConfirm() {
@@ -131,23 +143,71 @@ export function useBookingConfirm() {
     addresses?.pickup_address ?? Object.values(addresses ?? {})[0];
   const deliveryAddress = addresses?.delivery_address;
   const scheduleType: string = service?.form_schema?.schedule_type ?? "ONCE";
+  const bookingPolicy = service?.booking_policy ?? DEFAULT_BOOKING_POLICY;
   const user = useAppSelector((s) => s.auth.user);
-  const [selectedWorkerId, setPreferredWorkerId] = useState<number | null>(
+  const [workerSelection, setPreferredWorker] = useState<BookingFavoriteWorker | null>(
     null,
   );
-  const { data: favoriteData, isLoading: favoritesLoading } =
-    useGetFavoriteWorkersQuery(
-      {
-        service_id: service?.id,
-        address_id: pickupAddress?.id,
-        page_size: 50,
-      },
-      { skip: !user || !service || !pickupAddress },
+  const serviceData = useMemo(() => {
+    const allowedKeys = new Set(service?.form_schema?.fields.map((f) => f.key));
+    return Object.fromEntries(
+      Object.entries(values).filter(([key]) => allowedKeys.has(key)),
     );
+  }, [service, values]);
+  const hasSchedule = scheduleType === "ONCE"
+    ? !!(values.date && values.start_time)
+    : !!(values.weekdays?.length && values.start_time && values.package_duration);
+  const canCheckAvailability = !!(user && service && pickupAddress && hasSchedule);
+  const {
+    currentData: favoriteData,
+    isFetching: favoritesFetching,
+    isError: favoritesError,
+    isUninitialized: favoritesUninitialized,
+    refetch: refetchFavorites,
+  } = useGetFavoriteWorkerAvailabilityQuery(
+    canCheckAvailability
+      ? { service_id: service.id, address_id: pickupAddress.id, service_data: serviceData }
+      : skipToken,
+    { refetchOnMountOrArgChange: true },
+  );
   const favoriteWorkers = favoriteData?.results ?? [];
-  // Chọn xong mà đổi địa chỉ/dịch vụ làm người đó không còn hợp lệ -> tự bỏ qua
-  const preferredWorker =
-    favoriteWorkers.find((w) => w.worker_id === selectedWorkerId) ?? null;
+  const favoritesLoading =
+    canCheckAvailability && !favoriteData && (favoritesFetching || favoritesUninitialized);
+  const refreshFavoriteWorkers = () => {
+    if (!favoritesUninitialized && !favoritesFetching) void refetchFavorites();
+  };
+
+  useEffect(() => {
+    if (!workerSelection || !favoriteData || favoritesFetching || favoritesError) return;
+    const stillAvailable = favoriteData.results.some(
+      (worker) =>
+        worker.worker_id === workerSelection.worker_id && worker.availability === "AVAILABLE",
+    );
+    if (!stillAvailable) {
+      setPreferredWorker(null);
+      Alert.alert(
+        t("Nhân viên yêu thích"),
+        t("Nhân viên đã bận hoặc không còn phù hợp với lịch bạn chọn. Vui lòng chọn lại."),
+      );
+    }
+  }, [workerSelection, favoriteData, favoritesFetching, favoritesError, t]);
+
+  const availabilitySchedule = useMemo(() => {
+    if (!favoriteData) return undefined;
+    const start = new Date(favoriteData.first_schedule.scheduled_start);
+    const end = new Date(favoriteData.first_schedule.scheduled_end);
+    const locale = getLocale(t);
+    const timeZone = bookingPolicy.time_zone;
+    const time = (date: Date) =>
+      date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", timeZone });
+    const date = start.toLocaleDateString(locale, {
+      day: "2-digit", month: "2-digit", year: "numeric", timeZone,
+    });
+    const timeRange = `${time(start)} – ${time(end)}`;
+    return scheduleType === "ONCE"
+      ? `${timeRange} · ${date}`
+      : `${formatWeekdays(values.weekdays, t)} · ${timeRange} · ${t("{{value0}} buổi", { value0: favoriteData.session_count })}`;
+  }, [favoriteData, scheduleType, values.weekdays, bookingPolicy.time_zone, t]);
 
   // Dịch vụ định kỳ / nhiều buổi: bắt buộc thanh toán trước -> ẩn tiền mặt.
   // (BE vẫn là chốt chặn cuối, FE chỉ ẩn cho khách đỡ chọn nhầm.)
@@ -217,13 +277,13 @@ export function useBookingConfirm() {
     const date = values.date;
     const time = values.start_time;
     if (!date || !time) return null;
-    const parsed = new Date(`${date}T${time}:00`);
+    // Represent the selected wall time in UTC for display. Eligibility uses the booking timezone.
+    const parsed = new Date(`${date}T${time}:00Z`);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   }, [scheduleType, values, t]);
 
   const durationHours = useMemo(() => {
-    if (!service) return 2;
-    return extractDurationHours(serviceFields, values);
+    return extractDurationHours(serviceFields, values, service?.form_schema?.default_duration_hours);
   }, [service, values, t]);
 
   const scheduledEnd = useMemo(() => {
@@ -244,12 +304,13 @@ export function useBookingConfirm() {
         ];
       }
       const weekday = capitalizeFirst(
-        scheduledStart.toLocaleDateString(getLocale(t), { weekday: "long" }),
+        scheduledStart.toLocaleDateString(getLocale(t), { weekday: "long", timeZone: "UTC" }),
       );
       const fullDate = scheduledStart.toLocaleDateString(getLocale(t), {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
+        timeZone: "UTC",
       });
       return [
         {
@@ -283,7 +344,7 @@ export function useBookingConfirm() {
     if (values.package_duration) {
       rows.push({
         icon: "clock",
-        text: t("Gói {{value0}}, buổi đầu theo lịch gần nhất", {
+        text: t("Gói {{value0}}, bắt đầu từ ngày mai", {
           value0:
             getLocalizedPackageLabels(t)[values.package_duration] ??
             values.package_duration,
@@ -325,13 +386,6 @@ export function useBookingConfirm() {
   const selectedPaymentMethod =
     paymentOptions.find((m) => m.value === paymentMethod) ?? paymentOptions[0];
 
-  const buildServiceData = () => {
-    const allowedKeys = new Set(serviceFields.map((f) => f.key));
-    return Object.fromEntries(
-      Object.entries(values).filter(([k]) => allowedKeys.has(k)),
-    );
-  };
-
   const confirm = async () => {
     if (!service) return;
 
@@ -358,15 +412,10 @@ export function useBookingConfirm() {
         );
         return;
       }
-      if (
-        scheduledStart.getTime() <
-        Date.now() + (MIN_LEAD_MINUTES - 5) * 60 * 1000
-      ) {
+      if (!isBookingTimeInRange(values.start_time, getBookingTimeRange(values.date, bookingPolicy))) {
         Alert.alert(
           t("Thời gian không hợp lệ"),
-          t(
-            "Vui lòng đặt trước giờ bắt đầu ít nhất 2 giờ. Hãy quay lại chọn giờ khác.",
-          ),
+          t("Khung giờ đã hết hạn hoặc không hợp lệ. Vui lòng chọn lại ngày giờ."),
         );
         return;
       }
@@ -387,8 +436,6 @@ export function useBookingConfirm() {
     }
 
     try {
-      const serviceData = buildServiceData();
-
       const missingFields = serviceFields
         .filter((field) => {
           const value = serviceData[field.key];
@@ -418,7 +465,7 @@ export function useBookingConfirm() {
         service_data: serviceData,
         payment_method: paymentMethod, // đã tự đổi sang BANK_TRANSFER nếu là định kỳ
         voucher_code: selectedVoucher?.voucher.code,
-        preferred_worker_id: preferredWorker?.worker_id,
+        preferred_worker_id: workerSelection?.worker_id,
         note:
           typeof values.note === "string" && values.note.trim()
             ? values.note.trim()
@@ -450,6 +497,13 @@ export function useBookingConfirm() {
       const paymentError = err?.data?.errors?.payment_method;
       const preferredError = err?.data?.errors?.preferred_worker_id;
       const amountError = err?.data?.errors?.amount ?? err?.data?.amount;
+      if (err?.data?.errors?.schedules) {
+        Alert.alert(
+          t("Thời gian không hợp lệ"),
+          t("Khung giờ đã hết hạn hoặc không hợp lệ. Vui lòng chọn lại ngày giờ."),
+        );
+        return;
+      }
       const message =
         voucherError ||
         paymentError ||
@@ -463,7 +517,10 @@ export function useBookingConfirm() {
 
       if (voucherError) clearSelectedVoucher();
       if (paymentError) setPaymentModalVisible(true);
-      if (preferredError) setPreferredWorkerId(null);
+      if (preferredError) {
+        setPreferredWorker(null);
+        refreshFavoriteWorkers();
+      }
       Alert.alert(
         voucherError
           ? t("Voucher không còn hợp lệ")
@@ -474,7 +531,11 @@ export function useBookingConfirm() {
               : amountError
                 ? t("Ví không đủ tiền")
                 : t("Không thể đặt lịch"),
-        Array.isArray(message) ? message.join("\n") : String(message),
+        preferredError
+          ? (Array.isArray(preferredError) ? preferredError : [preferredError])
+              .map((detail) => localizeKnownMessage(String(detail), t))
+              .join("\n")
+          : Array.isArray(message) ? message.join("\n") : String(message),
       );
     }
   };
@@ -502,8 +563,12 @@ export function useBookingConfirm() {
     clearSelectedVoucher,
     favoriteWorkers,
     favoritesLoading,
-    preferredWorkerId: preferredWorker?.worker_id ?? null,
-    setPreferredWorkerId,
+    favoritesFetching,
+    favoritesError,
+    availabilitySchedule,
+    refreshFavoriteWorkers,
+    selectedWorker: workerSelection,
+    setPreferredWorker,
     paymentMethod,
     setPaymentMethod,
     selectedPaymentMethod,
