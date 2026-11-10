@@ -41,3 +41,26 @@ test('payment history translates backend titles, methods and statuses with stabl
 });
 
  test('system transaction notes translate identifiers while free-form notes remain untouched',async()=>{try{await core.i18n.changeLanguage('en');assert.equal(localizeTransactionNote('Thanh toán đơn CW-001',core.translate),'Payment for booking CW-001');assert.equal(localizeTransactionNote('Nạp tiền vào ví (mã 123456)',core.translate),'Wallet top-up (code 123456)');assert.equal(localizeTransactionNote('Rút tiền về Test Bank ****1234',core.translate),'Withdrawal to Test Bank ****1234');assert.equal(localizeTransactionNote('Ưu tiên phòng ngủ',core.translate),'Ưu tiên phòng ngủ');await core.i18n.changeLanguage('vi');assert.equal(localizeTransactionNote('Thanh toán đơn CW-001',core.translate),'Thanh toán đơn CW-001');}finally{await core.i18n.changeLanguage('vi');}});
+
+const {localizeAddressLabel}=load('src/features/address/utils/addressLabel.ts');
+test('preset address labels switch both ways without modifying stored or custom labels',async()=>{
+ const mocks={...common,'@/features/address/utils/addressLabel':{localizeAddressLabel},'@/components/ui':{Input:'Input'}};
+ const {default:AddressForm}=load('src/features/address/components/AddressForm.tsx',mocks);
+ const changes=[],values={label:'Nhà',receiver_name:'Tên khách',receiver_phone:'0900000000',address_line:'Địa chỉ tự nhập'};
+ let renderer;try{await act(async()=>{renderer=create(React.createElement(AddressForm,{values,onChange:(...args)=>changes.push(args),showContact:true,canToggle:false,isOther:false,onToggleOther:()=>{}}));});
+ for(const lang of ['en','vi','en','vi']){await act(async()=>{await core.i18n.changeLanguage(lang);});const input=renderer.root.findAllByType('Input').find(n=>n.props.icon==='tag');assert.equal(input.props.value,lang==='en'?'Home':'Nhà');assert.equal(values.label,'Nhà');assert.equal(localizeAddressLabel('Nhà bố mẹ',core.translate),'Nhà bố mẹ');assert.equal(localizeAddressLabel('Công ty',core.translate),lang==='en'?'Work':'Công ty');}
+ await act(async()=>{await core.i18n.changeLanguage('en');});const office=renderer.root.findAllByType('TouchableOpacity').find(n=>n.findAllByType('Text').some(t=>t.children.includes('Work')));await act(async()=>office.props.onPress());assert.deepEqual(changes,[['label','Công ty']]);
+ }finally{if(renderer)await act(async()=>renderer.unmount());await core.i18n.changeLanguage('vi');}
+});
+
+test('existing validation messages follow language changes while unknown backend text stays unchanged',async()=>{
+ const {ErrorText}=load('src/components/ui/ErrorText.tsx',common);let renderer;
+ try{await core.i18n.changeLanguage('en');const stored=core.translate('Vui lòng nhập số điện thoại');await act(async()=>{renderer=create(React.createElement(ErrorText,{message:stored}));});
+ for(const lang of ['vi','en','vi']){await act(async()=>{await core.i18n.changeLanguage(lang);});assert.equal(textOf(renderer),core.translate('Vui lòng nhập số điện thoại'));assert.equal(core.localizeKnownMessage('Lỗi tự do từ máy chủ'),'Lỗi tự do từ máy chủ');}
+ }finally{if(renderer)await act(async()=>renderer.unmount());await core.i18n.changeLanguage('vi');}
+});
+
+test('all static translation calls in source have English dictionary entries',()=>{
+ const en=require('../../src/features/language/locales/en.json');
+ function scan(dir){for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const file=path.join(dir,entry.name);if(entry.isDirectory()){scan(file);continue;}if(!/\.tsx?$/.test(file))continue;const source=ts.createSourceFile(file,fs.readFileSync(file,'utf8'),ts.ScriptTarget.Latest,true);function visit(n){if(ts.isCallExpression(n)&&['t','translate','translateText','defaultTranslate'].includes(n.expression.getText(source))&&n.arguments[0]&&ts.isStringLiteral(n.arguments[0]))assert.ok(Object.hasOwn(en,n.arguments[0].text),file+': '+n.arguments[0].text);ts.forEachChild(n,visit);}visit(source);}}scan(path.join(root,'src'));
+});

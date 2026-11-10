@@ -163,4 +163,5 @@ export type PickedFile = {
   name?: string;
   type?: string;
   size?: number;
+  file?: File;
 };

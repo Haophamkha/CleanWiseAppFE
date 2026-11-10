@@ -330,7 +330,7 @@ export default function ServiceDetailScreen() {
             disabled={estimatedPrice == null || missingRequiredAddress}
             onPress={handleGoToConfirm}
           >
-            <Text className="text-white font-bold text-base">{t("Đặt dịch vụ")}</Text>
+            <Text className="text-white font-bold text-base">{t("Tiếp theo")}</Text>
           </TouchableOpacity>
         </View>
       )}

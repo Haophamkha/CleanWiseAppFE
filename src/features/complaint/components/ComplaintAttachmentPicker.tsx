@@ -34,7 +34,7 @@ export function ComplaintAttachmentPicker({
       );
       return;
     }
-    const file = await pickImage(undefined, t);
+    const file = await pickImage({ includeWebFile: true }, t);
     if (!file) return;
 
     const mime = file.type?.toLowerCase();

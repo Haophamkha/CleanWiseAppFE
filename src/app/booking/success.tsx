@@ -64,8 +64,8 @@ export default function BookingSuccessScreen() {
           className="w-full bg-surface border border-line overflow-hidden mb-7"
           style={[{ borderRadius: RADIUS.card }, SHADOWS.card]}
         >
-          <View className="p-2 pb-15">
-            <BookingCodeCard code={code} large />
+          <View className="px-5 py-4">
+            <BookingCodeCard code={code} />
           </View>
 
           <View className="relative">
