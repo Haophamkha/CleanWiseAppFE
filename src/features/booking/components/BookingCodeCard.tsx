@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 
-import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { SHADOWS } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { Feather } from "@expo/vector-icons";
 import { Platform, Text, TouchableOpacity, View } from "react-native";
@@ -50,9 +50,13 @@ export function BookingCodeCard({ code, large }: Props) {
       <View className="flex-row items-center justify-between">
         <View className="flex-1 mr-3">
           <Text className="text-[11px] font-bold uppercase tracking-wide text-ink-muted">
-            {t("Mã đơn dịch vụ")}</Text>
+            {t("Mã đơn dịch vụ")}
+          </Text>
           <Text
             selectable
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.6}
             className="font-extrabold mt-0.5 text-base text-ink"
             style={{ fontFamily: MONO, letterSpacing: 0.8 }}
           >
@@ -77,11 +81,15 @@ export function BookingCodeCard({ code, large }: Props) {
           className="text-[11px] font-bold uppercase text-ink-muted"
           style={{ letterSpacing: 1 }}
         >
-          {t("Mã đơn dịch vụ")}</Text>
+          {t("Mã đơn dịch vụ")}
+        </Text>
         <Text
           selectable
-          className="text-[19px] font-extrabold text-ink mt-0.5"
-          style={{ fontFamily: MONO, letterSpacing: 0.8 }}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.5}
+          className="text-[17px] font-extrabold text-ink mt-0.5"
+          style={{ fontFamily: MONO, letterSpacing: 0.3 }}
         >
           {code}
         </Text>

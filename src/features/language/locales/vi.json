@@ -1267,5 +1267,7 @@
   "Chuyển thiếu ({{value0}} / {{value1}}){{value2}}": "Chuyển thiếu ({{value0}} / {{value1}}){{value2}}",
   "Liên hệ": "Liên hệ",
   "© {{value0}} CleanWise. Bảo lưu mọi quyền.": "© {{value0}} CleanWise. Bảo lưu mọi quyền.",
-  "CCCD/CMND Sandbox": "CCCD/CMND Sandbox"
+  "CCCD/CMND Sandbox": "CCCD/CMND Sandbox",
+  "Vui lòng đặt trước giờ bắt đầu ít nhất 2 giờ. Hãy quay lại chọn giờ khác.": "Vui lòng đặt trước giờ bắt đầu ít nhất 2 giờ. Hãy quay lại chọn giờ khác.",
+  "Gói {{value0}}, buổi đầu theo lịch gần nhất": "Gói {{value0}}, buổi đầu theo lịch gần nhất"
 }

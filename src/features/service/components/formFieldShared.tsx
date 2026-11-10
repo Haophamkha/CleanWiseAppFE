@@ -1,6 +1,8 @@
-import { translate as defaultTranslate, getLocale } from "@/features/language/i18n";
+import {
+  translate as defaultTranslate,
+  getLocale,
+} from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
-
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 // src/components/service/formFieldShared.tsx
@@ -33,7 +35,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
 
 export type Values = Record<string, any>;
 
@@ -69,14 +70,17 @@ export function getSelectedOption(
 export function buildCaption(
   opt: FieldOption,
   isAdditive: boolean,
-  pricingConfig?: PricingConfig, translateText = defaultTranslate,
+  pricingConfig?: PricingConfig,
+  translateText = defaultTranslate,
 ): string | undefined {
   const price = isAdditive
     ? pricingConfig?.additional_services?.[opt.value]
     : pricingConfig?.base_prices?.[opt.value];
 
   if (typeof price !== "number") return undefined;
-  return isAdditive ? `+${formatVnd(price, translateText)}` : formatVnd(price, translateText);
+  return isAdditive
+    ? `+${formatVnd(price, translateText)}`
+    : formatVnd(price, translateText);
 }
 
 // Ô chọn tròn: đã chọn = nền màu chính + dấu tích
@@ -309,7 +313,9 @@ export function TabBar({
             onPress={() => onChange(opt.value)}
             activeOpacity={0.85}
             className={`h-10 px-5 rounded-full items-center justify-center border ${
-              selected ? "bg-primary-fill border-primary" : "bg-surface border-line"
+              selected
+                ? "bg-primary-fill border-primary"
+                : "bg-surface border-line"
             }`}
             style={selected ? SHADOWS.card : undefined}
           >
@@ -456,7 +462,11 @@ export function WeekdayRow({
               }`}
             >
               {getLocale(t) === "en-US" && weekdayCodes.includes(opt.value)
-                ? new Date(2024, 0, 7 + weekdayCodes.indexOf(opt.value)).toLocaleDateString(getLocale(t), { weekday: "short" })
+                ? new Date(
+                    2024,
+                    0,
+                    7 + weekdayCodes.indexOf(opt.value),
+                  ).toLocaleDateString(getLocale(t), { weekday: "short" })
                 : opt.label.replace("Thứ ", "T")}
             </Text>
           </TouchableOpacity>
@@ -618,9 +628,11 @@ function TimeWheelPicker({
     <View>
       <View className="flex-row mb-2">
         <Text className="flex-1 text-center text-[15px] font-bold text-ink">
-          {t("Giờ")}</Text>
+          {t("Giờ")}
+        </Text>
         <Text className="flex-1 text-center text-[15px] font-bold text-ink">
-          {t("Phút")}</Text>
+          {t("Phút")}
+        </Text>
       </View>
 
       <View style={{ height: WHEEL_HEIGHT, flexDirection: "row" }}>
@@ -731,7 +743,9 @@ export function TimeField({
           </TouchableOpacity>
 
           <View className="items-center">
-            <Text className="text-lg font-bold text-ink">{t("Chọn giờ làm")}</Text>
+            <Text className="text-lg font-bold text-ink">
+              {t("Chọn giờ làm")}
+            </Text>
             <Text className="text-xs text-ink-muted mt-0.5">
               {t("Khung giờ")} {rangeLabel}
             </Text>
@@ -821,7 +835,9 @@ export function DateStripField({
             accessibilityState={{ disabled, selected }}
             activeOpacity={0.85}
             className={`items-center justify-center border ${
-              selected ? "bg-primary-fill border-primary" : "bg-surface border-line"
+              selected
+                ? "bg-primary-fill border-primary"
+                : "bg-surface border-line"
             }`}
             style={[
               { width: 60, height: 80, borderRadius: 20 },
@@ -850,7 +866,9 @@ export function DateStripField({
                 selected ? "text-white/70" : "text-ink-muted"
               }`}
             >
-              {getLocale(t) === "en-US" ? d.toLocaleDateString(getLocale(t), { month: "short" }) : `Th${d.getMonth() + 1}`}
+              {getLocale(t) === "en-US"
+                ? d.toLocaleDateString(getLocale(t), { month: "short" })
+                : `Th${d.getMonth() + 1}`}
             </Text>
           </TouchableOpacity>
         );
@@ -1046,7 +1064,8 @@ export function FieldControl({
     case "TEXT":
     case "TEXTAREA":
       return (
-        <TextInput keyboardAppearance={themeMode}
+        <TextInput
+          keyboardAppearance={themeMode}
           className="rounded-2xl border border-line bg-surface px-4 py-3.5 text-[15px] text-ink"
           style={{
             minHeight: field.type === "TEXTAREA" ? 96 : undefined,

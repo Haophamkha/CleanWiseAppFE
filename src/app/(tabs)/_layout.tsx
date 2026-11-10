@@ -5,7 +5,7 @@ import { useChatSocket } from "@/features/chat/hooks/useChatSocket";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { useAppSelector } from "@/store/hooks";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import { useEffect, useRef, useState, type ComponentProps } from "react";
 import {
   Animated,
@@ -184,12 +184,6 @@ function TabItem({
   );
 }
 
-/**
- * Nút Chatbot giữa:
- * - Nhấn giữ: nút lún xuống, icon nhỏ lại
- * - Thả ra: nút bật lại có độ nảy, một vòng sóng lan tỏa ra ngoài
- * - Khi được chọn: icon xoay một vòng, viền sáng lên
- */
 function CenterItem({
   options,
   label,
@@ -340,7 +334,8 @@ function CenterItem({
   );
 }
 
-function CurvedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+function CurvedTabBar({ state, descriptors }: BottomTabBarProps) {
+  const router = useRouter();
   const { COLORS, isDark } = useAppTheme();
 
   const [keyboardVisible, setKeyboardVisible] = useState(false);
@@ -412,18 +407,9 @@ function CurvedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               typeof options.title === "string" ? options.title : route.name;
 
             const onPress = () => {
-              const event = navigation.emit({
-                type: "tabPress",
-                target: route.key,
-                canPreventDefault: true,
-              });
-              if (!focused && !event.defaultPrevented) {
-                navigation.navigate(route.name, route.params);
-              }
+              if (!focused) router.navigate(`/(tabs)/${route.name}` as any);
             };
-            const onLongPress = () => {
-              navigation.emit({ type: "tabLongPress", target: route.key });
-            };
+            const onLongPress = () => {};
 
             const Item = index === centerIndex ? CenterItem : TabItem;
 

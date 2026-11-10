@@ -43,10 +43,16 @@ export type PaymentOption = {
   disabled?: boolean;
 };
 
-export function getLocalizedPaymentMethods(translateText = defaultTranslate): PaymentOption[] {
+export function getLocalizedPaymentMethods(
+  translateText = defaultTranslate,
+): PaymentOption[] {
   return [
     { value: "CASH", label: translateText("Tiền mặt"), icon: "cash" },
-    { value: "BANK_TRANSFER", label: translateText("Chuyển khoản"), icon: "bank" },
+    {
+      value: "BANK_TRANSFER",
+      label: translateText("Chuyển khoản"),
+      icon: "bank",
+    },
     { value: "WALLET", label: translateText("Ví CleanWise"), icon: "wallet" },
   ];
 }
@@ -63,7 +69,9 @@ const WEEKDAY_LABELS: Record<string, string> = {
   SUN: "CN",
 };
 
-function getLocalizedPackageLabels(translateText = defaultTranslate): Record<string, string> {
+function getLocalizedPackageLabels(
+  translateText = defaultTranslate,
+): Record<string, string> {
   return {
     "1_MONTH": translateText("1 tháng"),
     "2_MONTHS": translateText("2 tháng"),
@@ -90,13 +98,20 @@ function extractDurationHours(
 
 const capitalizeFirst = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-const formatWeekdays = (weekdays?: string[], translateText = defaultTranslate) =>
+const formatWeekdays = (
+  weekdays?: string[],
+  translateText = defaultTranslate,
+) =>
   !weekdays || weekdays.length === 0
     ? "—"
     : weekdays.map((d) => translateText(WEEKDAY_LABELS[d] ?? d)).join(", ");
 
 const formatTime = (d: Date, translateText = defaultTranslate) =>
-  d.toLocaleTimeString(getLocale(translateText), { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
+  d.toLocaleTimeString(getLocale(translateText), {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  });
 
 export function useBookingConfirm() {
   const { t } = useTranslation();
@@ -304,7 +319,11 @@ export function useBookingConfirm() {
         },
         {
           icon: "clock",
-          text: t("{{value0}} giờ, {{value1}} đến {{value2}}", { value0: durationHours, value1: formatTime(scheduledStart, t), value2: formatTime(scheduledEnd, t) }),
+          text: t("{{value0}} giờ, {{value1}} đến {{value2}}", {
+            value0: durationHours,
+            value1: formatTime(scheduledStart, t),
+            value2: formatTime(scheduledEnd, t),
+          }),
         },
       ];
     }
@@ -325,7 +344,11 @@ export function useBookingConfirm() {
     if (values.package_duration) {
       rows.push({
         icon: "clock",
-        text: t("Gói {{value0}}, bắt đầu từ ngày mai", { value0: getLocalizedPackageLabels(t)[values.package_duration] ?? values.package_duration }),
+        text: t("Gói {{value0}}, bắt đầu từ ngày mai", {
+          value0:
+            getLocalizedPackageLabels(t)[values.package_duration] ??
+            values.package_duration,
+        }),
       });
     }
     return rows;
@@ -350,7 +373,10 @@ export function useBookingConfirm() {
             totalAmount != null && walletBalance < totalAmount;
           return {
             ...m,
-            subtitle: t("Số dư {{value0}}{{value1}}", { value0: formatVnd(walletBalance, t), value1: insufficient ? t(" · Không đủ") : "" }),
+            subtitle: t("Số dư {{value0}}{{value1}}", {
+              value0: formatVnd(walletBalance, t),
+              value1: insufficient ? t(" · Không đủ") : "",
+            }),
             disabled: insufficient,
           };
         }),
@@ -423,9 +449,11 @@ export function useBookingConfirm() {
       if (missingFields.length > 0) {
         Alert.alert(
           t("Thiếu thông tin"),
-          t("Các trường bắt buộc chưa có dữ liệu:\n\n{{value0}}", { value0: missingFields
-            .map((field) => `• ${field.label} (${field.key})`)
-            .join("\n") }),
+          t("Các trường bắt buộc chưa có dữ liệu:\n\n{{value0}}", {
+            value0: missingFields
+              .map((field) => `• ${field.label} (${field.key})`)
+              .join("\n"),
+          }),
         );
         return;
       }
