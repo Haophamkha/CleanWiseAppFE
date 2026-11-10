@@ -64,8 +64,15 @@ export function CreateReviewSheet({
           {`${a.worker.last_name} ${a.worker.first_name}`.trim() ||
             a.worker.username}
         </Text>
-        <Text className="text-ink-soft text-xs mt-1 mb-4">
-          {a.booking_code}  {t("· Buổi")} {a.schedule.sequence_no} ·{" "}
+        <Text
+          className="text-ink-soft text-xs mt-1"
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >
+          {a.booking_code}  {t("· Buổi")} {a.schedule.sequence_no}
+        </Text>
+        <Text className="text-ink-soft text-xs mb-4">
           {formatReviewDate(a.schedule.scheduled_start, t)}
         </Text>
         <View className="items-center mb-4">

@@ -121,6 +121,8 @@ export function ComplaintCard({
           className="text-[12.5px] font-semibold mt-1"
           style={{ color: meta.color }}
           numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
         >
           {t("Đơn")}{" "}{item.booking_code}
           {item.schedule_sequence_no != null

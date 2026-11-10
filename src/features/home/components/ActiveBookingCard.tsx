@@ -42,7 +42,12 @@ export function ActiveBookingCard({
           <Text className="text-base font-bold text-ink" numberOfLines={1}>
             {t(booking.service_name)}
           </Text>
-          <Text className="text-xs text-ink-muted mt-0.5">
+          <Text
+            className="text-xs text-ink-muted mt-0.5"
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+          >
             {t("Mã")}{" "}{booking.booking_code}
           </Text>
         </View>

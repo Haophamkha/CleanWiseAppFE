@@ -23,11 +23,7 @@ export function SystemMessageCard({
 
   const { COLORS } = useAppTheme();
 
-  const sub = assignment
-    ? [assignment.service_name ? t(assignment.service_name) : undefined, assignment.booking_code]
-        .filter(Boolean)
-        .join(" · ")
-    : "";
+  const assignmentTextStyle = { fontSize: 12, marginTop: 1, color: COLORS.inkSoft };
 
   return (
     <View
@@ -69,12 +65,19 @@ export function SystemMessageCard({
           style={{ fontSize: 15, fontWeight: "700", color: COLORS.primaryDark }}
         >
           {t("Thông báo lịch làm")}</Text>
-        {!!sub && (
+        {!!assignment?.service_name && (
+          <Text numberOfLines={1} style={assignmentTextStyle}>
+            {t(assignment.service_name)}
+          </Text>
+        )}
+        {!!assignment?.booking_code && (
           <Text
             numberOfLines={1}
-            style={{ fontSize: 12, marginTop: 1, color: COLORS.inkSoft }}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+            style={assignmentTextStyle}
           >
-            {sub}
+            {assignment.booking_code}
           </Text>
         )}
 

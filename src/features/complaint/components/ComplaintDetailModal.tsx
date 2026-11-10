@@ -138,7 +138,10 @@ export function ComplaintDetailModal({
                 {t("MÃ ĐƠN")}</Text>
               <Text
                 selectable
-                className="text-[14px] font-extrabold"
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+                className="text-[14px] font-extrabold max-w-full"
                 style={{
                   color: COLORS.primaryDark,
                   fontFamily: Platform.select({

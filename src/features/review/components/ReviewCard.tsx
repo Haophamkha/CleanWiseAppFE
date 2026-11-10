@@ -35,7 +35,12 @@ export function ReviewCard({
       <Text className="text-primary-dark font-semibold text-sm">
         {t(review.service_name)}
       </Text>
-      <Text className="text-ink-soft text-xs mt-1">
+      <Text
+        className="text-ink-soft text-xs mt-1"
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >
         {review.booking_code}  {t("· Buổi")} {review.schedule.sequence_no}
       </Text>
       <Text className="text-ink-muted text-xs mt-1">

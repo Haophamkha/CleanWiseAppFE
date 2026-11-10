@@ -413,7 +413,7 @@ export default function BookingConfirmScreen() {
           onPress={confirm}
         >
           <Text className="text-white font-bold text-base">
-            {isLoading ? t("Đang đăng việc...") : t("Đăng việc")}
+            {isLoading ? t("Đang đặt dịch vụ...") : t("Đặt dịch vụ")}
           </Text>
         </TouchableOpacity>
       </View>
