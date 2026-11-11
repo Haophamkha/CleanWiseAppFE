@@ -56,7 +56,7 @@ export function BookingCodeCard({ code, large }: Props) {
             selectable
             numberOfLines={1}
             adjustsFontSizeToFit
-            minimumFontScale={0.6}
+            minimumFontScale={0.7}
             className="font-extrabold mt-0.5 text-base text-ink"
             style={{ fontFamily: MONO, letterSpacing: 0.8 }}
           >
@@ -87,9 +87,9 @@ export function BookingCodeCard({ code, large }: Props) {
           selectable
           numberOfLines={1}
           adjustsFontSizeToFit
-          minimumFontScale={0.5}
-          className="text-[17px] font-extrabold text-ink mt-0.5"
-          style={{ fontFamily: MONO, letterSpacing: 0.3 }}
+          minimumFontScale={0.7}
+          className="text-[19px] font-extrabold text-ink mt-0.5"
+          style={{ fontFamily: MONO, letterSpacing: 0.8 }}
         >
           {code}
         </Text>
