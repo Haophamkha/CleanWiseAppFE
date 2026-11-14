@@ -173,6 +173,7 @@ export function ChatRoom({ id }: { id: number; assignmentId?: number }) {
       <ChatRoomHeader
         name={conversation.other_user.name}
         avatar={conversation.other_user.avatar}
+        isSupport={conversation.other_user.role === "ADMIN"}
       />
 
       <View style={{ flex: 1, backgroundColor: CHAT_BG }}>

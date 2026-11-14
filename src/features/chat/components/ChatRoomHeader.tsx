@@ -11,9 +11,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export function ChatRoomHeader({
   name,
   avatar,
+  isSupport,
 }: {
   name: string;
   avatar?: string | null;
+  isSupport: boolean;
 }) {
   const { t } = useTranslation();
 
@@ -53,7 +55,8 @@ export function ChatRoomHeader({
           {name}
         </Text>
         <Text numberOfLines={1} style={{ fontSize: 13, color: COLORS.ink }}>
-          {t("Nhân viên phụ trách")}</Text>
+          {isSupport ? t("Chăm sóc khách hàng") : t("Nhân viên phụ trách")}
+        </Text>
       </View>
     </View>
   );

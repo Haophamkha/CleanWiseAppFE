@@ -15,6 +15,15 @@ export type ComplaintIssueTypeStage =
 
 export type ComplaintReporterRole = "CUSTOMER" | "WORKER";
 
+export type RequestedResolution = "REDO" | "REFUND" | "CHANGE" | "SUPPORT";
+
+export type ComplaintWorkflowRequest = {
+  id: number;
+  action: "ACCEPT" | "REVISE" | "REPLY" | "REOPEN";
+  proposal_id?: number;
+  message?: string;
+};
+
 /**
  * Loại vấn đề/khiếu nại mà customer có thể chọn.
  *
@@ -85,6 +94,7 @@ export type ComplaintListItem = {
 
   status: ComplaintStatus;
   status_label: string;
+  workflow_status?: "SENT" | "ACCEPTED" | "DECLINED" | "COMPLETED" | null;
 
   created_at: string;
 };
@@ -148,6 +158,22 @@ export type ComplaintDetail = {
   created_at: string;
 
   attachments: ComplaintAttachment[];
+  requested_resolution?: RequestedResolution | "";
+  next_update_at?: string | null;
+  events?: { id: number; kind: string; label: string; message: string; created_at: string }[];
+  proposal?: {
+    id: number;
+    status: "SENT" | "ACCEPTED" | "DECLINED" | "COMPLETED";
+    message: string;
+    service_action: "" | "REDO" | "CHANGE";
+    scheduled_start: string | null;
+    worker_name: string | null;
+    refund_scope: "" | "SESSION" | "BOOKING" | "PARTIAL" | "CASH";
+    refund_amount: string | null;
+    refund_transaction_code: string | null;
+    voucher_code: string | null;
+    fulfillment_booking_code: string | null;
+  } | null;
 };
 
 export type CreateComplaintPayload = {
@@ -155,6 +181,7 @@ export type CreateComplaintPayload = {
   schedule: number;
   issue_type: number;
   content?: string;
+  requested_resolution?: RequestedResolution;
   files?: PickedFile[];
 };
 

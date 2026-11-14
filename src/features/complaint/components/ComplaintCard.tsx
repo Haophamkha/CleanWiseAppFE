@@ -11,6 +11,7 @@ import type {
 import { formatReviewDate } from "@/features/review/utils/reviewFormat";
 import { Feather } from "@expo/vector-icons";
 import { Platform, Text, TouchableOpacity, View } from "react-native";
+import { getComplaintProgressLabel } from "../utils/complaintProgress";
 
 const MONO = Platform.select({
   ios: "Menlo",
@@ -89,6 +90,7 @@ export function ComplaintCard({
   };
 
   const dead = item.status === "CANCELLED";
+  const progressLabel = getComplaintProgressLabel(item.status, item.workflow_status);
 
   return (
     <TouchableOpacity
@@ -147,7 +149,7 @@ export function ComplaintCard({
               className="text-[11.5px] font-bold ml-1.5"
               style={{ color: meta.color }}
             >
-              {meta.label}
+              {progressLabel ? t(progressLabel) : meta.label}
             </Text>
           </View>
 
