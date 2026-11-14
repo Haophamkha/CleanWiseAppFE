@@ -7,6 +7,8 @@ import {
   useGetComplaintDetailQuery,
 } from "@/features/complaint/api/complaintApi";
 import { getComplaintStatusMap } from "@/features/complaint/components/ComplaintCard";
+import { ComplaintWorkflow } from "./ComplaintWorkflow";
+import { getComplaintProgressLabel } from "../utils/complaintProgress";
 import { formatReviewDate } from "@/features/review/utils/reviewFormat";
 import { formatVnd } from "@/utils/currency";
 import { Feather } from "@expo/vector-icons";
@@ -37,6 +39,8 @@ export function ComplaintDetailModal({
     id as number,
     {
       skip: id == null,
+      refetchOnMountOrArgChange: true,
+      pollingInterval: id == null ? 0 : 15000,
     },
   );
   const [cancel, { isLoading: cancelling }] = useCancelComplaintMutation();
@@ -44,6 +48,7 @@ export function ComplaintDetailModal({
   const COMPLAINT_STATUS_META = getComplaintStatusMap(COLORS, t);
   const meta = data ? COMPLAINT_STATUS_META[data.status] : undefined;
   const refund = Number(data?.refund_amount) || 0;
+  const progressLabel = data && getComplaintProgressLabel(data.status, data.proposal?.status);
 
   const onCancel = () =>
     Alert.alert(t("Hủy khiếu nại"), t("Bạn chắc chắn muốn hủy khiếu nại này?"), [
@@ -104,7 +109,7 @@ export function ComplaintDetailModal({
                     className="text-[11.5px] font-bold"
                     style={{ color: meta.color }}
                   >
-                    {meta.label}
+                    {progressLabel ? t(progressLabel) : meta.label}
                   </Text>
                 </View>
               )}
@@ -202,7 +207,7 @@ export function ComplaintDetailModal({
               </ScrollView>
             )}
 
-            {(!!data.resolution_note || refund > 0) && (
+            {data.reporter_role !== "CUSTOMER" && (!!data.resolution_note || refund > 0) && (
               <View className="bg-primary-soft border border-primary-border rounded-2xl p-3.5 mt-4">
                 <Text className="text-primary-dark text-xs font-bold mb-1">
                   {t("Phản hồi từ CleanWise")}</Text>
@@ -222,6 +227,8 @@ export function ComplaintDetailModal({
                 )}
               </View>
             )}
+
+            {data.reporter_role === "CUSTOMER" && <ComplaintWorkflow key={data.id} complaint={data} />}
 
             {data.status === "PENDING" && (
               <Pressable

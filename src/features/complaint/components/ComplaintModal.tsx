@@ -11,6 +11,7 @@ import {
 import type {
   ComplaintStage,
   PickedFile,
+  RequestedResolution,
 } from "@/features/complaint/types/Complaint";
 
 import { getApiErrorMessage } from "@/utils/apiError";
@@ -29,6 +30,8 @@ import {
   View,
 } from "react-native";
 import { ComplaintAttachmentPicker } from "./ComplaintAttachmentPicker";
+import { ComplaintWorkflow, requestedResolutions } from "./ComplaintWorkflow";
+import { getComplaintProgressLabel } from "../utils/complaintProgress";
 
 function getComplaintStage(bookingStatus: string): ComplaintStage | null {
   switch (bookingStatus) {
@@ -78,6 +81,7 @@ export function ComplaintModal({
 
   const [issueTypeId, setIssueTypeId] = useState<number | null>(null);
   const [content, setContent] = useState("");
+  const [requested, setRequested] = useState<RequestedResolution>();
   const [images, setImages] = useState<PickedFile[]>([]);
   const [error, setError] = useState("");
 
@@ -94,7 +98,9 @@ export function ComplaintModal({
 
   const { data: existingComplaint, isLoading: isLoadingExisting } =
     useGetComplaintDetailQuery(existingId as number, {
-      skip: !existingId,
+      skip: !visible || !existingId,
+      refetchOnMountOrArgChange: true,
+      pollingInterval: visible && existingId ? 15000 : 0,
     });
 
   const hasExisting = !!existingId;
@@ -113,6 +119,7 @@ export function ComplaintModal({
   const resetAndClose = () => {
     setIssueTypeId(null);
     setContent("");
+    setRequested(undefined);
     setImages([]);
     setError("");
     onClose();
@@ -122,6 +129,7 @@ export function ComplaintModal({
     if (!visible) {
       setIssueTypeId(null);
       setContent("");
+      setRequested(undefined);
       setImages([]);
       setError("");
     }
@@ -154,6 +162,7 @@ export function ComplaintModal({
         schedule: scheduleId,
         issue_type: issueTypeId,
         content: content.trim(),
+        requested_resolution: requested,
         files: images,
       }).unwrap();
 
@@ -188,6 +197,7 @@ export function ComplaintModal({
 
     const badge =
       STATUS_BADGE[existingComplaint.status] ?? STATUS_BADGE.PENDING;
+    const progressLabel = getComplaintProgressLabel(existingComplaint.status, existingComplaint.proposal?.status);
 
     return (
       <View>
@@ -196,7 +206,7 @@ export function ComplaintModal({
           style={{ backgroundColor: badge.bg }}
         >
           <Text className="text-[12px] font-bold" style={{ color: badge.text }}>
-            {badge.label}
+            {progressLabel ? t(progressLabel) : badge.label}
           </Text>
         </View>
 
@@ -245,7 +255,7 @@ export function ComplaintModal({
           </>
         )}
 
-        {existingComplaint.resolution_note && (
+        {existingComplaint.reporter_role !== "CUSTOMER" && existingComplaint.resolution_note && (
           <>
             <Text
               className="text-[13px] font-bold uppercase mb-1"
@@ -259,7 +269,11 @@ export function ComplaintModal({
           </>
         )}
 
-        {Number(existingComplaint.refund_amount ?? 0) > 0 && (
+        {existingComplaint.reporter_role === "CUSTOMER" && (
+          <ComplaintWorkflow key={existingComplaint.id} complaint={existingComplaint} />
+        )}
+
+        {existingComplaint.reporter_role !== "CUSTOMER" && Number(existingComplaint.refund_amount ?? 0) > 0 && (
           <View
             className="flex-row items-center justify-between rounded-xl px-4 py-3 mb-3"
             style={{
@@ -449,6 +463,18 @@ export function ComplaintModal({
           onChange={setImages}
           disabled={isLoading}
         />
+
+        <Text className="mt-4 mb-2 text-[13px] font-bold uppercase text-ink-muted">{t("Mong muốn xử lý")}</Text>
+        <View className="flex-row flex-wrap gap-2">
+          {(Object.keys(requestedResolutions) as RequestedResolution[]).map((choice) => (
+            <TouchableOpacity key={choice} accessibilityRole="button"
+              accessibilityState={{ selected: requested === choice }}
+              onPress={() => setRequested(choice)}
+              className={`rounded-xl border px-3 py-2 ${requested === choice ? "border-primary-border bg-primary-soft" : "border-line bg-surface"}`}>
+              <Text className="text-sm font-semibold text-ink">{t(requestedResolutions[choice])}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         {!!error && (
           <Text className="text-[13px] mt-3" style={{ color: COLORS.danger }}>
