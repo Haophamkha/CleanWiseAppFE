@@ -183,18 +183,18 @@ export const complaintApi = baseApi.injectEndpoints({
       ],
     }),
 
-    addComplaintAttachment: builder.mutation<void, { id: number; photo: PickedFile }>({
-      query: ({ id, photo }) => {
-        const data = new FormData();
-        appendPhoto(data, "file", photo);
-        return { url: `/api/customer/complaints/${id}/attachments/`, method: "POST", data };
-      },
-      invalidatesTags: (_result, _error, { id }) => [{ type: "Complaints", id }],
-    }),
     updateComplaintWorkflow: builder.mutation<ComplaintDetail, ComplaintWorkflowRequest>({
-      query: ({ id, ...data }) => ({
-        url: `/api/customer/complaints/${id}/workflow/`, method: "POST", data,
-      }),
+      query: ({ id, attachments, ...data }) => {
+        const url = `/api/customer/complaints/${id}/workflow/`;
+        if (!attachments?.length) return { url, method: "POST", data };
+
+        const form = new FormData();
+        form.append("action", data.action);
+        form.append("request_id", String(data.request_id));
+        if (data.message) form.append("message", data.message);
+        for (const photo of attachments) appendPhoto(form, "attachments", photo);
+        return { url, method: "POST", data: form };
+      },
       transformResponse: unwrap<ComplaintDetail>,
       invalidatesTags: (_result, _error, { id }) => [{ type: "Complaints", id }, "Complaints"],
     }),
@@ -221,7 +221,6 @@ export const complaintApi = baseApi.injectEndpoints({
 });
 
 export const {
-  useAddComplaintAttachmentMutation,
   useUpdateComplaintWorkflowMutation,
   useGetComplaintIssueTypesQuery,
   useCreateComplaintMutation,
