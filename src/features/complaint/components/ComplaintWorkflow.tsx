@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Feather } from "@expo/vector-icons";
-import { useAddComplaintAttachmentMutation, useUpdateComplaintWorkflowMutation } from "@/features/complaint/api/complaintApi";
+import { useUpdateComplaintWorkflowMutation } from "@/features/complaint/api/complaintApi";
 import type {
   ComplaintDetail,
   ComplaintWorkflowRequest,
@@ -11,8 +11,8 @@ import type {
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { formatReviewDate } from "@/features/review/utils/reviewFormat";
 import { getApiErrorMessage } from "@/utils/apiError";
-import { pickImage } from "@/utils/imagePicker";
 import { formatVnd } from "@/utils/currency";
+import { ComplaintSupplement } from "./ComplaintSupplement";
 
 export const requestedResolutions = {
   REDO: "Làm lại miễn phí",
@@ -23,7 +23,6 @@ export const requestedResolutions = {
 
 const replyLabels = {
   REVISE: "Trao đổi thêm",
-  REPLY: "Gửi thêm thông tin",
   REOPEN: "Yêu cầu xem xét lại",
 };
 type ReplyAction = keyof typeof replyLabels;
@@ -32,7 +31,6 @@ export function ComplaintWorkflow({ complaint }: { complaint: ComplaintDetail })
   const { t } = useTranslation();
   const { mode, COLORS } = useAppTheme();
   const [send, { isLoading }] = useUpdateComplaintWorkflowMutation();
-  const [upload, { isLoading: isUploading }] = useAddComplaintAttachmentMutation();
   const [reply, setReply] = useState<ReplyAction | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -41,15 +39,14 @@ export function ComplaintWorkflow({ complaint }: { complaint: ComplaintDetail })
   const rejected = complaint.status === "REJECTED";
   const awaiting = inReview && proposal?.status === "SENT";
   const requested = complaint.requested_resolution;
-  const busy = isLoading || isUploading;
+  const busy = isLoading;
   const events = [...(complaint.events ?? [])].reverse();
-  const update = events.find((event) => ["ACK", "REQUEST", "OFFER"].includes(event.kind));
+  const update = events.find((event) => ["ACK", "OFFER"].includes(event.kind));
   const terminal = complaint.status === "RESOLVED" || rejected;
   const showProposal = !!proposal && (inReview || (complaint.status === "RESOLVED" && proposal.status === "COMPLETED"));
   const latestSupportMessage = update?.message;
   const title = terminal
     ? rejected ? t("Kết quả xem xét") : t("Khiếu nại đã được giải quyết.")
-    : update?.kind === "REQUEST" ? t("Yêu cầu bổ sung thông tin")
     : update?.kind === "ACK" ? t("Phản hồi từ CleanWise")
     : showProposal ? t("Phương án xử lý")
     : t(complaint.status === "CANCELLED" ? "Đã hủy" : complaint.status === "IN_REVIEW" ? "Đang xem xét" : "Đã gửi khiếu nại");
@@ -63,7 +60,7 @@ export function ComplaintWorkflow({ complaint }: { complaint: ComplaintDetail })
         return !proposal.voucher_code ||
           line !== `Voucher ${proposal.voucher_code} đã có trong Voucher của tôi. Chọn voucher khi đặt dịch vụ.`;
       }).join("\n").trim()
-    : update?.kind === "ACK" || update?.kind === "REQUEST"
+    : update?.kind === "ACK"
       ? latestSupportMessage
       : showProposal ? proposal.message : latestSupportMessage;
   const time = terminal ? complaint.resolved_at ?? result?.created_at : update?.created_at;
@@ -93,23 +90,13 @@ export function ComplaintWorkflow({ complaint }: { complaint: ComplaintDetail })
     });
   }
   if (!terminal && complaint.next_update_at) {
-    items.push({ label: t("Hẹn cập nhật"), icon: "clock", value: formatReviewDate(complaint.next_update_at, t) });
+    items.push({ label: t("Thời gian phản hồi"), icon: "clock", value: formatReviewDate(complaint.next_update_at, t) });
   }
   const timeline = [...events, {
     id: "submitted", label: "Đã gửi khiếu nại", created_at: complaint.created_at,
   }];
 
-  async function addPhoto() {
-    setError("");
-    try {
-      const photo = await pickImage({ includeWebFile: true }, t);
-      if (photo) await upload({ id: complaint.id, photo }).unwrap();
-    } catch (err) {
-      setError(getApiErrorMessage(err, t("Không gửi được phản hồi. Vui lòng thử lại."), t));
-    }
-  }
-
-  async function submit(action: ComplaintWorkflowRequest["action"]) {
+  async function submit(action: Exclude<ComplaintWorkflowRequest["action"], "REPLY">) {
     setError("");
     try {
       await send({
@@ -177,14 +164,17 @@ export function ComplaintWorkflow({ complaint }: { complaint: ComplaintDetail })
           </View>}
         </View>
       </View>
-      {inReview && complaint.attachments.length < 5 && (
-        <Pressable accessibilityRole="button" disabled={busy} onPress={() => void addPhoto()} className="rounded-xl border border-line px-4 py-3">
-          <Text className="font-bold text-ink">{t(isUploading ? "Đang gửi ảnh..." : "Thêm ảnh minh chứng")}</Text>
-        </Pressable>
+      {complaint.supplement && (
+        <ComplaintSupplement
+          key={complaint.supplement.request_id}
+          complaintId={complaint.id}
+          supplement={complaint.supplement}
+          attachmentCount={complaint.attachments.length}
+        />
       )}
-      {(inReview || rejected) && !reply && (
-        <Pressable accessibilityRole="button" disabled={busy} onPress={() => startReply(rejected ? "REOPEN" : "REPLY")} className="rounded-xl border border-line px-4 py-3">
-          <Text className="font-bold text-ink">{t(replyLabels[rejected ? "REOPEN" : "REPLY"])}</Text>
+      {rejected && !reply && (
+        <Pressable accessibilityRole="button" disabled={busy} onPress={() => startReply("REOPEN")} className="rounded-xl border border-line px-4 py-3">
+          <Text className="font-bold text-ink">{t(replyLabels.REOPEN)}</Text>
         </Pressable>
       )}
       {reply && (inReview || rejected) && (

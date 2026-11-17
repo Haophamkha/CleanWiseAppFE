@@ -22,6 +22,15 @@ export type ComplaintWorkflowRequest = {
   action: "ACCEPT" | "REVISE" | "REPLY" | "REOPEN";
   proposal_id?: number;
   message?: string;
+  request_id?: number;
+  attachments?: PickedFile[];
+};
+
+export type ComplaintSupplementStatus = {
+  request_id: number;
+  message: string;
+  status: "PENDING" | "SUBMITTED" | "CLOSED";
+  submitted_at: string | null;
 };
 
 /**
@@ -160,6 +169,7 @@ export type ComplaintDetail = {
   attachments: ComplaintAttachment[];
   requested_resolution?: RequestedResolution | "";
   next_update_at?: string | null;
+  supplement?: ComplaintSupplementStatus | null;
   events?: { id: number; kind: string; label: string; message: string; created_at: string }[];
   proposal?: {
     id: number;
