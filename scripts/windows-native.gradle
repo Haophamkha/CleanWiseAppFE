@@ -1,0 +1,12 @@
+// Optional init script for local Windows builds with deeply nested C++ paths.
+// Requires Android SDK CMake 4.1.2 (bundles Ninja 1.12.1).
+// Run from android/: gradlew.bat assembleRelease --init-script ../scripts/windows-native.gradle
+allprojects { p ->
+    p.afterEvaluate {
+        def androidExtension = p.extensions.findByName('android')
+        if (androidExtension != null) {
+            androidExtension.externalNativeBuild.cmake.version = '4.1.2'
+            androidExtension.defaultConfig.externalNativeBuild.cmake.arguments.add('-DCMAKE_OBJECT_PATH_MAX=200')
+        }
+    }
+}
