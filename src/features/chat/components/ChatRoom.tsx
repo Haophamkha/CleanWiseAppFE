@@ -200,7 +200,7 @@ export function ChatRoom({ id }: { id: number; assignmentId?: number }) {
           ListHeaderComponent={
             r.otherTyping ? (
               <TypingIndicator avatar={conversation.other_user.avatar} />
-            ) : null
+            ) : undefined
           }
           ListFooterComponent={
             r.hasOlder ? (
@@ -236,7 +236,7 @@ export function ChatRoom({ id }: { id: number; assignmentId?: number }) {
                   </Text>
                 </TouchableOpacity>
               </View>
-            ) : null
+            ) : undefined
           }
           ListEmptyComponent={
             r.loaded ? (

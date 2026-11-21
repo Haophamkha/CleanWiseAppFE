@@ -700,7 +700,7 @@ function PaymentHistoryList({
               </View>
             )}
           </View>
-        ) : null
+        ) : undefined
       }
       ListEmptyComponent={
         <EmptyState
@@ -755,7 +755,7 @@ function PaymentHistoryList({
             color={COLORS.primary}
             style={{ marginVertical: 16 }}
           />
-        ) : null
+        ) : undefined
       }
     />
   );

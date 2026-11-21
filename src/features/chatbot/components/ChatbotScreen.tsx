@@ -234,7 +234,7 @@ function CustomerChatbot({ userId }: { userId: number }) {
             flexGrow: 1,
           }}
           ListHeaderComponent={
-            chat.working ? <ChatbotThinkingIndicator /> : null
+            chat.working ? <ChatbotThinkingIndicator /> : undefined
           }
           ListFooterComponent={
             chat.hasOlder ? (
@@ -253,7 +253,7 @@ function CustomerChatbot({ userId }: { userId: number }) {
                     {t("Xem tin nhắn cũ")}</Text>
                 )}
               </TouchableOpacity>
-            ) : null
+            ) : undefined
           }
         />
       )}

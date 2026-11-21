@@ -1,4 +1,5 @@
 import { translate as defaultTranslate } from "@/features/language/i18n";
+import { isRefreshTokenRejected } from "@/features/auth/utils/refreshFailure";
 
 import { STORAGE_KEYS } from "@/config/constants";
 import { ENV } from "@/config/env";
@@ -30,6 +31,12 @@ const PUBLIC_ENDPOINTS = [
 
 const REFRESH_URL = "/api/auth/token/refresh/";
 const LOGOUT_URL = "/api/auth/logout/";
+let pendingRefresh: { access: string; refresh: string } | null = null;
+let sessionGeneration = 0;
+export const resetRefreshState = () => {
+  sessionGeneration += 1;
+  pendingRefresh = null;
+};
 
 const isValidToken = (t: string | null | undefined): t is string =>
   !!t && t !== "undefined" && t !== "null";
@@ -74,7 +81,7 @@ axiosInstance.interceptors.request.use(async (config) => {
     console.log("[REQUEST]", config.method?.toUpperCase(), config.url, {
       hasAuthHeader: !!config.headers?.Authorization,
       isFormData: config.data instanceof FormData,
-      body: loggedBody,
+      body: config.url?.includes("/api/auth/") ? "[REDACTED]" : loggedBody,
     });
   }
 
@@ -86,7 +93,18 @@ axiosInstance.interceptors.request.use(async (config) => {
  * ======================================================= */
 
 const doRefresh = async (): Promise<string> => {
+  const generation = sessionGeneration;
+  // Rotation can already have invalidated the old refresh token on the server.
+  // If native persistence failed, retry that write before making another refresh.
+  if (pendingRefresh) {
+    const rotated = pendingRefresh;
+    await storage.setSession(rotated.access, rotated.refresh);
+    if (generation !== sessionGeneration) throw new Error("SESSION_CHANGED");
+    pendingRefresh = null;
+    return rotated.access;
+  }
   const refreshToken = await storage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+  if (generation !== sessionGeneration) throw new Error("SESSION_CHANGED");
   if (!isValidToken(refreshToken)) throw new Error("NO_REFRESH_TOKEN");
 
   // axios thường (không qua axiosInstance) để tránh interceptor chạy vòng lặp
@@ -97,13 +115,16 @@ const doRefresh = async (): Promise<string> => {
   );
 
   const data = response.data?.data ?? response.data;
-  if (typeof data?.access !== "string") throw new Error("BAD_REFRESH_RESPONSE");
-
-  await storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, data.access);
-  // BE bật ROTATE_REFRESH_TOKENS: BẮT BUỘC lưu refresh mới
-  if (typeof data.refresh === "string") {
-    await storage.setItem(STORAGE_KEYS.REFRESH_TOKEN, data.refresh);
+  if (!isValidToken(data?.access)
+    || (data.refresh !== undefined && !isValidToken(data.refresh))) {
+    throw new Error("BAD_REFRESH_RESPONSE");
   }
+  if (generation !== sessionGeneration) throw new Error("SESSION_CHANGED");
+
+  pendingRefresh = { access: data.access, refresh: typeof data.refresh === "string" ? data.refresh : refreshToken };
+  await storage.setSession(pendingRefresh.access, pendingRefresh.refresh);
+  if (generation !== sessionGeneration) throw new Error("SESSION_CHANGED");
+  pendingRefresh = null;
   return data.access;
 };
 
@@ -121,10 +142,9 @@ const shouldLogout = async (e: unknown): Promise<boolean> => {
     return isValidToken(await storage.getItem(STORAGE_KEYS.ACCESS_TOKEN));
   }
   if (axios.isAxiosError(e)) {
-    const status = e.response?.status;
-    return status === 400 || status === 401 || status === 403;
+    return isRefreshTokenRejected(e.response?.status, e.response?.data);
   }
-  return true; // BAD_REFRESH_RESPONSE
+  return false;
 };
 
 /* =========================================================
@@ -141,6 +161,7 @@ export const performLogout = async (
 
   if (isLoggingOut) return;
   isLoggingOut = true;
+  resetRefreshState();
   try {
     const refresh = await storage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
     const pushToken = await storage.getItem(STORAGE_KEYS.PUSH_TOKEN);
@@ -159,8 +180,7 @@ export const performLogout = async (
         .catch(() => {});
     }
 
-    await storage.deleteItem(STORAGE_KEYS.ACCESS_TOKEN);
-    await storage.deleteItem(STORAGE_KEYS.REFRESH_TOKEN);
+    await storage.clearSession();
     await storage.deleteItem(STORAGE_KEYS.PUSH_TOKEN);
   } finally {
     authDispatch?.(clearAuth());
@@ -200,7 +220,8 @@ const setAuthHeader = (config: AxiosRequestConfig, token: string) => {
 axiosInstance.interceptors.response.use(
   (response) => {
     if (__DEV__) {
-      console.log("[RESPONSE OK]", response.config.url, response.data);
+      console.log("[RESPONSE OK]", response.config.url,
+        response.config.url?.includes("/api/auth/") ? "[REDACTED]" : response.data);
     }
     return response;
   },

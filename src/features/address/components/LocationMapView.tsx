@@ -27,7 +27,7 @@ const LocationMapView = forwardRef<LocationMapViewHandle, Props>(
   ({ initialRegion, onRegionChangeComplete, userLocation }, ref) => {
   const { COLORS } = useAppTheme();
 
-    const webviewRef = useRef<WebView>(null);
+    const webviewRef = useRef<WebView<object>>(null);
     const loadedRef = useRef(false);
     useEffect(() => {
       if (loadedRef.current) {
@@ -182,7 +182,7 @@ const LocationMapView = forwardRef<LocationMapViewHandle, Props>(
     );
 
     return (
-      <WebView
+      <WebView<object>
         ref={webviewRef}
         originWhitelist={["*"]}
         source={source}

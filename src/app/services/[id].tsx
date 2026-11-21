@@ -57,6 +57,7 @@ export default function ServiceDetailScreen() {
   });
 
   const [values, setValues] = useState<Record<string, any>>({});
+  const [repeatableFooterHeight, setRepeatableFooterHeight] = useState(0);
 
   // Dữ liệu dịch vụ cũ có thể chưa có form_schema/fields. Luôn chuẩn hóa
   // thành mảng để màn hình chi tiết không bị crash khi render.
@@ -248,7 +249,7 @@ export default function ServiceDetailScreen() {
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 220 }}
+        contentContainerStyle={{ paddingBottom: groupField ? repeatableFooterHeight + 16 : 16 }}
       >
         {heroImage ? (
           <Image
@@ -306,6 +307,7 @@ export default function ServiceDetailScreen() {
           onSubmit={handleGoToConfirm}
           submitDisabled={groupItems.length === 0 || missingRequiredAddress}
           submitLabel={t("Tiếp theo")}
+          onLayout={(event) => setRepeatableFooterHeight(event.nativeEvent.layout.height)}
         />
       ) : (
         <View

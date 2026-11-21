@@ -1,3 +1,4 @@
+import type { ScrollViewInstance } from "react-native";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 
 import { useEffect, useRef, useState } from "react";
@@ -23,7 +24,7 @@ export function BannerCarousel() {
   const itemHeight = itemWidth / ASPECT;
   const step = itemWidth + 12;
 
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const indexRef = useRef(0);
   const pausedRef = useRef(false);
   const [index, setIndex] = useState(0);

@@ -167,7 +167,7 @@ export function Vouchers() {
           refreshControl={
             <RefreshControl
               refreshing={v.isFetching}
-              onRefresh={v.refetch}
+              onRefresh={() => { void v.refetch(); }}
               tintColor={COLORS.primary}
               colors={[COLORS.primaryFill]}
             />

@@ -26,6 +26,8 @@
     },
     "plugins": [
       "expo-router",
+      "./plugins/withSingleLauncher",
+      "./plugins/withRoomDatabaseKeep",
       "@react-native-google-signin/google-signin",
       [
         "expo-splash-screen",

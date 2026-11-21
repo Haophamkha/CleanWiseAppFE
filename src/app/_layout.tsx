@@ -1,63 +1,39 @@
 import { ConfirmProvider } from "@/components/common/ConfirmProvider";
 import { SuccessSheetProvider } from "@/components/common/SuccessSheet";
-import { STORAGE_KEYS } from "@/config/constants";
 import { AppToast } from "@/config/toastConfig";
-import { useGetProfileQuery } from "@/features/auth/api/authApi";
-import { usePushNotifications } from "@/features/notification/hooks/usePushNotifications";
-import { useUnreadCountRealtime } from "@/features/notification/hooks/useUnreadCountRealtime";
+import { SessionBootstrap } from "@/features/auth/components/SessionBootstrap";
+import { AppLanguageProvider } from "@/features/language/LanguageProvider";
+import { AppThemeProvider } from "@/features/theme/ThemeProvider";
 import { registerAuthDispatch } from "@/store/baseApi";
-import { useAppSelector } from "@/store/hooks";
 import { store } from "@/store/store";
-import { storage } from "@/utils/storage";
 import { Stack } from "expo-router";
-import { useEffect, useState } from "react";
+import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
-import { AppThemeProvider } from "@/features/theme/ThemeProvider";
-import { AppLanguageProvider } from "@/features/language/LanguageProvider";
-import * as SplashScreen from "expo-splash-screen";
 import "../global.css";
 
 registerAuthDispatch(store.dispatch);
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-function AuthInit() {
-  const user = useAppSelector((s) => s.auth.user);
-  const [needBootstrap, setNeedBootstrap] = useState(false);
-
-  useEffect(() => {
-    storage.getItem(STORAGE_KEYS.ACCESS_TOKEN).then((t) => {
-      if (t && t !== "null" && t !== "undefined") setNeedBootstrap(true);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (user) setNeedBootstrap(false);
-  }, [user]);
-
-  useGetProfileQuery(undefined, { skip: !needBootstrap });
-  usePushNotifications(!!user);
-  useUnreadCountRealtime(!!user);
-
-  return null;
-}
-
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <Provider store={store}>
-        <AppLanguageProvider><AppThemeProvider>
-          <ConfirmProvider>
-            <SuccessSheetProvider>
-              <AuthInit />
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="(tabs)" />
-              </Stack>
-              <AppToast />
-            </SuccessSheetProvider>
-          </ConfirmProvider>
-        </AppThemeProvider></AppLanguageProvider>
+        <AppLanguageProvider>
+          <AppThemeProvider>
+            <ConfirmProvider>
+              <SuccessSheetProvider>
+                <SessionBootstrap>
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="(auth)" />
+                    <Stack.Screen name="(tabs)" />
+                  </Stack>
+                </SessionBootstrap>
+                <AppToast />
+              </SuccessSheetProvider>
+            </ConfirmProvider>
+          </AppThemeProvider>
+        </AppLanguageProvider>
       </Provider>
     </SafeAreaProvider>
   );

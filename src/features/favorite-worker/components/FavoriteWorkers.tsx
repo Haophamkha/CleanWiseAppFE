@@ -52,7 +52,7 @@ export function FavoriteWorkers() {
           ListHeaderComponent={
             f.workers.length > 0 ? (
               <FavoriteSummaryCard count={f.count} />
-            ) : null
+            ) : undefined
           }
           renderItem={({ item }) => (
             <WorkerCard
@@ -67,7 +67,7 @@ export function FavoriteWorkers() {
                 style={{ paddingVertical: 16 }}
                 color={COLORS.primary}
               />
-            ) : null
+            ) : undefined
           }
           ListEmptyComponent={<FavoriteWorkersEmpty />}
         />
