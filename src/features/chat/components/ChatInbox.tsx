@@ -143,7 +143,7 @@ export function ChatInbox() {
                 color={COLORS.primary}
                 style={{ marginVertical: 12 }}
               />
-            ) : null
+            ) : undefined
           }
         />
       )}

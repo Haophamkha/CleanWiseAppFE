@@ -479,7 +479,7 @@ export default function TabsLayout() {
             <Ionicons
               name={focused ? "home" : "home-outline"}
               size={size}
-              color={color}
+              color={color == null || typeof color === "number" ? COLORS.primary : color}
             />
           ),
         }}
@@ -493,7 +493,7 @@ export default function TabsLayout() {
             <Ionicons
               name={focused ? "calendar" : "calendar-outline"}
               size={size}
-              color={color}
+              color={color == null || typeof color === "number" ? COLORS.primary : color}
             />
           ),
         }}
@@ -507,7 +507,7 @@ export default function TabsLayout() {
             <MaterialCommunityIcons
               name={focused ? "robot-happy" : "robot-happy-outline"}
               size={size}
-              color={color}
+              color={color == null || typeof color === "number" ? COLORS.primary : color}
             />
           ),
         }}
@@ -529,7 +529,7 @@ export default function TabsLayout() {
                 focused ? "chatbubble-ellipses" : "chatbubble-ellipses-outline"
               }
               size={size}
-              color={color}
+              color={color == null || typeof color === "number" ? COLORS.primary : color}
             />
           ),
         }}
@@ -543,7 +543,7 @@ export default function TabsLayout() {
             <Ionicons
               name={focused ? "person" : "person-outline"}
               size={size}
-              color={color}
+              color={color == null || typeof color === "number" ? COLORS.primary : color}
             />
           ),
         }}

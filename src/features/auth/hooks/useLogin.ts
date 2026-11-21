@@ -1,11 +1,12 @@
 import { useTranslation } from "react-i18next";
 
-import { useSuccessSheet } from "@/components/common/SuccessSheet";
-import { ROUTES } from "@/config/constants";
+import { storage } from "@/utils/storage";
+import { ROUTES, STORAGE_KEYS } from "@/config/constants";
 import {
   saveTokens,
   useLoginMutation,
   useLoginWithGoogleMutation,
+  useLazyGetProfileQuery,
 } from "@/features/auth/api/authApi";
 import { useGoogleAuth } from "@/features/auth/hooks/useGoogleAuth";
 import type { AuthResponse } from "@/features/auth/types/authResponse";
@@ -16,7 +17,7 @@ import { getApiErrorMessage } from "@/utils/apiError";
 import { showErrorToast } from "@/utils/toast";
 import { getLocalizedLoginSchema } from "@/utils/validators";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 export function useLogin() {
   const { t } = useTranslation();
@@ -28,7 +29,48 @@ export function useLogin() {
   const [loginWithGoogle, { isLoading: isGoogleLoading }] =
     useLoginWithGoogleMutation();
   const dispatch = useAppDispatch();
-  const { show } = useSuccessSheet();
+  const [getProfile] = useLazyGetProfileQuery();
+  const [sessionPhase, setSessionPhase] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const pendingLogin = useRef<AuthResponse | null>(null);
+  const saved = useRef(false);
+  const inFlight = useRef(false);
+  const preparing = useRef(false);
+
+  const prepareSession = async () => {
+    const res = pendingLogin.current;
+    if (!res || preparing.current) return;
+    preparing.current = true;
+    setSessionPhase("loading");
+    try {
+      if (!saved.current) {
+        await saveTokens(res.access, res.refresh);
+        saved.current = true;
+        dispatch(baseApi.util.resetApiState());
+      }
+      const profile = await getProfile().unwrap();
+      dispatch(setUser(profile));
+      setSessionPhase("success");
+    } catch {
+      if (saved.current) {
+        try {
+          const token = await storage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+          if (!token) {
+            setSessionPhase("idle");
+            setError(t("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."));
+            return;
+          }
+        } catch { /* Keep retry available when secure storage is temporarily unavailable. */ }
+      }
+      setSessionPhase("error");
+    } finally {
+      preparing.current = false;
+    }
+  };
+
+  const finishSession = useCallback(() => {
+    setSessionPhase("idle");
+    router.replace(ROUTES.HOME);
+  }, []);
 
   // Dùng chung cho đăng nhập thường và Google
   const finishLogin = async (res: AuthResponse) => {
@@ -38,30 +80,20 @@ export function useLogin() {
       showErrorToast(t("Đăng nhập thất bại"), msg);
       return;
     }
-    await saveTokens(res.access, res.refresh); // đợi ghi xong rồi mới đi tiếp
-    dispatch(baseApi.util.resetApiState()); // xóa cache của người trước
-
-    // setUser + chuyển trang sau khi popup tự đóng (3s), tránh layout redirect đè lên popup
-    const name = [res.user.first_name, res.user.last_name]
-      .filter(Boolean)
-      .join(" ");
-    show({
-      title: t("Đăng nhập thành công!"),
-      message: name ? t("Chào mừng trở lại, {{value0}}.", { value0: name }) : t("Chào mừng bạn trở lại."),
-      onClose: () => {
-        dispatch(setUser(res.user));
-        router.replace(ROUTES.HOME);
-      },
-    });
+    pendingLogin.current = res;
+    saved.current = false;
+    await prepareSession();
   };
 
   const submit = async () => {
+    if (inFlight.current || sessionPhase !== "idle") return;
     const result = getLocalizedLoginSchema(t).safeParse({ phone, password });
     if (!result.success) {
       setError(result.error.issues[0].message);
       return;
     }
     setError("");
+    inFlight.current = true;
     try {
       await finishLogin(await login({ phone, password }).unwrap());
     } catch (e) {
@@ -71,10 +103,14 @@ export function useLogin() {
       );
       setError(message);
       showErrorToast(t("Đăng nhập thất bại"), message);
+    } finally {
+      inFlight.current = false;
     }
   };
 
   const handleGoogleSuccess = async (idToken: string) => {
+    if (inFlight.current || sessionPhase !== "idle") return;
+    inFlight.current = true;
     setError("");
     try {
       await finishLogin(await loginWithGoogle({ id_token: idToken }).unwrap());
@@ -85,6 +121,8 @@ export function useLogin() {
       );
       setError(message);
       showErrorToast(t("Đăng nhập Google thất bại"), message);
+    } finally {
+      inFlight.current = false;
     }
   };
 
@@ -99,6 +137,9 @@ export function useLogin() {
     isLoading,
     isGoogleLoading,
     googleReady: request,
+    sessionPhase,
+    retrySession: prepareSession,
+    finishSession,
     submit,
     submitGoogle: () => promptAsync(),
   };

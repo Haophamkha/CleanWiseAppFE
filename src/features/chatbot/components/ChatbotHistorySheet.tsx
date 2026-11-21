@@ -222,7 +222,7 @@ export function ChatbotHistorySheet({
               icon="message-circle"
               title={t("Chưa có cuộc trò chuyện. Hãy gửi câu hỏi đầu tiên cho trợ lý.")}
             />
-          ) : null
+          ) : undefined
         }
         ListFooterComponent={
           isError ? (
@@ -248,7 +248,7 @@ export function ChatbotHistorySheet({
                   {t("Xem thêm hội thoại")}</Text>
               )}
             </TouchableOpacity>
-          ) : null
+          ) : undefined
         }
       />
     </BottomSheet>

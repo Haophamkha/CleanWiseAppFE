@@ -29,14 +29,14 @@ export function FormSchemaRenderer({
 
   return (
     <View>
-      {fields.map(rawField => {
+      {fields.map((rawField, index) => {
         const field = localizeServiceField(rawField, t);
         if (field.type === "TASK_CHECKLIST") {
           return <TaskChecklist key={field.key} content={taskChecklist} />;
         }
 
         return (
-          <View key={field.key} className="mb-6">
+          <View key={field.key} className={index === fields.length - 1 ? "mb-0" : "mb-5"}>
             {field.type !== "BOOLEAN" && (
               <View className="flex-row items-center mb-2">
                 <Text

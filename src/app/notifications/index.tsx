@@ -136,7 +136,7 @@ export default function NotificationsScreen() {
               actionLabel={t("Thử lại")}
               onAction={refresh}
             />
-          ) : null
+          ) : undefined
         }
         ListEmptyComponent={
           isLoading ? (

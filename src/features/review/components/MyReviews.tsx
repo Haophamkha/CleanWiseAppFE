@@ -166,7 +166,7 @@ function ReviewsTab({ r }: { r: ReturnType<typeof useMyReviews> }) {
                 <Text className="text-ink-muted text-xs mt-0.5">
                   {t("Có thể chỉnh sửa trong 30 ngày kể từ lần gửi đầu tiên.")}</Text>
               </View>
-            ) : null
+            ) : undefined
           }
           renderItem={({ item }) => (
             <ReviewCard review={item} onEdit={() => r.edit(item)} />

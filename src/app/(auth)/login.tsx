@@ -9,10 +9,13 @@ import {
   PillButton,
   PillInput,
 } from "@/features/auth/components/AuthKit";
+import { SessionLoadingScreen } from "@/features/auth/components/SessionLoadingScreen";
 import { useLogin } from "@/features/auth/hooks/useLogin";
+import { ROUTES } from "@/config/constants";
+import { useAppSelector } from "@/store/hooks";
 import googleIcon from "@assets/icon/google.png";
-import { Link, router } from "expo-router";
-import { Image, Text, View } from "react-native";
+import { Link, Redirect, router } from "expo-router";
+import { Image, Modal, Text, View } from "react-native";
 
 export default function LoginScreen() {
   const { t } = useTranslation();
@@ -30,9 +33,18 @@ export default function LoginScreen() {
     googleReady,
     submit,
     submitGoogle,
+    sessionPhase,
+    retrySession,
+    finishSession,
   } = useLogin();
 
+  const user = useAppSelector((state) => state.auth.user);
+  // Expo Go/deep links can reopen this route even after the session is restored.
+  // Keep an active login animation mounted until its own completion callback.
+  if (user && sessionPhase === "idle") return <Redirect href={ROUTES.HOME} />;
+
   return (
+    <>
     <AuthScreen
       icon="home"
       title={t("Đăng nhập")}
@@ -124,5 +136,15 @@ export default function LoginScreen() {
         }
       />
     </AuthScreen>
+    <Modal visible={sessionPhase !== "idle"} animationType="fade" statusBarTranslucent onRequestClose={() => {}}>
+      <SessionLoadingScreen
+        mode="login"
+        error={sessionPhase === "error"}
+        success={sessionPhase === "success"}
+        onRetry={() => { void retrySession(); }}
+        onComplete={finishSession}
+      />
+    </Modal>
+    </>
   );
 }

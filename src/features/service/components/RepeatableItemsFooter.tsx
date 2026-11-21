@@ -17,6 +17,7 @@ import {
     Text,
     TouchableOpacity,
     View,
+    type LayoutChangeEvent,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getSelectedOption } from "./formFieldShared";
@@ -31,6 +32,7 @@ type Props = {
   onSubmit: () => void;
   submitDisabled?: boolean;
   submitLabel?: string;
+  onLayout?: (event: LayoutChangeEvent) => void;
 };
 
 export function RepeatableItemsFooter({
@@ -41,6 +43,7 @@ export function RepeatableItemsFooter({
   onSubmit,
   submitDisabled,
   submitLabel = t("Tiếp theo"),
+  onLayout,
 }: Props) {
   const { t } = useTranslation();
 
@@ -90,6 +93,7 @@ export function RepeatableItemsFooter({
       {/* Footer */}
       <View
         className="bg-surface border-t border-line"
+        onLayout={onLayout}
         style={{
           position: "absolute",
           left: 0,

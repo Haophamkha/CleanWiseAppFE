@@ -1,4 +1,3 @@
-import { STORAGE_KEYS } from "@/config/constants";
 import type {
   ChangePasswordRequest,
   ForgotPasswordRequest,
@@ -14,12 +13,12 @@ import type {
 } from "@/features/auth/types/authResponse";
 import type { Gender } from "@/features/auth/types/User";
 import { setUser } from "@/store/authSlice";
-import { baseApi } from "@/store/baseApi";
+import { baseApi, resetRefreshState } from "@/store/baseApi";
 import { storage } from "@/utils/storage";
 
 export const saveTokens = async (access: string, refresh: string) => {
-  await storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, access);
-  await storage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refresh);
+  resetRefreshState();
+  await storage.setSession(access, refresh);
 };
 
 const unwrapResponse = (response: any) => {
@@ -174,6 +173,7 @@ export const {
   useRegisterMutation,
   useLoginWithGoogleMutation,
   useGetProfileQuery,
+  useLazyGetProfileQuery,
   useUpdateProfileMutation,
   useForgotPasswordMutation,
   useVerifyResetOtpMutation,

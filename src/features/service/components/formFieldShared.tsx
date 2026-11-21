@@ -960,6 +960,7 @@ export function FieldControl({
   const { mode: themeMode } = useAppTheme();
 
   const { COLORS } = useAppTheme();
+  const [textAreaHeight, setTextAreaHeight] = useState(96);
 
   const options = resolveOptions(field, siblingValues);
   const hasImages = options.some((o) => !!o.image);
@@ -1069,11 +1070,16 @@ export function FieldControl({
           className="rounded-2xl border border-line bg-surface px-4 py-3.5 text-[15px] text-ink"
           style={{
             minHeight: field.type === "TEXTAREA" ? 96 : undefined,
+            height: field.type === "TEXTAREA" ? textAreaHeight : undefined,
             textAlignVertical: field.type === "TEXTAREA" ? "top" : "center",
           }}
           placeholder={field.placeholder}
           placeholderTextColor={COLORS.inkMuted}
           multiline={field.type === "TEXTAREA"}
+          scrollEnabled={field.type === "TEXTAREA" ? false : undefined}
+          onContentSizeChange={field.type === "TEXTAREA" ? (event) => {
+            setTextAreaHeight(Math.max(96, Math.ceil(event.nativeEvent.contentSize.height)));
+          } : undefined}
           numberOfLines={field.type === "TEXTAREA" ? 3 : 1}
           value={value ?? ""}
           onChangeText={onChange}

@@ -1,3 +1,4 @@
+import type { ScrollViewInstance } from "react-native";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -16,7 +17,7 @@ export function HelpArticleReader({ article }: { article: HelpArticle }) {
   const params = useLocalSearchParams<{ section?: string; step?: string }>();
   const { section, invalid, step } = guidePosition(article.sections, params.section, params.step);
   const english = i18n.resolvedLanguage === "en";
-  const scroll = useRef<ScrollView>(null);
+  const scroll = useRef<ScrollViewInstance>(null);
   const tocOffset = useRef(0);
   const steps = section?.steps ?? [];
   const current = steps[step];

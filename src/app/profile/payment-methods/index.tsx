@@ -192,7 +192,7 @@ export default function CustomerPaymentMethodsScreen() {
           refreshControl={
             <RefreshControl
               refreshing={isFetching && !isLoading}
-              onRefresh={refetch}
+              onRefresh={() => { void refetch(); }}
               tintColor={PRIMARY}
               colors={[PRIMARY]}
             />
@@ -213,7 +213,7 @@ export default function CustomerPaymentMethodsScreen() {
                 <Text className="text-ink-soft font-semibold text-xs uppercase tracking-wide mb-3 ml-1">
                   {t("Tài khoản đã lưu")}</Text>
               </>
-            ) : null
+            ) : undefined
           }
           renderItem={({ item }) => (
             <PaymentMethodCard

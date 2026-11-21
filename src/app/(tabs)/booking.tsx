@@ -165,7 +165,7 @@ export default function BookingScreen() {
               ListFooterComponent={
                 isLoadingMore ? (
                   <ActivityIndicator className="py-4" color={COLORS.primary} />
-                ) : null
+                ) : undefined
               }
               ListEmptyComponent={
                 <View className="pt-16">
