@@ -6,7 +6,7 @@ import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { Card } from "@/components/ui/Card";
 import { RADIUS, SHADOWS } from "@/constants/theme";
 import { BookingCodeCard } from "@/features/booking/components/BookingCodeCard";
-import { OpenBankAppButtons } from "@/features/booking/components/OpenBankAppButtons";
+// import { OpenBankAppButtons } from "@/features/booking/components/OpenBankAppButtons";
 import { useBookingPayment } from "@/features/booking/hooks/useBookingPayment";
 import { Feather } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
@@ -183,7 +183,7 @@ export default function BookingQrScreen() {
                   {t("Thanh toán bằng chuyển khoản ngân hàng (VietQR)")}</Text>
 
                 {/* Mở thẳng app ngân hàng, chỉ hiện khi BE đã trả thông tin chuyển khoản */}
-                {!!link?.account_number && <OpenBankAppButtons info={link} />}
+                {/* {!!link?.account_number && <OpenBankAppButtons info={link} />} */}
 
                 <View
                   className={`flex-row items-center mt-4 px-3 py-1.5 rounded-full border ${
