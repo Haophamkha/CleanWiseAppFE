@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -14,7 +15,7 @@ import {
 } from "@/features/notification/utils/notificationMeta";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Alert } from "react-native";
+import { Alert } from "@/components/common/AppAlert";
 
 const PAGE_SIZE = 20;
 const PREFETCH_GAP_MS = 400;
@@ -127,7 +128,7 @@ export function useNotifications() {
     const route = getNotificationRoute(notification);
 
     if (route) {
-      router.push(route as any);
+      safePush(route as any);
     }
   };
 

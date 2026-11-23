@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
 
 import type { BookingScheduleDetail } from "@/features/booking/types/Booking";
@@ -11,7 +12,7 @@ import type { FavoriteWorker } from "@/features/favorite-worker/types/FavoriteWo
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Alert } from "react-native";
+import { Alert } from "@/components/common/AppAlert";
 
 export type WorkerProfileData = (
   | NonNullable<BookingScheduleDetail["worker"]>
@@ -79,7 +80,7 @@ export function useWorkerProfile() {
     }
     try {
       const result = await getChat(selectedAssignment).unwrap();
-      router.push({
+      safePush({
         pathname: "/messages/[id]",
         params: {
           id: String(result.conversation.id),

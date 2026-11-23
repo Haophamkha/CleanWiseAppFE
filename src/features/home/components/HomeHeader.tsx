@@ -24,10 +24,10 @@ export function HomeHeader({
 
   const { mode: themeMode } = useAppTheme();
 
-  const { COLORS } = useAppTheme();
+  const { COLORS, SHADOWS } = useAppTheme();
 
   return (
-    <GradientHeader>
+    <GradientHeader rounded>
       <View className="flex-row items-center justify-between">
         <View className="flex-1 mr-3">
           <Text className="text-sm text-ink-soft">
@@ -49,7 +49,7 @@ export function HomeHeader({
         ) : null}
       </View>
 
-      <View className="flex-row items-center bg-surface rounded-full px-4 py-3 mt-5">
+      <View className="flex-row items-center bg-surface rounded-full px-4 py-3.5 mt-5" style={SHADOWS.card}>
         <Feather name="search" size={18} color={COLORS.inkMuted} />
         <TextInput keyboardAppearance={themeMode}
           className="flex-1 ml-3 text-base text-ink"

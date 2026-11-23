@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import {
     chatApi,
     useGetConversationsQuery,
@@ -99,7 +100,7 @@ export function useChatInbox() {
 
   const openConversation = (item: ChatConversation) => {
     readOnOpen(item);
-    router.push(`/messages/${item.id}`);
+    safePush(`/messages/${item.id}`);
   };
 
   return {

@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -32,7 +33,7 @@ export default function AddressListScreen() {
   const { data: addresses, isLoading, isError } = useGetAddressesQuery();
 
   const handleEdit = (id: number) => {
-    router.push({
+    safePush({
       pathname: "/profile/address/[id]",
       params: { id: String(id) },
     });
@@ -45,7 +46,7 @@ export default function AddressListScreen() {
   };
 
   const handleAdd = () => {
-    router.push({
+    safePush({
       pathname: "/profile/address/choose-method",
       params: pickerKey ? { pickerKey } : {},
     });

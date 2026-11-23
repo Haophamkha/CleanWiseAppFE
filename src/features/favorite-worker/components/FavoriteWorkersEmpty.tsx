@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -22,7 +23,7 @@ export function FavoriteWorkersEmpty() {
         {t("Sau khi có nhân viên nhận việc, hãy mở hồ sơ và nhấn biểu tượng tim để lưu lại.")}</Text>
       <TouchableOpacity
         className="bg-primary-fill rounded-xl px-6 py-3 mt-5"
-        onPress={() => router.push("/(tabs)/booking")}
+        onPress={() => safePush("/(tabs)/booking")}
       >
         <Text className="text-white font-bold">{t("Xem đơn dịch vụ")}</Text>
       </TouchableOpacity>

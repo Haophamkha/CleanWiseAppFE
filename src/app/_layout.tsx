@@ -1,6 +1,7 @@
 import { ConfirmProvider } from "@/components/common/ConfirmProvider";
 import { SuccessSheetProvider } from "@/components/common/SuccessSheet";
 import { AppToast } from "@/config/toastConfig";
+import { AlertHost } from "@/components/common/AppAlert";
 import { SessionBootstrap } from "@/features/auth/components/SessionBootstrap";
 import { AppLanguageProvider } from "@/features/language/LanguageProvider";
 import { AppThemeProvider } from "@/features/theme/ThemeProvider";
@@ -30,6 +31,7 @@ export default function RootLayout() {
                   </Stack>
                 </SessionBootstrap>
                 <AppToast />
+                <AlertHost />
               </SuccessSheetProvider>
             </ConfirmProvider>
           </AppThemeProvider>

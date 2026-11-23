@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { translate as defaultTranslate } from "@/features/language/i18n";
 import { MenuGroup } from "@/components/common/MenuGroup";
 import { MenuListItem } from "@/components/common/MenuListItem";
@@ -64,7 +65,7 @@ const renderItems = (items: MenuItem[]) =>
       icon={item.icon}
       label={item.label}
       comingSoon={!item.href}
-      onPress={item.href ? () => router.push(item.href as any) : undefined}
+      onPress={item.href ? () => safePush(item.href as any) : undefined}
     />
   ));
 

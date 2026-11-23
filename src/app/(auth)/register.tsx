@@ -138,18 +138,19 @@ export default function RegisterScreen() {
         </View>
       }
     >
-      <View style={{ flexDirection: "row" }}>
-        <View style={{ flex: 1, marginRight: 10 }}>
+      <View>
+        <View>
           <PillInput
             icon="user"
-            placeholder={t("Họ và tên đệm")}
+            placeholder={t("Họ")}
             autoCapitalize="words"
             value={form.last_name}
             onChangeText={(v) => update("last_name", v)}
           />
         </View>
-        <View style={{ flex: 1 }}>
+        <View>
           <PillInput
+            icon="user"
             placeholder={t("Tên")}
             autoCapitalize="words"
             value={form.first_name}
@@ -216,7 +217,7 @@ export default function RegisterScreen() {
           style={{
             width: 20,
             height: 20,
-            borderRadius: 10,
+            borderRadius: 6,
             marginRight: 10,
             marginTop: 1,
             alignItems: "center",

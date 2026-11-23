@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
 
 import { EmptyState } from "@/components/ui";
@@ -10,7 +11,6 @@ import { HomeVoucherCard } from "@/features/home/components/HomeVoucherCard";
 import { SectionHeader } from "@/features/home/components/SectionHeader";
 import { ServiceCard } from "@/features/home/components/ServiceCard";
 import { useHome } from "@/features/home/hooks/useHome";
-import { router } from "expo-router";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -50,6 +50,7 @@ export default function HomeScreen() {
         <View className="px-5 pt-5">
           {!h.isAuthenticated && <GuestBanner />}
 
+
           <SectionHeader title={t("Dịch vụ")} />
           {h.servicesLoading ? (
             <View className="items-center py-10">
@@ -81,7 +82,7 @@ export default function HomeScreen() {
                   name={item.name}
                   description={item.description}
                   icon={item.icon}
-                  onPress={() => router.push(`/services/${item.id}` as any)}
+                  onPress={() => safePush(`/services/${item.id}` as any)}
                 />
               ))}
             </View>
@@ -95,7 +96,7 @@ export default function HomeScreen() {
             <View className="px-5">
               <SectionHeader
                 title={t("Ưu đãi cho bạn")}
-                onSeeAll={() => router.push("/vouchers" as any)}
+                onSeeAll={() => safePush("/vouchers" as any)}
               />
             </View>
             <ScrollView
@@ -110,7 +111,7 @@ export default function HomeScreen() {
                 <HomeVoucherCard
                   key={v.id}
                   voucher={v}
-                  onPress={() => router.push("/vouchers" as any)}
+                  onPress={() => safePush("/vouchers" as any)}
                 />
               ))}
             </ScrollView>

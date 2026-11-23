@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -57,7 +58,7 @@ export function AuthGreeting() {
           <View className="flex-row space-x-3 mt-1" style={{ gap: 12 }}>
             <TouchableOpacity
               className="flex-1 bg-emerald-700 rounded-xl py-3 items-center shadow-sm"
-              onPress={() => router.push(ROUTES.LOGIN as any)}
+              onPress={() => safePush(ROUTES.LOGIN as any)}
               activeOpacity={0.8}
             >
               <Text className="text-white font-bold text-sm">{t("Đăng nhập")}</Text>
@@ -65,7 +66,7 @@ export function AuthGreeting() {
 
             <TouchableOpacity
               className="flex-1 bg-surface border border-emerald-700 rounded-xl py-3 items-center"
-              onPress={() => router.push(ROUTES.REGISTER as any)}
+              onPress={() => safePush(ROUTES.REGISTER as any)}
               activeOpacity={0.8}
             >
               <Text className="text-emerald-700 font-bold text-sm">

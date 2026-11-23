@@ -16,7 +16,8 @@ import { useRefreshControl } from "@/hooks/useRefreshControl";
 import { getApiErrorMessage } from "@/utils/apiError";
 import * as Crypto from "expo-crypto";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, AppState, Linking } from "react-native";
+import { AppState, Linking } from "react-native";
+import { Alert } from "@/components/common/AppAlert";
 import { useDispatch } from "react-redux";
 
 // Khớp hạn mức BE giai đoạn đầu. Muốn test số nhỏ thì hạ BE (WALLET_*_MIN) và hạ ở đây.

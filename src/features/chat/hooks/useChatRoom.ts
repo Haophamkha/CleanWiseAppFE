@@ -21,7 +21,8 @@ import { useAppSelector } from "@/store/hooks";
 import { showErrorToast } from "@/utils/toast";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, AppState, FlatList, Keyboard, Platform } from "react-native";
+import { AppState, FlatList, Keyboard, Platform } from "react-native";
+import { Alert } from "@/components/common/AppAlert";
 
 export function useChatRoom(id: number) {
   const { t } = useTranslation();

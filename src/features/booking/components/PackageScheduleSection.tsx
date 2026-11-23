@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
 
 import type { BookingScheduleDetail } from "@/features/booking/types/Booking";
@@ -44,7 +45,7 @@ export function PackageScheduleSection({
   if (!schedules.length) return null;
 
   const openDetail = (schedule: BookingScheduleDetail) => {
-    router.push({
+    safePush({
       pathname: "/booking/schedule/[id]",
       params: {
         id: String(schedule.id),

@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
 
 import { useRegisterPushTokenMutation } from "@/features/notification/api/notificationApi";
@@ -31,7 +32,7 @@ function openFromPush(response: any) {
     related_booking: data?.booking_id,
   });
 
-  router.push((route ?? "/notifications") as any);
+  safePush((route ?? "/notifications") as any);
 }
 
 export function usePushNotifications(enabled: boolean) {

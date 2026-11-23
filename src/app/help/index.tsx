@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -26,7 +27,7 @@ export default function HelpLibrary() {
       {isLoading && <ActivityIndicator color={COLORS.primary} />}
       {isError && <View><Text className="text-ink-soft mb-3">{t("Chưa tải được hướng dẫn.")}</Text><TouchableOpacity onPress={refetch}><Text className="text-primary font-bold">{t("Thử lại")}</Text></TouchableOpacity></View>}
       {!isLoading && !isError && !data?.length && <Text className="text-ink-soft">{t("Chưa có hướng dẫn được xuất bản.")}</Text>}
-      {!isError && data?.map((article) => <TouchableOpacity key={article.id} onPress={() => router.push({ pathname: "/help/[id]", params: { id: String(article.id) } })} accessibilityRole="button" className="bg-surface border border-line rounded-2xl p-4 mb-3">
+      {!isError && data?.map((article) => <TouchableOpacity key={article.id} onPress={() => safePush({ pathname: "/help/[id]", params: { id: String(article.id) } })} accessibilityRole="button" className="bg-surface border border-line rounded-2xl p-4 mb-3">
         <View className="flex-row items-center"><Feather name="book-open" size={20} color={COLORS.primaryDark} /><Text className="flex-1 text-ink font-bold ml-3">{article.title}</Text></View>
         <Text className="text-ink-soft leading-5 mt-3">{article.summary}</Text>
         <Text className="text-primary-dark text-xs mt-3">{t("Phiên bản")} {article.version}  {t("· Xem hướng dẫn")}</Text>

@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -198,7 +199,7 @@ export function WithdrawModal({ visible, balance, onClose }: Props) {
         <TouchableOpacity
           onPress={() => {
             w.close();
-            router.push("/profile/payment-methods/add" as any);
+            safePush("/profile/payment-methods/add" as any);
           }}
           activeOpacity={0.8}
           style={{

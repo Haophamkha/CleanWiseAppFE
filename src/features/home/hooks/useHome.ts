@@ -8,6 +8,8 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 const ACTIVE_STATUSES = ["PENDING", "ASSIGNED", "IN_PROGRESS"];
+const HOME_MAX = 2; // so don toi da hien o Home
+const STATUS_ORDER: Record<string, number> = { IN_PROGRESS: 0, ASSIGNED: 1, PENDING: 2 };
 
 const normalize = (s: string) =>
   s
@@ -68,7 +70,8 @@ export function useHome() {
     () =>
       (bookingsQ.data?.results ?? [])
         .filter((b) => ACTIVE_STATUSES.includes(b.status))
-        .slice(0, 2),
+        .sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9))
+        .slice(0, HOME_MAX),
     [bookingsQ.data, t],
   );
 

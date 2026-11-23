@@ -3,7 +3,7 @@ import { translate as defaultTranslate } from "@/features/language/i18n";
 // utils/imagePicker.ts
 import type { PickedFile } from "@/features/complaint/types/Complaint";
 import * as ImagePicker from "expo-image-picker";
-import { Alert } from "react-native";
+import { Alert } from "@/components/common/AppAlert";
 
 type Options = {
   square?: boolean;

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useClearAllNotificationsMutation } from "@/features/notification/api/notificationApi";
 import { getApiErrorMessage } from "@/utils/apiError";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
-import { Alert } from "react-native";
+import { Alert } from "@/components/common/AppAlert";
 
 export function useClearNotifications(onDone?: () => void) {
   const { t } = useTranslation();

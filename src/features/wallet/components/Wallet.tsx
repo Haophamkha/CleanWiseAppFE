@@ -102,7 +102,7 @@ function Chip({
   );
 }
 
-function TransactionRow({ tx }: { tx: WalletTransaction }) {
+function TransactionRow({ tx, last }: { tx: WalletTransaction; last?: boolean }) {
   const { t } = useTranslation();
   const { COLORS, TREND } = useAppTheme();
 
@@ -110,29 +110,24 @@ function TransactionRow({ tx }: { tx: WalletTransaction }) {
   const failed = tx.status === "FAILED";
   const tone = isCredit ? TREND.up : TREND.down;
   const toneBg = isCredit ? TREND.upBg : TREND.downBg;
-  const amountColor = failed ? COLORS.inkMuted : tone;
 
   return (
     <View
-      style={[
-        {
-          flexDirection: "row",
-          alignItems: "center",
-          padding: 14,
-          marginBottom: 10,
-          borderRadius: 22,
-          backgroundColor: COLORS.surface,
-          borderWidth: StyleSheet.hairlineWidth,
-          borderColor: COLORS.line,
-        },
-        SHADOWS.card,
-      ]}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 14,
+        paddingHorizontal: 14,
+        borderBottomWidth: last ? 0 : StyleSheet.hairlineWidth,
+        borderBottomColor: COLORS.line,
+        opacity: failed ? 0.7 : 1,
+      }}
     >
       <View
         style={{
-          width: 44,
-          height: 44,
-          borderRadius: 14,
+          width: 46,
+          height: 46,
+          borderRadius: 23,
           alignItems: "center",
           justifyContent: "center",
           backgroundColor: failed ? COLORS.canvas : toneBg,
@@ -140,35 +135,25 @@ function TransactionRow({ tx }: { tx: WalletTransaction }) {
       >
         <Feather
           name={isCredit ? "arrow-down-left" : "arrow-up-right"}
-          size={19}
+          size={20}
           color={failed ? COLORS.inkMuted : tone}
         />
       </View>
 
       <View style={{ flex: 1, marginLeft: 12 }}>
-        <Text
-          numberOfLines={1}
-          style={{ fontSize: 14.5, fontWeight: "700", color: COLORS.ink }}
-        >
+        <Text numberOfLines={1} style={{ fontSize: 14.5, fontWeight: "700", color: COLORS.ink }}>
           {t(tx.type_display)}
         </Text>
-
         {!!(tx.note || tx.booking_code) && (
-          <Text
-            numberOfLines={1}
-            style={{ marginTop: 2, fontSize: 12, color: COLORS.inkSoft }}
-          >
+          <Text numberOfLines={1} style={{ marginTop: 2, fontSize: 12, color: COLORS.inkSoft }}>
             {tx.note ? localizeTransactionNote(tx.note, t) : tx.booking_code}
           </Text>
         )}
-
-        <View
-          style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}
-        >
-          <Text style={{ fontSize: 12, color: COLORS.inkMuted }}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
+          <Feather name="clock" size={11} color={COLORS.inkMuted} />
+          <Text style={{ marginLeft: 4, fontSize: 12, color: COLORS.inkMuted }}>
             {fmtTime(tx.created_at, t)}
           </Text>
-
           {tx.status !== "SUCCESS" && (
             <View
               style={{
@@ -176,56 +161,34 @@ function TransactionRow({ tx }: { tx: WalletTransaction }) {
                 paddingHorizontal: 8,
                 paddingVertical: 2,
                 borderRadius: 999,
-                backgroundColor: failed
-                  ? COLORS.dangerLight
-                  : COLORS.primaryLight,
+                backgroundColor: failed ? COLORS.dangerLight : COLORS.primaryLight,
               }}
             >
-              <Text
-                style={{
-                  fontSize: 11,
-                  fontWeight: "700",
-                  color: failed ? COLORS.danger : COLORS.primaryDark,
-                }}
-              >
+              <Text style={{ fontSize: 11, fontWeight: "700", color: failed ? COLORS.danger : COLORS.primaryDark }}>
                 {t(tx.status_display)}
               </Text>
             </View>
           )}
         </View>
-
         {!!tx.code && (
-          <Text
-            selectable
-            style={{ marginTop: 3, fontSize: 11, color: COLORS.inkMuted }}
-          >
+          <Text selectable numberOfLines={1} style={{ marginTop: 3, fontSize: 11, color: COLORS.inkMuted }}>
             {tx.code}
           </Text>
         )}
       </View>
 
-      <View style={{ marginLeft: 8, alignItems: "flex-end" }}>
-        <Text
-          style={{
-            fontSize: 15,
-            fontWeight: "800",
-            color: amountColor,
-            textDecorationLine: failed ? "line-through" : "none",
-          }}
-        >
-          {isCredit ? "+" : "-"}
-          {formatVnd(Number(tx.amount), t)}
-        </Text>
-
-        {!failed && (
-          <Feather
-            name={isCredit ? "trending-up" : "trending-down"}
-            size={14}
-            color={tone}
-            style={{ marginTop: 4 }}
-          />
-        )}
-      </View>
+      <Text
+        style={{
+          marginLeft: 8,
+          fontSize: 15.5,
+          fontWeight: "800",
+          color: failed ? COLORS.inkMuted : tone,
+          textDecorationLine: failed ? "line-through" : "none",
+        }}
+      >
+        {isCredit ? "+" : "-"}
+        {formatVnd(Number(tx.amount), t)}
+      </Text>
     </View>
   );
 }
@@ -355,9 +318,11 @@ export function Wallet() {
                 >
                   {g.label}
                 </Text>
-                {g.items.map((tx) => (
-                  <TransactionRow key={tx.id} tx={tx} />
-                ))}
+                <View style={[{ borderRadius: 22, backgroundColor: COLORS.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: COLORS.line }, SHADOWS.card]}>
+                  {g.items.map((tx, i) => (
+                    <TransactionRow key={tx.id} tx={tx} last={i === g.items.length - 1} />
+                  ))}
+                </View>
               </View>
             ))
           )}

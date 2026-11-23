@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { translate as defaultTranslate, getLocale } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
 
@@ -155,7 +156,7 @@ function WorkerRow({
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={() => {
-        router.push({
+        safePush({
           pathname: "/worker/[id]",
           params: {
             id: String(worker.worker_id),

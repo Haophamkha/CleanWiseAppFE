@@ -10,7 +10,7 @@ import { getApiErrorMessage } from "@/utils/apiError";
 import { formatVnd } from "@/utils/currency";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Alert } from "react-native";
+import { Alert } from "@/components/common/AppAlert";
 
 const CANCELLABLE_STATUSES = ["PENDING", "ASSIGNED"];
 const ACTIVE_STATUSES = ["PENDING", "ASSIGNED", "IN_PROGRESS"];

@@ -21,7 +21,6 @@ import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -32,6 +31,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { Alert } from "@/components/common/AppAlert";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type Step = "options" | "bank-form";

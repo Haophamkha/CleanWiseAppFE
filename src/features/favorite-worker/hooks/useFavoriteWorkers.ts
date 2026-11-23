@@ -42,7 +42,6 @@ export function useFavoriteWorkers() {
   }, [data, page]);
 
   const refresh = () => {
-    setWorkers([]);
     if (page === 1) void refetch();
     else setPage(1);
   };

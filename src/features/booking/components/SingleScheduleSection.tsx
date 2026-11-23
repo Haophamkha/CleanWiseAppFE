@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { translate as defaultTranslate, getLocale } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
 
@@ -259,7 +260,7 @@ export function SingleScheduleSection({
 
   const goToWorker = () => {
     if (!worker) return;
-    router.push({
+    safePush({
       pathname: "/worker/[id]",
       params: {
         id: String(worker.worker_id),

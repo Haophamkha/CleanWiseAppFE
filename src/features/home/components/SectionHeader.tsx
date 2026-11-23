@@ -9,10 +9,17 @@ export function SectionHeader({ title, onSeeAll }: Props) {
 
   return (
     <View className="flex-row items-center justify-between mb-3">
-      <Text className="text-xl font-bold text-ink">{title}</Text>
+      <Text
+        className="text-[19px] font-extrabold text-ink"
+        style={{ letterSpacing: -0.2 }}
+      >
+        {title}
+      </Text>
       {onSeeAll ? (
         <TouchableOpacity onPress={onSeeAll} hitSlop={8}>
-          <Text className="text-sm font-semibold text-primary">{t("Xem tất cả")}</Text>
+          <Text className="text-sm font-semibold text-primary">
+            {t("Xem t\u1EA5t c\u1EA3")}
+          </Text>
         </TouchableOpacity>
       ) : null}
     </View>

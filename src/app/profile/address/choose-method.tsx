@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -155,7 +156,7 @@ export default function ChooseAddressMethodScreen() {
           title={t("Chọn trên bản đồ")}
           description={t("Ghim vị trí, hệ thống tự điền địa chỉ giúp bạn")}
           onPress={() =>
-            router.push({
+            safePush({
               pathname: "/profile/address/select-location",
               params,
             })
@@ -166,7 +167,7 @@ export default function ChooseAddressMethodScreen() {
           title={t("Nhập thủ công")}
           description={t("Tự chọn tỉnh/thành, phường/xã và nhập địa chỉ")}
           onPress={() =>
-            router.push({ pathname: "/profile/address/add", params })
+            safePush({ pathname: "/profile/address/add", params })
           }
         />
       </View>

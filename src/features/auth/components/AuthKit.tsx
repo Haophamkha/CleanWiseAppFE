@@ -2,9 +2,11 @@ import { translate as t } from "@/features/language/i18n";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { SHADOWS } from "@/constants/theme";
 import { Feather } from "@expo/vector-icons";
+import logoMark from "@assets/images/logo-mark.png";
 import { ReactNode, useState } from "react";
 import {
     ActivityIndicator,
+    Image,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -79,19 +81,7 @@ export function AuthScreen({
           <View
             style={{ alignItems: "center", marginTop: 8, marginBottom: 28 }}
           >
-            <View
-              style={{
-                width: 96,
-                height: 96,
-                borderRadius: 48,
-                backgroundColor: COLORS.primarySoft,
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 20,
-              }}
-            >
-              <Feather name={icon} size={36} color={COLORS.primary} />
-            </View>
+            <View style={[{ borderRadius: 26, marginBottom: 18 }, SHADOWS.float]}><Image source={logoMark} style={{ width: 84, height: 84, borderRadius: 26 }} resizeMode="contain" /></View>
             <Text
               style={{
                 fontSize: 30,

@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
 import { getLocale } from "@/features/language/i18n";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -80,7 +81,7 @@ function Sparkline({ series }: { series: number[] }) {
       <Polyline
         points={pts}
         fill="none"
-        stroke="#fff"
+        stroke={ON_DARK.text}
         strokeWidth={2.5}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -225,75 +226,50 @@ export function WalletHero({
         )}
       </View>
 
-      {/* Thẻ số dư */}
-      <LinearGradient
-        colors={GRADIENTS.wallet}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[{ padding: 24, borderRadius: RADIUS.hero }, SHADOWS.float]}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Text
-            style={{
-              flex: 1,
-              fontSize: 14,
-              fontWeight: "500",
-              color: ON_DARK.textSoft,
-            }}
-          >
-            {t("Số dư khả dụng")}</Text>
-          {trend.hasData && <TrendBadge net={trend.net} />}
-        </View>
+      {/* Th hero-card */}
+      <View style={[{ borderRadius: RADIUS.hero, backgroundColor: COLORS.primaryFill }, SHADOWS.float]}>
+        <LinearGradient
+          colors={GRADIENTS.wallet}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ padding: 22, borderRadius: RADIUS.hero, overflow: "hidden" }}
+        >
+          <View pointerEvents="none" style={{ position: "absolute", width: 180, height: 180, borderRadius: 90, right: -50, top: -60, backgroundColor: ON_DARK.surface }} />
+          <View pointerEvents="none" style={{ position: "absolute", width: 120, height: 120, borderRadius: 60, left: -40, bottom: -50, backgroundColor: ON_DARK.surface }} />
 
-        {isInitialLoading ? (
-          <View style={{ height: 62 }} />
-        ) : (
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "baseline",
-              marginTop: 8,
-            }}
-          >
-            <Text
-              adjustsFontSizeToFit
-              numberOfLines={1}
-              style={{
-                fontSize: 46,
-                lineHeight: 56,
-                fontWeight: "800",
-                color: ON_DARK.text,
-              }}
-            >
-              {balance.toLocaleString(getLocale(t))}
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <View style={{ width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: ON_DARK.surface, borderWidth: 1, borderColor: ON_DARK.border }}>
+              <Feather name="pocket" size={18} color={ON_DARK.text} />
+            </View>
+            <Text style={{ flex: 1, marginLeft: 10, fontSize: 14, fontWeight: "600", color: ON_DARK.textSoft }}>
+              {t("S\u1ed1 d\u01b0 kh\u1ea3 d\u1ee5ng")}
             </Text>
-            <Text
-              style={{
-                marginLeft: 4,
-                fontSize: 24,
-                fontWeight: "700",
-                color: ON_DARK.textSoft,
-              }}
-            >
-              {t("đ")}</Text>
+            {trend.hasData && <TrendBadge net={trend.net} />}
           </View>
-        )}
 
-        {trend.hasData && (
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginTop: 12,
-            }}
-          >
-            <Text style={{ fontSize: 12.5, color: ON_DARK.textSoft }}>
-              {t("Biến động")}{" "}{DAYS} {t("ngày qua")}</Text>
-            <Sparkline series={trend.series} />
-          </View>
-        )}
-      </LinearGradient>
+          {isInitialLoading ? (
+            <View style={{ height: 70 }} />
+          ) : (
+            <View style={{ flexDirection: "row", alignItems: "baseline", marginTop: 14 }}>
+              <Text adjustsFontSizeToFit numberOfLines={1} style={{ fontSize: 44, lineHeight: 54, fontWeight: "800", color: ON_DARK.text }}>
+                {balance.toLocaleString(getLocale(t))}
+              </Text>
+              <Text style={{ marginLeft: 4, fontSize: 22, fontWeight: "700", color: ON_DARK.textSoft }}>
+                {t("\u0111")}
+              </Text>
+            </View>
+          )}
+
+          {trend.hasData && (
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 16, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 16, backgroundColor: ON_DARK.surface }}>
+              <Text style={{ fontSize: 12.5, fontWeight: "600", color: ON_DARK.textSoft }}>
+                {t("Bi\u1ebfn \u0111\u1ed9ng")} {DAYS} {t("ng\u00e0y qua")}
+              </Text>
+              <Sparkline series={trend.series} />
+            </View>
+          )}
+        </LinearGradient>
+      </View>
 
       {/* 3 nút riêng */}
       <View style={{ flexDirection: "row", gap: 10, marginTop: 14 }}>
@@ -304,7 +280,7 @@ export function WalletHero({
         <Tile
           icon="credit-card"
           label={t("Ngân hàng")}
-          onPress={() => router.push("/profile/payment-methods" as any)}
+          onPress={() => safePush("/profile/payment-methods" as any)}
         />
       </View>
     </View>
