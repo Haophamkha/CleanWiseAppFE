@@ -1,6 +1,5 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
-import { Feather } from "@expo/vector-icons";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 
 import { MenuGroup } from "@/components/common/MenuGroup";
@@ -13,15 +12,15 @@ import { useProfile } from "@/features/profile/hooks/useProfile";
 import { useAppSelector } from "@/store/hooks";
 import Constants from "expo-constants";
 import { router } from "expo-router";
-import { Alert, Linking, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Image, Linking, ScrollView, Text, View } from "react-native";
+import { Alert } from "@/components/common/AppAlert";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppearanceSettings } from "@/features/theme/AppearanceSettings";
 import { LanguageSettings } from "@/features/language/LanguageSettings";
 
 export default function SettingsScreen() {
   const { t } = useTranslation();
-  const { COLORS } = useAppTheme();
-  const [showMore, setShowMore] = useState(false);
+  const { COLORS, SHADOWS } = useAppTheme();
 
   const insets = useSafeAreaInsets();
   const { isAuthenticated } = useProfile();
@@ -69,28 +68,45 @@ export default function SettingsScreen() {
             <MenuListItem icon="bell" label={t("Thông báo đẩy")} onPress={() => Linking.openSettings()} />
           )}
           <LanguageSettings compact />
-        </MenuGroup>
-
-        <TouchableOpacity accessibilityRole="button" accessibilityState={{ expanded: showMore }}
-          onPress={() => setShowMore(!showMore)} className="flex-row items-center px-1 py-2 mb-3">
-          <Text className="flex-1 text-xs text-ink-muted">{t("Cài đặt khác")}</Text>
-          <Feather name={showMore ? "chevron-up" : "chevron-down"} size={16} color={COLORS.inkMuted} />
-        </TouchableOpacity>
-        {showMore && <MenuGroup>
           {isAuthenticated && hasPassword && <MenuListItem icon="key" label={t("Đổi mật khẩu")}
-            onPress={() => router.push(ROUTES.CHANGE_PASSWORD as any)} />}
+            onPress={() => safePush(ROUTES.CHANGE_PASSWORD as any)} />}
           <MenuListItem icon="external-link" label={t("Cài đặt thông báo hệ thống")} onPress={() => Linking.openSettings()} />
           <MenuListItem
             icon="trash-2"
             label={t("Xoá bộ nhớ đệm")}
             onPress={clearCache}
           />
-        </MenuGroup>}
+        </MenuGroup>
 
-        <View className="items-center mt-2">
-          <Text className="text-sm font-semibold text-primary">CleanWise</Text>
-          <Text className="text-xs text-ink-muted mt-1">{t("Nhà sạch, sống thảnh thơi")}</Text>
-          {showMore && <Text className="text-xs text-ink-muted mt-2">v{Constants.expoConfig?.version ?? "1.0.0"}</Text>}
+        <View style={{ alignItems: "center", marginTop: 8, paddingVertical: 20 }}>
+          <Image
+            source={require("@assets/images/logo-mark.png")}
+            style={[{ width: 72, height: 72, borderRadius: 26 }, SHADOWS.float]}
+          />
+          <Text style={{ marginTop: 14, fontSize: 20, fontWeight: "800", letterSpacing: -0.2, color: COLORS.ink }}>
+            CleanWise
+          </Text>
+          <Text style={{ marginTop: 4, fontSize: 13, color: COLORS.inkSoft }}>
+            {t("Nh\u00e0 s\u1ea1ch, s\u1ed1ng th\u1ea3nh th\u01a1i")}
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginTop: 12,
+              paddingHorizontal: 12,
+              paddingVertical: 5,
+              borderRadius: 999,
+              backgroundColor: COLORS.surface,
+              borderWidth: 1,
+              borderColor: COLORS.line,
+            }}
+          >
+            <View style={{ width: 6, height: 6, borderRadius: 3, marginRight: 6, backgroundColor: COLORS.primary }} />
+            <Text style={{ fontSize: 12, fontWeight: "600", color: COLORS.inkSoft }}>
+              {t("Phi\u00ean b\u1ea3n")} {Constants.expoConfig?.version ?? "1.0.0"}
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </View>

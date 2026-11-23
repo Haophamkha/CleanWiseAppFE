@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
 
 import { useLazyGetBookingDetailQuery } from "@/features/booking/api/bookingApi";
@@ -27,14 +28,14 @@ export function useChatbotCardNavigation() {
       card.action === "OPEN_HELP_ARTICLE" &&
       card.article_id > 0
     ) {
-      router.push({
+      safePush({
         pathname: "/help/[id]",
         params: { id: String(card.article_id), ...(card.section_id ? { section: card.section_id } : {}) },
       });
       return;
     }
     if (card.type === "address_map" && card.action === "OPEN_ADDRESS_MAP") {
-      router.push({
+      safePush({
         pathname: "/profile/address/select-location",
         params: { pickerKey: CHATBOT_ADDRESS_PICKER_KEY },
       });
@@ -45,7 +46,7 @@ export function useChatbotCardNavigation() {
       card.type === "service" &&
       card.service_id > 0
     ) {
-      router.push({
+      safePush({
         pathname: "/services/[id]",
         params: { id: String(card.service_id) },
       });
@@ -54,7 +55,7 @@ export function useChatbotCardNavigation() {
       card.type === "booking" &&
       card.booking_id > 0
     ) {
-      router.push({
+      safePush({
         pathname: "/booking/[id]",
         params: { id: String(card.booking_id) },
       });
@@ -75,7 +76,7 @@ export function useChatbotCardNavigation() {
           (item) => item.id === card.schedule_id,
         );
         if (!schedule) throw new Error("Schedule unavailable");
-        router.push({
+        safePush({
           pathname: "/booking/schedule/[id]",
           params: {
             id: String(schedule.id),

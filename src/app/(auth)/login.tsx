@@ -93,7 +93,7 @@ export default function LoginScreen() {
             style={{
               fontSize: 14,
               fontWeight: "700",
-              color: "#F59E0B",
+              color: COLORS.primary,
             }}
           >
             {t("Quên mật khẩu?")}</Text>

@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
 
 // features/address/hooks/useAddressForm.ts
@@ -171,7 +172,7 @@ export function useAddressForm(map: MapResultParams) {
   const goToMap = (extra: Record<string, string | undefined> = {}) => {
     if (isNavigating) return;
     setIsNavigating(true);
-    router.push({
+    safePush({
       pathname: "/profile/address/select-location",
       params: { latitude, longitude, ...extra },
     });

@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -29,12 +30,12 @@ export function GuestBanner() {
 
       <View style={{ flexDirection: "row", gap: 12 }}>
         <TouchableOpacity
-          onPress={() => router.push(ROUTES.LOGIN as any)}
+          onPress={() => safePush(ROUTES.LOGIN as any)}
           activeOpacity={0.85}
           style={{
             flex: 1,
             height: 48,
-            borderRadius: 12,
+            borderRadius: 24,
             backgroundColor: COLORS.primaryFill,
             alignItems: "center",
             justifyContent: "center",
@@ -44,18 +45,18 @@ export function GuestBanner() {
           <Text
             numberOfLines={1}
             adjustsFontSizeToFit
-            style={{ color: "#FFFFFF", fontWeight: "600", fontSize: 15 }}
+            style={{ color: COLORS.white, fontWeight: "600", fontSize: 15 }}
           >
             {t("Đăng nhập")}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => router.push(ROUTES.REGISTER as any)}
+          onPress={() => safePush(ROUTES.REGISTER as any)}
           activeOpacity={0.85}
           style={{
             flex: 1,
             height: 48,
-            borderRadius: 12,
+            borderRadius: 24,
             borderWidth: 1.5,
             borderColor: COLORS.primary,
             backgroundColor: "transparent",

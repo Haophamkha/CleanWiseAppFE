@@ -1323,5 +1323,15 @@
   "Mọi thứ đã sẵn sàng. Cùng vào CleanWise nhé!": "Everything is ready. Let’s get started!",
   "Đang chuẩn bị không gian của bạn...": "Preparing your space...",
   "Kết nối thành công": "Connected successfully",
-  "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.": "Your session has expired. Please sign in again."
+  "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.": "Your session has expired. Please sign in again.",
+  "Xác minh": "Verify",
+  "Xác minh lại": "Verify again",
+  "Chưa dùng để rút tiền": "Not yet usable for withdrawals",
+  "Thông tin xác minh": "Verification info",
+  "Nhập CCCD/CMND và số điện thoại đăng ký với ngân hàng.": "Enter the ID number and phone number registered with your bank.",
+  "Nhập mã OTP để hoàn tất xác minh.": "Enter the OTP to complete verification.",
+  "Tài khoản đã được xác minh": "Account verified",
+  "Xác minh thành công": "Verification successful",
+  "CleanWise không nhận mật khẩu hoặc OTP ngân hàng của bạn.": "CleanWise never receives your bank password or OTP.",
+  "Xem thêm": "Show more"
 }

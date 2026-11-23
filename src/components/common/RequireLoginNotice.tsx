@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { ROUTES } from "@/config/constants";
 import { translate as t } from "@/features/language/i18n";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -48,7 +49,7 @@ export function RequireLoginNotice({
         <TouchableOpacity
           className="flex-1 items-center justify-center bg-primary-soft border border-primary-border"
           style={{ borderRadius: 999, height: 50 }}
-          onPress={() => router.push(ROUTES.REGISTER as any)}
+          onPress={() => safePush(ROUTES.REGISTER as any)}
           activeOpacity={0.8}
         >
           <Text
@@ -64,7 +65,7 @@ export function RequireLoginNotice({
             { borderRadius: 999, height: 50, backgroundColor: COLORS.primary },
             SHADOWS.float,
           ]}
-          onPress={() => router.push(ROUTES.LOGIN as any)}
+          onPress={() => safePush(ROUTES.LOGIN as any)}
           activeOpacity={0.85}
         >
           <Text

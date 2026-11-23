@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 
 import { useGetUnreadCountQuery } from "@/features/notification/api/notificationApi";
@@ -17,7 +18,7 @@ export function NotificationBellButton() {
 
   return (
     <TouchableOpacity
-      onPress={() => router.push("/notifications" as any)}
+      onPress={() => safePush("/notifications" as any)}
       activeOpacity={0.7}
       className="relative"
     >

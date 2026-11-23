@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { translate as defaultTranslate } from "@/features/language/i18n";
 import { useTranslation } from "react-i18next";
 
@@ -98,7 +99,7 @@ export function ChatbotWelcome({
           />
         </View>
         <TouchableOpacity
-          onPress={() => router.push("/help" as any)}
+          onPress={() => safePush("/help" as any)}
           accessibilityRole="button"
           accessibilityLabel={t("Mở hướng dẫn sử dụng")}
           activeOpacity={0.8}

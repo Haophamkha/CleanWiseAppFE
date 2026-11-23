@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
-import { RADIUS, SHADOWS } from "@/constants/theme";
+import { ON_DARK, RADIUS, SHADOWS } from "@/constants/theme";
 import { useWorkerProfile } from "@/features/favorite-worker/hooks/useWorkerProfile";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -84,7 +84,7 @@ function Stars({ rating, active }: { rating: number; active: boolean }) {
             key={i}
             name={name}
             size={17}
-            color={active ? COLORS.accent : "rgba(255,255,255,0.55)"}
+            color={active ? COLORS.accent : ON_DARK.textSoft}
             style={{ marginHorizontal: 1 }}
           />
         );
@@ -369,16 +369,6 @@ export function WorkerProfile() {
   const highlights: { icon: IconName; label: string }[] = [];
   if (w.hasRating && w.rating >= 4.5)
     highlights.push({ icon: "award", label: t("Được đánh giá cao") });
-  if (w.completedJobs >= 10)
-    highlights.push({
-      icon: "trending-up",
-      label: t("{{value0}}+ đơn hoàn thành", { value0: w.completedJobs }),
-    });
-  if (w.experienceYears >= 3)
-    highlights.push({
-      icon: "shield",
-      label: t("{{value0}} năm kinh nghiệm", { value0: w.experienceYears , count: w.experienceYears}),
-    });
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.canvas }}>
@@ -423,7 +413,7 @@ export function WorkerProfile() {
               width: 260,
               height: 260,
               borderRadius: 130,
-              backgroundColor: "rgba(255,255,255,0.1)",
+              backgroundColor: ON_DARK.surface,
             }}
           />
           <View
@@ -435,7 +425,7 @@ export function WorkerProfile() {
               width: 150,
               height: 150,
               borderRadius: 75,
-              backgroundColor: "rgba(255,255,255,0.07)",
+              backgroundColor: ON_DARK.surface,
             }}
           />
           <View
@@ -447,7 +437,7 @@ export function WorkerProfile() {
               width: 120,
               height: 120,
               borderRadius: 60,
-              backgroundColor: "rgba(255,255,255,0.08)",
+              backgroundColor: ON_DARK.surface,
             }}
           />
 
@@ -462,9 +452,9 @@ export function WorkerProfile() {
                 borderRadius: 20,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: "rgba(255,255,255,0.22)",
+                backgroundColor: ON_DARK.surface,
                 borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.28)",
+                borderColor: ON_DARK.border,
               }}
             >
               <Feather name="arrow-left" size={19} color={COLORS.white} />
@@ -485,7 +475,7 @@ export function WorkerProfile() {
           {/* Avatar + tên + đánh giá */}
           <View style={{ alignItems: "center", marginTop: 22 }}>
             <LinearGradient
-              colors={["rgba(255,255,255,0.95)", "rgba(255,255,255,0.3)"]}
+              colors={[COLORS.white, ON_DARK.border]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{
@@ -547,9 +537,9 @@ export function WorkerProfile() {
                 paddingHorizontal: 12,
                 paddingVertical: 5,
                 borderRadius: 999,
-                backgroundColor: "rgba(255,255,255,0.2)",
+                backgroundColor: ON_DARK.surface,
                 borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.28)",
+                borderColor: ON_DARK.border,
               }}
             >
               <Feather name="check-circle" size={13} color={COLORS.white} />
@@ -587,7 +577,7 @@ export function WorkerProfile() {
                   style={{
                     marginLeft: 4,
                     fontSize: 12.5,
-                    color: "rgba(255,255,255,0.8)",
+                    color: ON_DARK.textSoft,
                   }}
                 >
                   ({w.completedJobs} {t("đơn)")}</Text>

@@ -2,7 +2,8 @@ import { useTranslation } from "react-i18next";
 import { APP_THEMES } from "@/constants/theme";
 import { MenuGroup } from "@/components/common/MenuGroup";
 import { Feather } from "@expo/vector-icons";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
+import { Alert } from "@/components/common/AppAlert";
 import { useAppTheme, type ThemePreference } from "./ThemeProvider";
 
 const OPTIONS: { value: ThemePreference; label: string }[] = [

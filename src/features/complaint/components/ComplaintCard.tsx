@@ -76,8 +76,7 @@ export function ComplaintCard({
   onPress: () => void;
 }) {
   const { t } = useTranslation();
-
-  const { COLORS } = useAppTheme();
+  const { COLORS, SHADOWS } = useAppTheme();
 
   const COMPLAINT_STATUS_META = getComplaintStatusMap(COLORS, t);
 
@@ -94,87 +93,84 @@ export function ComplaintCard({
 
   return (
     <TouchableOpacity
-      activeOpacity={0.85}
+      activeOpacity={0.88}
       onPress={onPress}
-      className="bg-surface border border-line mb-4 overflow-hidden"
       style={[
-        { borderRadius: RADIUS.card },
+        {
+          marginBottom: 16,
+          borderRadius: 22,
+          backgroundColor: COLORS.surface,
+          borderWidth: 1,
+          borderColor: COLORS.line,
+          overflow: "hidden",
+        },
         SHADOWS.card,
         dead && { opacity: 0.75 },
       ]}
     >
-      {/* Mã khiếu nại, kèm mã đơn + buổi */}
-      <View className="px-4 py-3" style={{ backgroundColor: meta.bg }}>
-        <Text
-          className="text-[10.5px] font-bold"
-          style={{ color: meta.color, letterSpacing: 0.5 }}
-        >
-          {t("MÃ KHIẾU NẠI")}</Text>
+      <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 4, backgroundColor: meta.color }} />
 
-        <Text
-          selectable
-          className="text-ink text-[17px] font-extrabold mt-0.5"
-          style={{ fontFamily: MONO, letterSpacing: 0.6 }}
-        >
-          {item.code ?? `#${item.id}`}
-        </Text>
+      <View style={{ paddingVertical: 16, paddingLeft: 20, paddingRight: 16 }}>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <View style={{ width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: meta.bg }}>
+            <Feather name={meta.icon} size={20} color={meta.color} />
+          </View>
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <Text numberOfLines={2} style={{ fontSize: 16, fontWeight: "800", color: COLORS.ink }}>
+              {item.issue_type_name}
+            </Text>
+            <Text style={{ marginTop: 2, fontSize: 12, color: COLORS.inkMuted }} numberOfLines={1}>
+              {formatReviewDate(item.created_at, t)}
+            </Text>
+          </View>
+        </View>
 
-        <Text
-          className="text-[12.5px] font-semibold mt-1"
-          style={{ color: meta.color }}
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.7}
-        >
-          {t("Đơn")}{" "}{item.booking_code}
-          {item.schedule_sequence_no != null
-            ? t("  ·  Buổi {{value0}}", { value0: item.schedule_sequence_no })
-            : ""}
-        </Text>
-      </View>
-
-      <View className="p-4">
-        <Text className="text-ink font-bold text-[16px]" numberOfLines={2}>
-          {item.issue_type_name}
-        </Text>
-
-        <View className="flex-row items-center mt-2.5">
-          <View
-            className="flex-row items-center px-2.5 py-1 rounded-full"
-            style={{ backgroundColor: meta.bg }}
-          >
-            <Feather name={meta.icon} size={11} color={meta.color} />
-
+        <View style={{ marginTop: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <View style={{ flex: 1, marginRight: 10 }}>
+            <Text style={{ fontSize: 10.5, fontWeight: "700", letterSpacing: 0.6, color: COLORS.inkMuted }}>
+              {t("M\u00c3 KHI\u1ebeU N\u1ea0I")}
+            </Text>
             <Text
-              className="text-[11.5px] font-bold ml-1.5"
-              style={{ color: meta.color }}
+              selectable
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+              style={{ marginTop: 2, fontSize: 16, fontWeight: "800", color: COLORS.ink, fontFamily: MONO, letterSpacing: 0.5 }}
             >
+              {item.code ?? `#${item.id}`}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: meta.bg }}>
+            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: meta.color, marginRight: 6 }} />
+            <Text style={{ fontSize: 12, fontWeight: "700", color: meta.color }}>
               {progressLabel ? t(progressLabel) : meta.label}
             </Text>
           </View>
-
-          <Text
-            className="text-ink-muted text-[12px] ml-3 flex-1"
-            numberOfLines={1}
-          >
-            {formatReviewDate(item.created_at, t)}
-          </Text>
         </View>
 
-        <Text className="text-ink-soft text-[13px] mt-3" numberOfLines={1}>
-          {item.stage_label}
-          {item.worker_name ? ` · NV: ${item.worker_name}` : ""}
-        </Text>
+        <View style={{ marginTop: 12, padding: 12, borderRadius: 14, backgroundColor: COLORS.canvas }}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Feather name="file-text" size={13} color={COLORS.inkMuted} />
+            <Text numberOfLines={1} style={{ flex: 1, marginLeft: 6, fontSize: 12.5, fontWeight: "600", color: COLORS.ink }}>
+              {t("\u0110\u01a1n")}{" "}{item.booking_code}
+              {item.schedule_sequence_no != null
+                ? t("  \u00b7  Bu\u1ed5i {{value0}}", { value0: item.schedule_sequence_no })
+                : ""}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}>
+            <Feather name="flag" size={13} color={COLORS.inkMuted} />
+            <Text numberOfLines={1} style={{ flex: 1, marginLeft: 6, fontSize: 12.5, color: COLORS.inkSoft }}>
+              {item.stage_label}
+              {item.worker_name ? ` \u00b7 NV: ${item.worker_name}` : ""}
+            </Text>
+          </View>
+        </View>
 
-        <View className="flex-row items-center justify-between mt-3 pt-3 border-t border-dashed border-line">
-          <Text
-            className="flex-1 text-[12.5px] font-semibold mr-3"
-            style={{ color: meta.color }}
-            numberOfLines={2}
-          >
+        <View style={{ marginTop: 12, flexDirection: "row", alignItems: "center" }}>
+          <Text numberOfLines={2} style={{ flex: 1, marginRight: 8, fontSize: 12.5, fontWeight: "600", color: meta.color }}>
             {meta.hint}
           </Text>
-
           <Feather name="chevron-right" size={18} color={COLORS.inkMuted} />
         </View>
       </View>

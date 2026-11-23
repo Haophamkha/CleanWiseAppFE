@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -169,11 +170,11 @@ export default function ServiceDetailScreen() {
         ),
       }),
     );
-    router.push("/booking/confirm");
+    safePush("/booking/confirm");
   };
 
   const handleChooseAddress = (entryKey: string, label: string) => {
-    router.push({
+    safePush({
       pathname: "/profile/address",
       params: { pickerKey: pickerKeyFor(entryKey), title: label },
     });

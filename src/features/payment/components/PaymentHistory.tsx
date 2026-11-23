@@ -1,36 +1,38 @@
-import { translate as defaultTranslate, getLocale } from "@/features/language/i18n";
+import { safePush } from "@/utils/navigation";
+import { getLocale } from "@/features/language/i18n";
 import { localizeTransactionNote } from "@/features/payment/utils/localizeTransactionNote";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ON_DARK, OVERLAY, RADIUS, SHADOWS } from "@/constants/theme";
+import { ON_DARK, RADIUS } from "@/constants/theme";
 import type {
-    PaymentHistoryItem,
-    PaymentHistorySource,
-    PaymentHistoryStatus,
-    PaymentHistoryStatusFilter,
+  PaymentHistoryItem,
+  PaymentHistorySource,
+  PaymentHistoryStatus,
+  PaymentHistoryStatusFilter,
 } from "@/features/payment/api/paymentHistoryApi";
 import {
-    usePaymentHistory,
-    type PaymentHistoryTotals,
+  usePaymentHistory,
+  type PaymentHistoryTotals,
 } from "@/features/payment/hooks/usePaymentHistory";
 import { formatVnd } from "@/utils/currency";
 import { formatMessageTime } from "@/utils/formatTime";
 import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useMemo, useState } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import { useMemo, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    Modal,
-    Pressable,
-    RefreshControl,
-    SectionList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  RefreshControl,
+  SectionList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -38,43 +40,35 @@ type IconName = React.ComponentProps<typeof Feather>["name"];
 
 type FilterOption<T extends string> = { key: T; label: string; icon: IconName };
 
-function getLocalizedSourceOptions(translateText = defaultTranslate): FilterOption<PaymentHistorySource>[] {
+const PAGE_STEP = 10;
+const HAIR = StyleSheet.hairlineWidth;
+
+function getSourceOptions(t: (k: string) => string): FilterOption<PaymentHistorySource>[] {
   return [
-    { key: "all", label: translateText("Tất cả loại"), icon: "layers" },
-    { key: "wallet", label: translateText("Qua ví"), icon: "briefcase" },
+    { key: "all", label: t("T\u1ea5t c\u1ea3 lo\u1ea1i"), icon: "layers" },
+    { key: "wallet", label: t("Qua v\u00ed"), icon: "briefcase" },
     { key: "online", label: "Online", icon: "credit-card" },
   ];
 }
 
-function getLocalizedStatusOptions(translateText = defaultTranslate): FilterOption<PaymentHistoryStatusFilter>[] {
+function getStatusOptions(t: (k: string) => string): FilterOption<PaymentHistoryStatusFilter>[] {
   return [
-    { key: "all", label: translateText("Mọi trạng thái"), icon: "list" },
-    { key: "paid", label: translateText("Đã thanh toán"), icon: "check-circle" },
-    { key: "pending", label: translateText("Chờ thanh toán"), icon: "clock" },
-    { key: "cancelled", label: translateText("Đã hủy"), icon: "x-circle" },
-    { key: "refunded", label: translateText("Đã hoàn"), icon: "rotate-ccw" },
+    { key: "all", label: t("M\u1ecdi tr\u1ea1ng th\u00e1i"), icon: "list" },
+    { key: "paid", label: t("\u0110\u00e3 thanh to\u00e1n"), icon: "check-circle" },
+    { key: "pending", label: t("Ch\u1edd thanh to\u00e1n"), icon: "clock" },
+    { key: "cancelled", label: t("\u0110\u00e3 h\u1ee7y"), icon: "x-circle" },
+    { key: "refunded", label: t("\u0110\u00e3 ho\u00e0n"), icon: "rotate-ccw" },
   ];
 }
 
-function getLocalizedEmptyText(translateText = defaultTranslate): Record<PaymentHistorySource, string> {
-  return {
-    all: translateText("Chưa có giao dịch thanh toán nào."),
-    wallet: translateText("Chưa có giao dịch nào qua ví."),
-    online: translateText("Chưa có thanh toán online nào."),
-  };
-}
-
-// Trạng thái khác SUCCESS thì hiện badge; SUCCESS thì không cần.
-
-
-const dayLabel = (iso: string, translateText = defaultTranslate) => {
+const dayLabel = (iso: string, t: (k: string) => string) => {
   const d = new Date(iso);
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
-  if (d.toDateString() === today.toDateString()) return translateText("Hôm nay");
-  if (d.toDateString() === yesterday.toDateString()) return translateText("Hôm qua");
-  return d.toLocaleDateString(getLocale(translateText), {
+  if (d.toDateString() === today.toDateString()) return t("H\u00f4m nay");
+  if (d.toDateString() === yesterday.toDateString()) return t("H\u00f4m qua");
+  return d.toLocaleDateString(getLocale(t as any), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -83,10 +77,10 @@ const dayLabel = (iso: string, translateText = defaultTranslate) => {
 
 type Section = { title: string; data: PaymentHistoryItem[] };
 
-function groupByDay(list: PaymentHistoryItem[], translateText = defaultTranslate): Section[] {
+function groupByDay(list: PaymentHistoryItem[], t: (k: string) => string): Section[] {
   const groups: Section[] = [];
   for (const item of list) {
-    const title = dayLabel(item.created_at, translateText);
+    const title = dayLabel(item.created_at, t);
     const last = groups[groups.length - 1];
     if (last && last.title === title) last.data.push(item);
     else groups.push({ title, data: [item] });
@@ -94,231 +88,123 @@ function groupByDay(list: PaymentHistoryItem[], translateText = defaultTranslate
   return groups;
 }
 
-/* ============================ dropdown lọc ============================ */
+/* ============================ dropdown loc ============================ */
 
-function FilterDropdown<T extends string>({
+function FilterButton<T extends string>({
   caption,
   value,
   options,
-  onChange,
+  open,
+  onPress,
 }: {
   caption: string;
   value: T;
   options: FilterOption<T>[];
-  onChange: (key: T) => void;
+  open: boolean;
+  onPress: () => void;
 }) {
   const { COLORS } = useAppTheme();
-
-  const insets = useSafeAreaInsets();
-  const [open, setOpen] = useState(false);
   const current = options.find((o) => o.key === value) ?? options[0];
   const active = value !== options[0].key;
 
   return (
-    <>
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={() => setOpen(true)}
-        style={{
-          flex: 1,
-          flexDirection: "row",
-          alignItems: "center",
-          paddingVertical: 10,
-          paddingHorizontal: 12,
-          borderRadius: 16,
-          backgroundColor: active ? COLORS.primaryLight : COLORS.canvas,
-          borderWidth: 1,
-          borderColor: active ? COLORS.primary : COLORS.line,
-        }}
-      >
-        <View
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 10,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: active ? COLORS.primaryFill : COLORS.surface,
-          }}
+    <TouchableOpacity
+      activeOpacity={0.85}
+      onPress={onPress}
+      style={{
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 9,
+        paddingHorizontal: 12,
+        borderRadius: 16,
+        backgroundColor: active ? COLORS.primaryLight : COLORS.canvas,
+        borderWidth: 1,
+        borderColor: active || open ? COLORS.primary : COLORS.line,
+      }}
+    >
+      <Feather name={current.icon} size={16} color={active ? COLORS.primaryDark : COLORS.inkSoft} />
+      <View style={{ flex: 1, marginLeft: 10 }}>
+        <Text style={{ fontSize: 11, color: COLORS.inkMuted }}>{caption}</Text>
+        <Text
+          numberOfLines={1}
+          style={{ marginTop: 1, fontSize: 13.5, fontWeight: "700", color: active ? COLORS.primaryDark : COLORS.ink }}
         >
-          <Feather
-            name={current.icon}
-            size={16}
-            color={active ? COLORS.white : COLORS.inkSoft}
-          />
-        </View>
-        <View style={{ flex: 1, marginLeft: 10 }}>
-          <Text style={{ fontSize: 11, color: COLORS.inkMuted }}>
-            {caption}
-          </Text>
-          <Text
-            numberOfLines={1}
-            style={{
-              marginTop: 1,
-              fontSize: 13.5,
-              fontWeight: "700",
-              color: active ? COLORS.primaryDark : COLORS.ink,
-            }}
-          >
-            {current.label}
-          </Text>
-        </View>
-        <Feather
-          name="chevron-down"
-          size={18}
-          color={active ? COLORS.primaryDark : COLORS.inkMuted}
-        />
-      </TouchableOpacity>
-
-      <Modal
-        visible={open}
-        transparent
-        animationType="fade"
-        statusBarTranslucent
-        onRequestClose={() => setOpen(false)}
-      >
-        <Pressable
-          onPress={() => setOpen(false)}
-          style={{
-            flex: 1,
-            justifyContent: "flex-end",
-            backgroundColor: OVERLAY,
-          }}
-        >
-          {/* Pressable rỗng để chạm vào sheet không đóng modal */}
-          <Pressable
-            onPress={() => {}}
-            style={{
-              backgroundColor: COLORS.surface,
-              borderTopLeftRadius: RADIUS.sheet,
-              borderTopRightRadius: RADIUS.sheet,
-              paddingHorizontal: 20,
-              paddingTop: 12,
-              paddingBottom: insets.bottom + 16,
-            }}
-          >
-            <View
-              style={{
-                alignSelf: "center",
-                width: 40,
-                height: 4,
-                borderRadius: 2,
-                backgroundColor: COLORS.line,
-              }}
-            />
-            <Text
-              style={{
-                marginTop: 16,
-                marginBottom: 12,
-                fontSize: 17,
-                fontWeight: "800",
-                color: COLORS.ink,
-              }}
-            >
-              {caption}
-            </Text>
-
-            {options.map((o) => {
-              const selected = o.key === value;
-              return (
-                <TouchableOpacity
-                  key={o.key}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    onChange(o.key);
-                    setOpen(false);
-                  }}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingVertical: 12,
-                    paddingHorizontal: 12,
-                    marginBottom: 6,
-                    borderRadius: 16,
-                    backgroundColor: selected
-                      ? COLORS.primaryLight
-                      : "transparent",
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 12,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: selected
-                        ? COLORS.primaryFill
-                        : COLORS.canvas,
-                    }}
-                  >
-                    <Feather
-                      name={o.icon}
-                      size={17}
-                      color={selected ? COLORS.white : COLORS.inkSoft}
-                    />
-                  </View>
-                  <Text
-                    style={{
-                      flex: 1,
-                      marginLeft: 12,
-                      fontSize: 15,
-                      fontWeight: selected ? "800" : "600",
-                      color: selected ? COLORS.primaryDark : COLORS.ink,
-                    }}
-                  >
-                    {o.label}
-                  </Text>
-                  {selected && (
-                    <Feather name="check" size={18} color={COLORS.primary} />
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-          </Pressable>
-        </Pressable>
-      </Modal>
-    </>
+          {current.label}
+        </Text>
+      </View>
+      <Feather name={open ? "chevron-up" : "chevron-down"} size={18} color={active ? COLORS.primaryDark : COLORS.inkMuted} />
+    </TouchableOpacity>
   );
 }
 
-/* ============================ thẻ tổng kết ============================ */
-
-function StatTile({
-  icon,
-  label,
+function FilterPanel<T extends string>({
+  options,
   value,
+  onChange,
 }: {
-  icon: IconName;
-  label: string;
-  value: string;
+  options: FilterOption<T>[];
+  value: T;
+  onChange: (key: T) => void;
 }) {
+  const { COLORS } = useAppTheme();
+
   return (
     <View
       style={{
-        flex: 1,
-        padding: 12,
+        marginTop: 10,
+        padding: 6,
         borderRadius: 18,
-        backgroundColor: ON_DARK.surface,
+        backgroundColor: COLORS.canvas,
         borderWidth: 1,
-        borderColor: ON_DARK.border,
+        borderColor: COLORS.line,
       }}
     >
+      {options.map((o) => {
+        const selected = o.key === value;
+        return (
+          <TouchableOpacity
+            key={o.key}
+            activeOpacity={0.8}
+            onPress={() => onChange(o.key)}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              paddingVertical: 11,
+              paddingHorizontal: 12,
+              borderRadius: 12,
+              backgroundColor: selected ? COLORS.primaryLight : "transparent",
+            }}
+          >
+            <Feather name={o.icon} size={16} color={selected ? COLORS.primaryDark : COLORS.inkSoft} />
+            <Text
+              style={{
+                flex: 1,
+                marginLeft: 10,
+                fontSize: 14,
+                fontWeight: selected ? "800" : "600",
+                color: selected ? COLORS.primaryDark : COLORS.ink,
+              }}
+            >
+              {o.label}
+            </Text>
+            {selected && <Feather name="check" size={16} color={COLORS.primary} />}
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+/* ============================ the tong ket ============================ */
+
+function SummaryStat({ icon, label, value }: { icon: IconName; label: string; value: string }) {
+  return (
+    <View style={{ flex: 1, paddingHorizontal: 14 }}>
       <View style={{ flexDirection: "row", alignItems: "center" }}>
         <Feather name={icon} size={13} color={ON_DARK.textSoft} />
-        <Text style={{ marginLeft: 6, fontSize: 12, color: ON_DARK.textSoft }}>
-          {label}
-        </Text>
+        <Text style={{ marginLeft: 6, fontSize: 12, color: ON_DARK.textSoft }}>{label}</Text>
       </View>
-      <Text
-        numberOfLines={1}
-        style={{
-          marginTop: 6,
-          fontSize: 16,
-          fontWeight: "800",
-          color: ON_DARK.text,
-        }}
-      >
+      <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={{ marginTop: 5, fontSize: 16, fontWeight: "800", color: ON_DARK.text }}>
         {value}
       </Text>
     </View>
@@ -327,104 +213,59 @@ function StatTile({
 
 function SummaryCard({ totals }: { totals: PaymentHistoryTotals }) {
   const { t } = useTranslation();
-
-  const { COLORS } = useAppTheme();
+  const { GRADIENTS, SHADOWS } = useAppTheme();
 
   return (
-    <View
-      style={[
-        {
-          marginTop: 16,
-          padding: 20,
-          borderRadius: RADIUS.hero,
-          backgroundColor: COLORS.primaryFill,
-          overflow: "hidden",
-        },
-        SHADOWS.float,
-      ]}
-    >
-      {/* vòng tròn trang trí */}
-      <View
-        style={{
-          position: "absolute",
-          top: -40,
-          right: -30,
-          width: 150,
-          height: 150,
-          borderRadius: 75,
-          backgroundColor: ON_DARK.surface,
-        }}
-      />
-      <View
-        style={{
-          position: "absolute",
-          bottom: -50,
-          left: -30,
-          width: 120,
-          height: 120,
-          borderRadius: 60,
-          backgroundColor: ON_DARK.surface,
-        }}
-      />
-
-      <View style={{ flexDirection: "row", alignItems: "center" }}>
-        <View
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 10,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: ON_DARK.surface,
-          }}
-        >
-          <Feather name="shield" size={16} color={ON_DARK.text} />
-        </View>
-        <Text style={{ marginLeft: 10, fontSize: 13, color: ON_DARK.textSoft }}>
-          {t("Tổng đã thanh toán")}</Text>
-      </View>
-
-      <Text
-        style={{
-          marginTop: 10,
-          fontSize: 32,
-          fontWeight: "800",
-          color: ON_DARK.text,
-        }}
+    <View style={[{ marginTop: 16, borderRadius: RADIUS.hero, backgroundColor: GRADIENTS.wallet[0] }, SHADOWS.float]}>
+      <LinearGradient
+        colors={GRADIENTS.wallet}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ padding: 20, borderRadius: RADIUS.hero, overflow: "hidden" }}
       >
-        {formatVnd(totals.paid, t)}
-      </Text>
+        <View pointerEvents="none" style={{ position: "absolute", top: -50, right: -40, width: 170, height: 170, borderRadius: 85, backgroundColor: ON_DARK.surface }} />
+        <View pointerEvents="none" style={{ position: "absolute", bottom: -60, left: -40, width: 130, height: 130, borderRadius: 65, backgroundColor: ON_DARK.surface }} />
 
-      <View style={{ flexDirection: "row", gap: 10, marginTop: 18 }}>
-        <StatTile
-          icon="rotate-ccw"
-          label={t("Đã hoàn về ví")}
-          value={formatVnd(totals.refunded, t)}
-        />
-        <StatTile
-          icon="hash"
-          label={t("Số giao dịch")}
-          value={String(totals.count)}
-        />
-      </View>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <View style={{ width: 34, height: 34, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: ON_DARK.surface, borderWidth: 1, borderColor: ON_DARK.border }}>
+            <Feather name="check-circle" size={17} color={ON_DARK.text} />
+          </View>
+          <Text style={{ marginLeft: 10, fontSize: 13.5, fontWeight: "600", color: ON_DARK.textSoft }}>
+            {t("T\u1ed5ng \u0111\u00e3 thanh to\u00e1n")}
+          </Text>
+        </View>
+
+        <Text numberOfLines={1} adjustsFontSizeToFit style={{ marginTop: 12, fontSize: 36, lineHeight: 44, fontWeight: "800", color: ON_DARK.text }}>
+          {formatVnd(totals.paid, t)}
+        </Text>
+
+        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 16, paddingVertical: 12, borderRadius: 18, backgroundColor: ON_DARK.surface }}>
+          <SummaryStat icon="rotate-ccw" label={t("\u0110\u00e3 ho\u00e0n v\u1ec1 v\u00ed")} value={formatVnd(totals.refunded, t)} />
+          <View style={{ width: 1, height: 30, backgroundColor: ON_DARK.border }} />
+          <SummaryStat icon="hash" label={t("S\u1ed1 giao d\u1ecbch")} value={String(totals.count)} />
+        </View>
+      </LinearGradient>
     </View>
   );
 }
 
-/* ============================ dòng giao dịch ============================ */
+/* ============================ dong giao dich ============================ */
 
 function HistoryRow({
   item,
+  first,
+  last,
   onPress,
 }: {
   item: PaymentHistoryItem;
+  first: boolean;
+  last: boolean;
   onPress?: () => void;
 }) {
   const { t } = useTranslation();
   const { COLORS, TREND } = useAppTheme();
 
-  const BADGE: Partial<Record<PaymentHistoryStatus, { bg: string; fg: string }>> =
-  {
+  const BADGE: Partial<Record<PaymentHistoryStatus, { bg: string; fg: string }>> = {
     PENDING: { bg: COLORS.accentLight, fg: COLORS.accentDark },
     FAILED: { bg: COLORS.dangerLight, fg: COLORS.danger },
     CANCELLED: { bg: COLORS.dangerLight, fg: COLORS.danger },
@@ -435,11 +276,7 @@ function HistoryRow({
   const dead = item.status === "FAILED" || item.status === "CANCELLED";
   const tone = isRefund ? TREND.up : COLORS.primaryDark;
   const toneBg = isRefund ? TREND.upBg : COLORS.primaryLight;
-  const icon: IconName = isRefund
-    ? "rotate-ccw"
-    : item.channel === "WALLET"
-      ? "briefcase"
-      : "credit-card";
+  const icon: IconName = isRefund ? "rotate-ccw" : item.channel === "WALLET" ? "briefcase" : "credit-card";
   const badge = BADGE[item.status];
   const amountColor = dead ? COLORS.inkMuted : isRefund ? TREND.up : COLORS.ink;
 
@@ -448,30 +285,25 @@ function HistoryRow({
       activeOpacity={onPress ? 0.85 : 1}
       onPress={onPress}
       disabled={!onPress}
-      style={[
-        {
-          flexDirection: "row",
-          alignItems: "center",
-          padding: 14,
-          marginBottom: 10,
-          borderRadius: 22,
-          backgroundColor: COLORS.surface,
-          borderWidth: StyleSheet.hairlineWidth,
-          borderColor: COLORS.line,
-        },
-        SHADOWS.card,
-      ]}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 14,
+        paddingHorizontal: 14,
+        backgroundColor: COLORS.surface,
+        borderColor: COLORS.line,
+        borderLeftWidth: HAIR,
+        borderRightWidth: HAIR,
+        borderTopWidth: first ? HAIR : 0,
+        borderBottomWidth: HAIR,
+        borderTopLeftRadius: first ? 20 : 0,
+        borderTopRightRadius: first ? 20 : 0,
+        borderBottomLeftRadius: last ? 20 : 0,
+        borderBottomRightRadius: last ? 20 : 0,
+        opacity: dead ? 0.75 : 1,
+      }}
     >
-      <View
-        style={{
-          width: 46,
-          height: 46,
-          borderRadius: 16,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: dead ? COLORS.canvas : toneBg,
-        }}
-      >
+      <View style={{ width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center", backgroundColor: dead ? COLORS.canvas : toneBg }}>
         <Feather name={icon} size={20} color={dead ? COLORS.inkMuted : tone} />
       </View>
 
@@ -483,38 +315,17 @@ function HistoryRow({
           style={{ fontSize: 14.5, fontWeight: "700", color: COLORS.ink }}
         >
           {item.booking_code
-            ? t(item.kind === "REFUND" ? "Hoàn tiền đơn {{value0}}" : "Thanh toán đơn {{value0}}", { value0: item.booking_code })
-            : t(item.kind === "REFUND" ? "Hoàn tiền vào ví" : "Thanh toán bằng ví")}
+            ? t(item.kind === "REFUND" ? "Ho\u00e0n ti\u1ec1n \u0111\u01a1n {{value0}}" : "Thanh to\u00e1n \u0111\u01a1n {{value0}}", { value0: item.booking_code })
+            : t(item.kind === "REFUND" ? "Ho\u00e0n ti\u1ec1n v\u00e0o v\u00ed" : "Thanh to\u00e1n b\u1eb1ng v\u00ed")}
         </Text>
-        <View
-          style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}
-        >
-          <Text style={{ fontSize: 12, color: COLORS.inkMuted }}>
-            {t(item.method_display)} · {formatMessageTime(item.created_at, t)}
+        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
+          <Feather name="clock" size={11} color={COLORS.inkMuted} />
+          <Text numberOfLines={1} style={{ flex: 1, marginLeft: 4, fontSize: 12, color: COLORS.inkMuted }}>
+            {t(item.method_display)} {"\u00b7"} {formatMessageTime(item.created_at, t)}
           </Text>
-          {badge && (
-            <View
-              style={{
-                marginLeft: 8,
-                paddingHorizontal: 8,
-                paddingVertical: 2,
-                borderRadius: 999,
-                backgroundColor: badge.bg,
-              }}
-            >
-              <Text
-                style={{ fontSize: 11, fontWeight: "700", color: badge.fg }}
-              >
-                {t(item.status_display)}
-              </Text>
-            </View>
-          )}
         </View>
         {!!item.note && (
-          <Text
-            numberOfLines={1}
-            style={{ marginTop: 3, fontSize: 12, color: COLORS.inkSoft }}
-          >
+          <Text numberOfLines={1} style={{ marginTop: 3, fontSize: 12, color: COLORS.inkSoft }}>
             {localizeTransactionNote(item.note, t)}
           </Text>
         )}
@@ -532,14 +343,13 @@ function HistoryRow({
           {isRefund ? "+" : "-"}
           {formatVnd(Number(item.amount), t)}
         </Text>
-        {!!onPress && (
-          <Feather
-            name="chevron-right"
-            size={16}
-            color={COLORS.inkMuted}
-            style={{ marginTop: 4 }}
-          />
-        )}
+        {badge ? (
+          <View style={{ marginTop: 5, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: badge.bg }}>
+            <Text style={{ fontSize: 11, fontWeight: "700", color: badge.fg }}>{t(item.status_display)}</Text>
+          </View>
+        ) : !!onPress ? (
+          <Feather name="chevron-right" size={16} color={COLORS.inkMuted} style={{ marginTop: 4 }} />
+        ) : null}
       </View>
     </TouchableOpacity>
   );
@@ -547,77 +357,31 @@ function HistoryRow({
 
 function SkeletonList() {
   const { COLORS } = useAppTheme();
+  const bar = (w: any, h: number, o = 0.6) => (
+    <View style={{ width: w, height: h, borderRadius: h / 2, backgroundColor: COLORS.line, opacity: o }} />
+  );
 
   return (
     <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
-      <View
-        style={{
-          height: 158,
-          borderRadius: RADIUS.hero,
-          backgroundColor: COLORS.line,
-          opacity: 0.55,
-        }}
-      />
-      {[0, 1, 2, 3].map((i) => (
-        <View
-          key={i}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginTop: 12,
-            padding: 14,
-            borderRadius: 22,
-            backgroundColor: COLORS.surface,
-            borderWidth: StyleSheet.hairlineWidth,
-            borderColor: COLORS.line,
-          }}
-        >
-          <View
-            style={{
-              width: 46,
-              height: 46,
-              borderRadius: 16,
-              backgroundColor: COLORS.line,
-              opacity: 0.6,
-            }}
-          />
-          <View style={{ flex: 1, marginLeft: 12 }}>
-            <View
-              style={{
-                width: "60%",
-                height: 12,
-                borderRadius: 6,
-                backgroundColor: COLORS.line,
-                opacity: 0.6,
-              }}
-            />
-            <View
-              style={{
-                width: "40%",
-                height: 10,
-                marginTop: 8,
-                borderRadius: 5,
-                backgroundColor: COLORS.line,
-                opacity: 0.45,
-              }}
-            />
+      <View style={{ height: 190, borderRadius: RADIUS.hero, backgroundColor: COLORS.line, opacity: 0.55 }} />
+      <View style={{ marginTop: 18, borderRadius: 20, backgroundColor: COLORS.surface, borderWidth: HAIR, borderColor: COLORS.line }}>
+        {[0, 1, 2, 3].map((i) => (
+          <View key={i} style={{ flexDirection: "row", alignItems: "center", padding: 14, borderBottomWidth: i < 3 ? HAIR : 0, borderBottomColor: COLORS.line }}>
+            <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: COLORS.line, opacity: 0.6 }} />
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              {bar("60%", 12)}
+              <View style={{ height: 8 }} />
+              {bar("40%", 10, 0.45)}
+            </View>
+            {bar(64, 14)}
           </View>
-          <View
-            style={{
-              width: 64,
-              height: 14,
-              borderRadius: 7,
-              backgroundColor: COLORS.line,
-              opacity: 0.6,
-            }}
-          />
-        </View>
-      ))}
+        ))}
+      </View>
     </View>
   );
 }
 
-/* ============================ danh sách ============================ */
+/* ============================ danh sach ============================ */
 
 function PaymentHistoryList({
   source,
@@ -629,13 +393,23 @@ function PaymentHistoryList({
   onResetFilters: () => void;
 }) {
   const { t } = useTranslation();
-
   const { COLORS } = useAppTheme();
-
   const insets = useSafeAreaInsets();
   const h = usePaymentHistory(source, status);
-  const sections = useMemo(() => groupByDay(h.items, t), [h.items, t]);
+  const [visible, setVisible] = useState(PAGE_STEP);
+
+  const sections = useMemo(() => groupByDay(h.items.slice(0, visible), t), [h.items, visible, t]);
   const filtering = source !== "all" || status !== "all";
+
+  const total = h.totals?.count ?? h.items.length;
+  const shown = Math.min(visible, total);
+  const remaining = Math.max(0, total - shown);
+
+  const showMore = () => {
+    const next = visible + PAGE_STEP;
+    setVisible(next);
+    if (next > h.items.length && h.items.length < total) h.loadMore();
+  };
 
   if (h.isInitialLoading) return <SkeletonList />;
 
@@ -643,8 +417,8 @@ function PaymentHistoryList({
     return (
       <EmptyState
         icon="alert-circle"
-        title={t("Không tải được lịch sử thanh toán.")}
-        actionLabel={t("Thử lại")}
+        title={t("Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c l\u1ecbch s\u1eed thanh to\u00e1n.")}
+        actionLabel={t("Th\u1eed l\u1ea1i")}
         onAction={() => h.retry()}
       />
     );
@@ -657,10 +431,7 @@ function PaymentHistoryList({
       keyExtractor={(it) => it.id}
       stickySectionHeadersEnabled={false}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{
-        paddingHorizontal: 16,
-        paddingBottom: insets.bottom + 24,
-      }}
+      contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24 }}
       refreshControl={
         <RefreshControl
           refreshing={h.refreshing}
@@ -669,33 +440,17 @@ function PaymentHistoryList({
           colors={[COLORS.primaryFill]}
         />
       }
-      onEndReached={h.loadMore}
-      onEndReachedThreshold={0.4}
       ListHeaderComponent={
         h.totals ? (
           <View>
             <SummaryCard totals={h.totals} />
             {filtering && (
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginTop: 14,
-                  paddingHorizontal: 4,
-                }}
-              >
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 14, paddingHorizontal: 4 }}>
                 <Text style={{ fontSize: 13, color: COLORS.inkSoft }}>
-                  {t("Đang lọc ·")}{" "}{h.totals.count} {t("giao dịch")}</Text>
+                  {t("\u0110ang l\u1ecdc \u00b7")} {h.totals.count} {t("giao d\u1ecbch")}
+                </Text>
                 <TouchableOpacity onPress={onResetFilters} hitSlop={8}>
-                  <Text
-                    style={{
-                      fontSize: 13,
-                      fontWeight: "700",
-                      color: COLORS.primary,
-                    }}
-                  >
-                    {t("Xóa lọc")}</Text>
+                  <Text style={{ fontSize: 13, fontWeight: "700", color: COLORS.primary }}>{t("X\u00f3a l\u1ecdc")}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -705,70 +460,61 @@ function PaymentHistoryList({
       ListEmptyComponent={
         <EmptyState
           icon="file-text"
-          title={
-            filtering
-              ? t("Không có giao dịch phù hợp với bộ lọc.")
-              : getLocalizedEmptyText(t).all
-          }
-          actionLabel={filtering ? t("Xóa bộ lọc") : undefined}
+          title={filtering ? t("Kh\u00f4ng c\u00f3 giao d\u1ecbch ph\u00f9 h\u1ee3p v\u1edbi b\u1ed9 l\u1ecdc.") : t("Ch\u01b0a c\u00f3 giao d\u1ecbch thanh to\u00e1n n\u00e0o.")}
+          actionLabel={filtering ? t("X\u00f3a b\u1ed9 l\u1ecdc") : undefined}
           onAction={filtering ? onResetFilters : undefined}
         />
       }
       renderSectionHeader={({ section }) => (
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginTop: 18,
-            marginBottom: 10,
-            paddingHorizontal: 4,
-          }}
-        >
-          <Text
-            style={{ fontSize: 13, fontWeight: "700", color: COLORS.inkSoft }}
-          >
-            {section.title}
-          </Text>
-          <View
-            style={{
-              flex: 1,
-              height: StyleSheet.hairlineWidth,
-              marginLeft: 10,
-              backgroundColor: COLORS.line,
-            }}
-          />
+        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 18, marginBottom: 10, paddingHorizontal: 4 }}>
+          <Text style={{ fontSize: 13, fontWeight: "700", color: COLORS.inkSoft }}>{section.title}</Text>
+          <View style={{ flex: 1, height: HAIR, marginLeft: 10, backgroundColor: COLORS.line }} />
         </View>
       )}
-      renderItem={({ item }) => (
+      renderItem={({ item, index, section }) => (
         <HistoryRow
           item={item}
-          onPress={
-            item.booking_id
-              ? () => router.push(`/booking/${item.booking_id}` as any)
-              : undefined
-          }
+          first={index === 0}
+          last={index === section.data.length - 1}
+          onPress={item.booking_id ? () => safePush(`/booking/${item.booking_id}` as any) : undefined}
         />
       )}
       ListFooterComponent={
         h.isLoadingMore ? (
-          <ActivityIndicator
-            color={COLORS.primary}
-            style={{ marginVertical: 16 }}
-          />
+          <ActivityIndicator color={COLORS.primary} style={{ marginVertical: 16 }} />
+        ) : remaining > 0 ? (
+          <TouchableOpacity
+            onPress={showMore}
+            activeOpacity={0.85}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              height: 46,
+              marginTop: 18,
+              borderRadius: 999,
+              backgroundColor: COLORS.ink,
+            }}
+          >
+            <Text style={{ fontSize: 14, fontWeight: "700", color: COLORS.surface }}>
+              {t("Xem th\u00eam")} ({Math.min(PAGE_STEP, remaining)})
+            </Text>
+            <Feather name="chevron-down" size={16} color={COLORS.surface} style={{ marginLeft: 6 }} />
+          </TouchableOpacity>
         ) : undefined
       }
     />
   );
 }
 
-/* ============================ màn hình ============================ */
+/* ============================ man hinh ============================ */
 
 export function PaymentHistory() {
   const { t } = useTranslation();
-
   const insets = useSafeAreaInsets();
   const [source, setSource] = useState<PaymentHistorySource>("all");
   const [status, setStatus] = useState<PaymentHistoryStatusFilter>("all");
+  const [openKey, setOpenKey] = useState<"source" | "status" | null>(null);
 
   const resetFilters = () => {
     setSource("all");
@@ -778,40 +524,46 @@ export function PaymentHistory() {
   return (
     <View className="flex-1 bg-canvas">
       <View style={{ paddingTop: insets.top }} className="bg-surface">
-        <ScreenHeader title={t("Lịch sử thanh toán")} />
+        <ScreenHeader title={t("L\u1ecbch s\u1eed thanh to\u00e1n")} />
       </View>
 
-      {/* Thanh lọc: 2 dropdown nằm ngang */}
       <View
         className="bg-surface border-b border-line"
-        style={{
-          flexDirection: "row",
-          gap: 10,
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-        }}
+        style={{ paddingHorizontal: 16, paddingVertical: 12 }}
       >
-        <FilterDropdown
-          caption={t("Loại")}
-          value={source}
-          options={getLocalizedSourceOptions(t)}
-          onChange={setSource}
-        />
-        <FilterDropdown
-          caption={t("Trạng thái")}
-          value={status}
-          options={getLocalizedStatusOptions(t)}
-          onChange={setStatus}
-        />
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <FilterButton
+            caption={t("Lo\u1ea1i")}
+            value={source}
+            options={getSourceOptions(t)}
+            open={openKey === "source"}
+            onPress={() => setOpenKey(openKey === "source" ? null : "source")}
+          />
+          <FilterButton
+            caption={t("Tr\u1ea1ng th\u00e1i")}
+            value={status}
+            options={getStatusOptions(t)}
+            open={openKey === "status"}
+            onPress={() => setOpenKey(openKey === "status" ? null : "status")}
+          />
+        </View>
+        {openKey === "source" && (
+          <FilterPanel
+            options={getSourceOptions(t)}
+            value={source}
+            onChange={(k) => { setSource(k); setOpenKey(null); }}
+          />
+        )}
+        {openKey === "status" && (
+          <FilterPanel
+            options={getStatusOptions(t)}
+            value={status}
+            onChange={(k) => { setStatus(k); setOpenKey(null); }}
+          />
+        )}
       </View>
 
-      {/* key theo bộ lọc: đổi bộ lọc thì reset trang và danh sách */}
-      <PaymentHistoryList
-        key={`${source}-${status}`}
-        source={source}
-        status={status}
-        onResetFilters={resetFilters}
-      />
+      <PaymentHistoryList key={`${source}-${status}`} source={source} status={status} onResetFilters={resetFilters} />
     </View>
   );
 }

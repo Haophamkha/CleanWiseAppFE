@@ -8,13 +8,13 @@ import { Feather } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Text,
   TouchableOpacity,
   View,
   useWindowDimensions,
 } from "react-native";
+import { Alert } from "@/components/common/AppAlert";
 import {
   useDeleteChatbotConversationMutation,
   useGetChatbotConversationsQuery,

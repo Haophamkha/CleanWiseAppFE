@@ -1,11 +1,12 @@
 import { ON_DARK } from "@/constants/theme";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
 import Feather from "@expo/vector-icons/Feather";
+import logoMark from "@assets/images/logo-mark.png";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Animated, BackHandler, Easing, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
+import { ActivityIndicator, Animated, BackHandler, Easing, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Path } from "react-native-svg";
 
@@ -38,7 +39,7 @@ export function SessionLoadingScreen({ error, onRetry, success = false, onComple
   mode?: "restore" | "login";
 }) {
   const { t } = useTranslation();
-  const { COLORS, isDark } = useAppTheme();
+  const { COLORS, SHADOWS, isDark } = useAppTheme();
   const tint = isDark ? COLORS.primary : COLORS.primaryLight;
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
@@ -131,9 +132,13 @@ export function SessionLoadingScreen({ error, onRetry, success = false, onComple
             </Svg>
           </Animated.View>
           <Animated.View style={{ transform: [{ scale: badgeScale }] }}>
-          <LinearGradient colors={[COLORS.primary, COLORS.primaryFill, COLORS.primaryFillDark]} style={[styles.badge, { borderColor: tint, width: stage * 0.4, height: stage * 0.4, borderRadius: stage }]}>
-            <Feather name={error ? "wifi-off" : showSuccess ? "check" : "home"} size={stage * 0.16} color={ON_DARK.text} />
-          </LinearGradient>
+          {error || showSuccess ? (
+            <LinearGradient colors={[COLORS.primary, COLORS.primaryFill, COLORS.primaryFillDark]} style={[styles.badge, { borderColor: tint, width: stage * 0.4, height: stage * 0.4, borderRadius: stage }]}>
+              <Feather name={error ? "wifi-off" : "check"} size={stage * 0.16} color={ON_DARK.text} />
+            </LinearGradient>
+          ) : (
+            <Image source={logoMark} style={[{ width: stage * 0.4, height: stage * 0.4, borderRadius: 26 }, SHADOWS.float]} resizeMode="contain" />
+          )}
           </Animated.View>
         </View>
         <Text style={[styles.eyebrow, { color: CREAM }]}>{showSuccess ? t("SẴN SÀNG") : t("CHÀO MỪNG TRỞ LẠI")}</Text>

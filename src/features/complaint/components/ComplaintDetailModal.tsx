@@ -14,7 +14,6 @@ import { formatVnd } from "@/utils/currency";
 import { Feather } from "@expo/vector-icons";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Modal,
   Platform,
@@ -23,6 +22,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { Alert } from "@/components/common/AppAlert";
 
 export function ComplaintDetailModal({
   id,

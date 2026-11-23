@@ -3,7 +3,8 @@ import { useAppTheme } from "@/features/theme/ThemeProvider";
 import { Feather } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
+import { Alert } from "@/components/common/AppAlert";
 import { useAppLanguage } from "./LanguageProvider";
 import { translate, type AppLanguage } from "./i18n";
 

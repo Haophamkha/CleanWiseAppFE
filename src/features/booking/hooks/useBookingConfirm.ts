@@ -32,7 +32,7 @@ import { formatVnd } from "@/utils/currency";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Alert } from "react-native";
+import { Alert } from "@/components/common/AppAlert";
 
 export type PaymentMethodValue = "CASH" | "BANK_TRANSFER" | "WALLET";
 export type PaymentOption = {

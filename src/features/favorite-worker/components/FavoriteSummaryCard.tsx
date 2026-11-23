@@ -1,86 +1,61 @@
 import { useTranslation } from "react-i18next";
 
+import { ON_DARK } from "@/constants/theme";
 import { useAppTheme } from "@/features/theme/ThemeProvider";
-
+import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Text, View } from "react-native";
 
 export function FavoriteSummaryCard({ count }: { count: number }) {
   const { t } = useTranslation();
-
-  const { COLORS } = useAppTheme();
+  const { COLORS, SHADOWS } = useAppTheme();
 
   return (
-    <LinearGradient
-      colors={[COLORS.accent, COLORS.accentDark]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        paddingVertical: 16,
-        paddingHorizontal: 20,
-        marginBottom: 14,
-        borderRadius: 20,
-        overflow: "hidden",
-      }}
-    >
-      {/* Vòng tròn trang trí */}
-      <View
+    <View style={[{ marginBottom: 16, borderRadius: 24, backgroundColor: COLORS.accent }, SHADOWS.card]}>
+      <LinearGradient
+        colors={[COLORS.accent, COLORS.accentDark]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={{
-          position: "absolute",
-          right: -24,
-          top: -32,
-          width: 110,
-          height: 110,
-          borderRadius: 55,
-          backgroundColor: "rgba(255,255,255,0.15)",
-        }}
-      />
-      <View
-        style={{
-          position: "absolute",
-          right: 40,
-          bottom: -40,
-          width: 80,
-          height: 80,
-          borderRadius: 40,
-          backgroundColor: "rgba(255,255,255,0.10)",
-        }}
-      />
-
-      <Text
-        style={{
-          fontSize: 40,
-          lineHeight: 46,
-          fontWeight: "800",
-          color: "#FFFFFF",
+          flexDirection: "row",
+          alignItems: "center",
+          paddingVertical: 20,
+          paddingHorizontal: 20,
+          borderRadius: 24,
+          overflow: "hidden",
         }}
       >
-        {count}
-      </Text>
+        <View pointerEvents="none" style={{ position: "absolute", right: -14, bottom: -22 }}>
+          <Feather name="heart" size={120} color={ON_DARK.surface} />
+        </View>
+        <View pointerEvents="none" style={{ position: "absolute", right: -30, top: -40, width: 110, height: 110, borderRadius: 55, backgroundColor: ON_DARK.surface }} />
 
-      <View
-        style={{
-          width: 1,
-          height: 36,
-          marginHorizontal: 16,
-          backgroundColor: "rgba(255,255,255,0.4)",
-        }}
-      />
-
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 16, fontWeight: "700", color: "#FFFFFF" }}>
-          {t("Nhân viên yêu thích")}</Text>
-        <Text
+        <View
           style={{
-            marginTop: 2,
-            fontSize: 13,
-            color: "rgba(255,255,255,0.92)",
+            width: 64,
+            height: 64,
+            borderRadius: 20,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: ON_DARK.surface,
+            borderWidth: 1,
+            borderColor: ON_DARK.border,
           }}
         >
-          {t("Đã lưu trong danh sách của bạn")}</Text>
-      </View>
-    </LinearGradient>
+          <Text style={{ fontSize: 30, lineHeight: 36, fontWeight: "800", color: ON_DARK.text }}>
+            {count}
+          </Text>
+        </View>
+
+        <View style={{ flex: 1, marginLeft: 16 }}>
+          <Text style={{ fontSize: 17, fontWeight: "800", color: ON_DARK.text }}>
+            {t("Nh\u00e2n vi\u00ean y\u00eau th\u00edch")}
+          </Text>
+          <Text style={{ marginTop: 3, fontSize: 13, color: ON_DARK.textSoft }}>
+            {t("\u0110\u00e3 l\u01b0u trong danh s\u00e1ch c\u1ee7a b\u1ea1n")}
+          </Text>
+        </View>
+      </LinearGradient>
+    </View>
   );
 }

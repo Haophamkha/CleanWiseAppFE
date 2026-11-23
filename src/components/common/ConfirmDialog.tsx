@@ -38,10 +38,10 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: Props) {
-  const { COLORS } = useAppTheme();
+  const { COLORS, OVERLAY } = useAppTheme();
 
   const accentColor = danger ? COLORS.danger : COLORS.primary;
-  const accentBg = danger ? "#FEF2F2" : COLORS.primaryLight;
+  const accentBg = danger ? COLORS.dangerLight : COLORS.primaryLight;
 
   return (
     <Modal
@@ -53,7 +53,7 @@ export function ConfirmDialog({
       <Pressable
         style={{
           flex: 1,
-          backgroundColor: "rgba(17,24,39,0.5)",
+          backgroundColor: OVERLAY,
           alignItems: "center",
           justifyContent: "center",
           paddingHorizontal: 28,
@@ -65,7 +65,7 @@ export function ConfirmDialog({
           style={{
             width: "100%",
             maxWidth: 340,
-            backgroundColor: COLORS.white,
+            backgroundColor: COLORS.surface,
             borderRadius: 28,
             paddingTop: 28,
             paddingBottom: 20,
@@ -139,11 +139,11 @@ export function ConfirmDialog({
               }}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" size="small" />
+                <ActivityIndicator color={COLORS.white} size="small" />
               ) : (
                 <Text
                   className="font-bold text-[14px]"
-                  style={{ color: "#fff" }}
+                  style={{ color: COLORS.white }}
                 >
                   {confirmText}
                 </Text>

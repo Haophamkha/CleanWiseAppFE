@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
 
 // features/address/hooks/useAddressList.ts
@@ -20,7 +21,7 @@ export function useAddressList() {
     useGetAddressesQuery();
 
   const edit = (id: number) =>
-    router.push({
+    safePush({
       pathname: "/profile/address/[id]",
       params: { id: String(id) },
     });
@@ -32,7 +33,7 @@ export function useAddressList() {
   };
 
   const add = () =>
-    router.push({
+    safePush({
       pathname: "/profile/address/choose-method",
       params: pickerKey ? { pickerKey } : {},
     });

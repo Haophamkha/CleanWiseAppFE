@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { ServiceThumb } from "@/features/booking/components/ServiceThumb";
 import type { BookingListItem } from "@/features/booking/types/Booking";
 import { getPaymentStatusMeta } from "@/features/booking/types/bookingStatus";
@@ -76,13 +77,14 @@ export function BookingCard({ item }: { item: BookingCardData }) {
         isDead && { opacity: 0.75 },
       ]}
       onPress={() =>
-        router.push({
+        safePush({
           pathname: "/booking/[id]",
           params: { id: String(item.id) },
         })
       }
     >
-      <View style={{ padding: 14 }}>
+      <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 4, backgroundColor: meta.color }} />
+      <View style={{ paddingVertical: 14, paddingLeft: 18, paddingRight: 14 }}>
         {/* Vùng 1: icon + tên dịch vụ + trạng thái */}
         <View className="flex-row items-center">
           <ServiceThumb
@@ -90,7 +92,7 @@ export function BookingCard({ item }: { item: BookingCardData }) {
             serviceCode={item.service_code}
             sectionCode={item.section_code}
             iconUri={item.service_icon}
-            size={48}
+            size={52}
           />
           <View className="flex-1">
             <Text
@@ -133,7 +135,7 @@ export function BookingCard({ item }: { item: BookingCardData }) {
           className="bg-canvas flex-row"
           style={{
             marginTop: 12,
-            borderRadius: 14,
+            borderRadius: 14, borderWidth: 1, borderColor: COLORS.line,
             paddingHorizontal: 12,
             paddingVertical: 10,
           }}
@@ -223,7 +225,7 @@ export function BookingCard({ item }: { item: BookingCardData }) {
         {/* Vùng 3: thanh toán | tổng tiền */}
         <View
           className="flex-row items-center justify-between"
-          style={{ marginTop: 12 }}
+          style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: COLORS.line }}
         >
           {!isDead ? (
             <View

@@ -4,7 +4,8 @@ import { useAppTheme } from "@/features/theme/ThemeProvider";
 
 import { Feather } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import { Alert, Linking, Text, TouchableOpacity, View } from "react-native";
+import { Linking, Text, TouchableOpacity, View } from "react-native";
+import { Alert } from "@/components/common/AppAlert";
 
 export type BankTransferInfo = {
   bank_bin?: string;

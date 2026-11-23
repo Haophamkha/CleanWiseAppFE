@@ -1,3 +1,4 @@
+import { safePush } from "@/utils/navigation";
 import { useTranslation } from "react-i18next";
 
 import { useAppTheme } from "@/features/theme/ThemeProvider";
@@ -31,12 +32,11 @@ import {
     useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
-const PRIMARY = "#047857";
 
 export default function CustomerPaymentMethodsScreen() {
   const { t } = useTranslation();
 
-  const { mode: themeMode } = useAppTheme();
+  const { mode: themeMode, COLORS } = useAppTheme();
 
   const insets = useSafeAreaInsets();
   const confirm = useConfirm();
@@ -82,7 +82,7 @@ export default function CustomerPaymentMethodsScreen() {
       const methodId = verifyMethodId;
       setVerifyMethodId(null);
       if (result.requires_otp) setOtpMethodId(methodId);
-      else showSuccessToast(t("Tài khoản đã được xác minh trên Sandbox TINGEE"));
+      else showSuccessToast(t("Tài khoản đã được xác minh"));
       await refetch();
     } catch (error: any) {
       showErrorToast(
@@ -98,7 +98,7 @@ export default function CustomerPaymentMethodsScreen() {
       await confirmVerification({ id: otpMethodId, otp }).unwrap();
       setOtpMethodId(null);
       setOtp("");
-      showSuccessToast(t("Xác minh Sandbox thành công"));
+      showSuccessToast(t("Xác minh thành công"));
       await refetch();
     } catch (error: any) {
       showErrorToast(t("OTP chưa hợp lệ"), error?.data?.message ?? t("Vui lòng thử lại."));
@@ -147,7 +147,7 @@ export default function CustomerPaymentMethodsScreen() {
           onPress={() => router.back()}
           className="w-9 h-9 rounded-full bg-canvas items-center justify-center mr-3"
         >
-          <Feather name="arrow-left" size={21} color="#111827" />
+          <Feather name="arrow-left" size={21} color={COLORS.ink} />
         </TouchableOpacity>
         <View className="flex-1">
           <Text className="text-ink text-lg font-bold">
@@ -159,20 +159,20 @@ export default function CustomerPaymentMethodsScreen() {
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color={PRIMARY} size="large" />
+          <ActivityIndicator color={COLORS.primary} size="large" />
           <Text className="text-ink-soft mt-3">{t("Đang tải tài khoản...")}</Text>
         </View>
       ) : isError ? (
         <View className="flex-1 items-center justify-center px-8">
-          <View className="w-16 h-16 rounded-full bg-red-50 items-center justify-center">
-            <Feather name="alert-circle" size={30} color="#DC2626" />
+          <View className="w-16 h-16 rounded-full bg-danger-light items-center justify-center">
+            <Feather name="alert-circle" size={30} color={COLORS.danger} />
           </View>
           <Text className="text-ink font-bold text-base mt-4">
             {t("Không tải được dữ liệu")}</Text>
           <Text className="text-ink-soft text-center mt-2">
             {t("Kiểm tra kết nối và thử lại.")}</Text>
           <TouchableOpacity
-            className="bg-emerald-700 rounded-xl px-5 py-3 mt-5"
+            className="bg-primary-fill rounded-xl px-5 py-3 mt-5"
             onPress={() => refetch()}
           >
             <Text className="text-white font-semibold">{t("Thử lại")}</Text>
@@ -193,21 +193,21 @@ export default function CustomerPaymentMethodsScreen() {
             <RefreshControl
               refreshing={isFetching && !isLoading}
               onRefresh={() => { void refetch(); }}
-              tintColor={PRIMARY}
-              colors={[PRIMARY]}
+              tintColor={COLORS.primary}
+              colors={[COLORS.primary]}
             />
           }
           ListHeaderComponent={
             methods.length ? (
               <>
-                <View className="bg-emerald-700 rounded-3xl px-5 py-4 mb-5 overflow-hidden">
+                <View className="bg-primary-fill rounded-3xl px-5 py-4 mb-5 overflow-hidden">
                   <View className="absolute w-24 h-24 rounded-full bg-surface/10 -right-5 -top-8" />
                   <View className="flex-row items-center">
                     <View className="w-10 h-10 rounded-full bg-surface/20 items-center justify-center mr-3">
-                      <Feather name="shield" size={19} color="#FFFFFF" />
+                      <Feather name="shield" size={19} color={COLORS.white} />
                     </View>
-                    <Text className="text-emerald-50 text-xs leading-5 flex-1">
-                      {t("CleanWise không nhận mật khẩu hoặc OTP ngân hàng. Nếu xác minh, bạn sẽ nhập mã OTP mô phỏng của TINGEE Sandbox.")}</Text>
+                    <Text className="text-white text-xs leading-5 flex-1">
+                      {t("CleanWise không nhận mật khẩu hoặc OTP ngân hàng của bạn.")}</Text>
                   </View>
                 </View>
                 <Text className="text-ink-soft font-semibold text-xs uppercase tracking-wide mb-3 ml-1">
@@ -226,8 +226,8 @@ export default function CustomerPaymentMethodsScreen() {
           )}
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center px-8 pb-20">
-              <View className="w-20 h-20 rounded-full bg-emerald-50 items-center justify-center">
-                <Feather name="credit-card" size={34} color={PRIMARY} />
+              <View className="w-20 h-20 rounded-full bg-primary-light items-center justify-center">
+                <Feather name="credit-card" size={34} color={COLORS.primary} />
               </View>
               <Text className="text-ink font-bold text-lg mt-5">
                 {t("Chưa có tài khoản nào")}</Text>
@@ -244,11 +244,11 @@ export default function CustomerPaymentMethodsScreen() {
           style={{ paddingBottom: Math.max(insets.bottom, 16) }}
         >
           <TouchableOpacity
-            className="flex-row bg-emerald-700 rounded-2xl py-4 items-center justify-center"
-            onPress={() => router.push("/profile/payment-methods/add" as any)}
+            className="flex-row bg-primary-fill rounded-2xl py-4 items-center justify-center"
+            onPress={() => safePush("/profile/payment-methods/add" as any)}
             activeOpacity={0.8}
           >
-            <Feather name="plus" size={18} color="#FFFFFF" />
+            <Feather name="plus" size={18} color={COLORS.white} />
             <Text className="text-white font-bold text-base ml-2">
               {t("Thêm phương thức")}</Text>
           </TouchableOpacity>
@@ -258,20 +258,20 @@ export default function CustomerPaymentMethodsScreen() {
         <View className="flex-1 bg-black/40 justify-center px-6">
           <View className="bg-surface rounded-3xl p-5">
             {verifyMethodId !== null ? <>
-              <Text className="text-ink text-lg font-bold">{t("Thông tin Sandbox")}</Text>
-              <Text className="text-ink-soft mt-2 leading-5">{t("Nhập CCCD/CMND và điện thoại theo kịch bản test TINGEE.")}</Text>
+              <Text className="text-ink text-lg font-bold">{t("Thông tin xác minh")}</Text>
+              <Text className="text-ink-soft mt-2 leading-5">{t("Nhập CCCD/CMND và số điện thoại đăng ký với ngân hàng.")}</Text>
               <TextInput keyboardAppearance={themeMode} className="border border-line rounded-2xl px-4 py-3 mt-4 text-ink" keyboardType="number-pad" value={identity} onChangeText={(value) => setIdentity(value.replace(/\D/g, "").slice(0, 14))} placeholder="CCCD/CMND test" />
               <TextInput keyboardAppearance={themeMode} className="border border-line rounded-2xl px-4 py-3 mt-3 text-ink" keyboardType="phone-pad" value={mobile} onChangeText={(value) => setMobile(value.replace(/\D/g, "").slice(0, 10))} placeholder={t("Điện thoại test")} />
             </> : <>
-              <Text className="text-ink text-lg font-bold">{t("Nhập OTP Sandbox")}</Text>
-              <Text className="text-ink-soft mt-2 leading-5">{t("Nhập mã OTP giả lập hiển thị trong luồng test TINGEE.")}</Text>
+              <Text className="text-ink text-lg font-bold">{t("Nhập mã OTP")}</Text>
+              <Text className="text-ink-soft mt-2 leading-5">{t("Nhập mã OTP để hoàn tất xác minh.")}</Text>
               <TextInput keyboardAppearance={themeMode} className="border border-line rounded-2xl px-4 py-3 mt-4 text-ink" keyboardType="number-pad" value={otp} onChangeText={(value) => setOtp(value.replace(/\D/g, "").slice(0, 8))} placeholder={t("Mã OTP")} maxLength={8} />
             </>}
             <View className="flex-row mt-5">
               <TouchableOpacity className="flex-1 py-3 items-center" onPress={() => { setOtpMethodId(null); setVerifyMethodId(null); }}>
                 <Text className="text-ink-soft font-semibold">{t("Để sau")}</Text>
               </TouchableOpacity>
-              <TouchableOpacity className="flex-1 py-3 items-center bg-emerald-700 rounded-xl" onPress={verifyMethodId !== null ? handleStartVerification : handleConfirmOtp} disabled={isConfirming || isVerifying || (verifyMethodId !== null ? identity.length < 9 || mobile.length !== 10 || !mobile.startsWith("0") : otp.length < 4)}>
+              <TouchableOpacity className="flex-1 py-3 items-center bg-primary-fill rounded-xl" onPress={verifyMethodId !== null ? handleStartVerification : handleConfirmOtp} disabled={isConfirming || isVerifying || (verifyMethodId !== null ? identity.length < 9 || mobile.length !== 10 || !mobile.startsWith("0") : otp.length < 4)}>
                 <Text className="text-white font-bold">{isConfirming || isVerifying ? t("Đang kiểm tra...") : verifyMethodId !== null ? t("Bắt đầu xác minh") : t("Xác nhận OTP")}</Text>
               </TouchableOpacity>
             </View>

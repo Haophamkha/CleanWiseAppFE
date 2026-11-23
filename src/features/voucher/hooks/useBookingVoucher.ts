@@ -11,7 +11,7 @@ import type {
     ValidateVoucherResponse,
 } from "@/features/voucher/types/Voucher";
 import { useEffect, useMemo, useState } from "react";
-import { Alert } from "react-native";
+import { Alert } from "@/components/common/AppAlert";
 
 function getLocalizedStatusReason(translateText = defaultTranslate): Partial<Record<UserVoucher["status"], string>> {
   return {
