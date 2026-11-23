@@ -115,6 +115,7 @@ export default function RegisterScreen() {
   return (
     <AuthScreen
       icon="user-plus"
+      compact
       title={t("Tạo tài khoản")}
       subtitle={t("Chỉ mất một phút để bắt đầu đặt lịch dọn dẹp.")}
       onBack={() => router.back()}
@@ -138,8 +139,8 @@ export default function RegisterScreen() {
         </View>
       }
     >
-      <View>
-        <View>
+      <View style={{ flexDirection: "row", gap: 10 }}>
+        <View style={{ flex: 1 }}>
           <PillInput
             icon="user"
             placeholder={t("Họ")}
@@ -148,7 +149,7 @@ export default function RegisterScreen() {
             onChangeText={(v) => update("last_name", v)}
           />
         </View>
-        <View>
+        <View style={{ flex: 1 }}>
           <PillInput
             icon="user"
             placeholder={t("Tên")}
